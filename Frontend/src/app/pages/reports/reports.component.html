@@ -1,0 +1,195 @@
+
+    <section class="page-shell">
+      <div class="page-header">
+        <div>
+          <p class="kicker mb-2">Analytics</p>
+          <h2 class="text-gradient mb-1">{{ 'reports.title' | t }}</h2>
+          <p class="text-secondary mb-0">{{ 'reports.subtitle' | t }}</p>
+        </div>
+        <button class="btn btn-outline-primary" (click)="loadReports()">
+          <i class="bi bi-arrow-clockwise me-2"></i>{{ 'dashboard.refresh' | t }}
+        </button>
+      </div>
+
+      @if (error()) {
+        <div class="alert alert-danger mb-4">
+          <i class="bi bi-exclamation-circle me-2"></i>{{ error() }}
+        </div>
+      }
+
+      @if (success()) {
+        <div class="alert alert-success mb-4">
+          <i class="bi bi-check-circle me-2"></i>{{ success() }}
+        </div>
+      }
+
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="card panel p-4">
+            <h5 class="mb-4"><i class="bi bi-file-earmark-plus me-2"></i>{{ 'reports.generateReport' | t }}</h5>
+
+            <div class="mb-3">
+              <label class="form-label">{{ 'reports.form.type' | t }}</label>
+              <select class="form-control" [(ngModel)]="reportType" name="reportType">
+                <option value="weekly">{{ 'reports.form.weekly' | t }}</option>
+                <option value="monthly">{{ 'reports.form.monthly' | t }}</option>
+                <option value="custom">{{ 'reports.form.custom' | t }}</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">{{ 'reports.form.startDate' | t }}</label>
+              <input type="date" class="form-control" [(ngModel)]="startDate" name="startDate">
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label">{{ 'reports.form.endDate' | t }}</label>
+              <input type="date" class="form-control" [(ngModel)]="endDate" name="endDate">
+            </div>
+
+            <button class="btn btn-primary w-100" (click)="generate()" [disabled]="generating() || !startDate || !endDate">
+              @if (generating()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              }
+              Generate
+            </button>
+          </div>
+        </div>
+
+        <div class="col-lg-8">
+          <div class="card panel p-4">
+            <h5 class="mb-4"><i class="bi bi-archive me-2"></i>{{ 'reports.savedReports' | t }}</h5>
+
+            @if (loading()) {
+              <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+              </div>
+            } @else if (!reports().length) {
+              <p class="text-secondary text-center py-4 mb-0">{{ 'reports.noReports' | t }}</p>
+            } @else {
+              <div class="report-list">
+                @for (report of reports(); track report.id) {
+                    <button class="report-card" type="button" (click)="selectReport(report.id)">
+                      <div>
+                        <div class="fw-semibold text-capitalize mb-1">{{ report.reportType }} report</div>
+                        <div class="text-secondary small">{{ report.startDate | date:'mediumDate' }} to {{ report.endDate | date:'mediumDate' }}</div>
+                      </div>
+                      <div class="text-end">
+                        <div>{{ report.totalSessions || 0 }} {{ 'reports.sessionsLabel' | t }}</div>
+                        <small class="text-secondary">{{ 'reports.created' | t }} {{ report.generatedAt | date:'short' }}</small>
+                      </div>
+                    </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      @if (selectedReport()) {
+        <div class="card panel p-4 mt-4">
+          <div class="d-flex justify-content-between align-items-center gap-3 mb-3 flex-wrap">
+            <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>{{ 'reports.detailTitle' | t }}</h5>
+            <button class="btn btn-outline-primary btn-sm" (click)="selectedReport.set(null)">{{ 'reports.close' | t }}</button>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-3">
+                <div class="detail-card">
+                <span class="text-secondary small">{{ 'reports.type' | t }}</span>
+                <strong class="text-capitalize">{{ selectedReport()!.reportType }}</strong>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="detail-card">
+                <span class="text-secondary small">{{ 'reports.sessionsLabel' | t }}</span>
+                <strong>{{ selectedReport()!.totalSessions || 0 }}</strong>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="detail-card">
+                <span class="text-secondary small">{{ 'reports.averageMood' | t }}</span>
+                <strong>{{ formatScore(selectedReport()!.averageMoodScore) }}</strong>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="detail-card">
+                <span class="text-secondary small">{{ 'reports.generated' | t }}</span>
+                <strong>{{ selectedReport()!.generatedAt | date:'short' }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-body">
+            <h6 class="mb-3">{{ 'reports.summary' | t }}</h6>
+
+            @if (getParsedSummary(); as summary) {
+              <div class="summary-grid mb-3">
+                @for (item of getSummaryHighlights(); track item.label) {
+                  <div class="summary-item">
+                    <span class="summary-label">{{ item.label }}</span>
+                    <strong class="summary-value text-capitalize">{{ item.value }}</strong>
+                  </div>
+                }
+              </div>
+
+              <p class="summary-note mb-2">{{ getReadableSummary() }}</p>
+              <small class="text-secondary">{{ 'reports.range' | t }}: {{ formatTimeRange(summary.timeRange) }}</small>
+
+              <details class="raw-summary mt-3">
+                <summary>{{ 'reports.showRaw' | t }}</summary>
+                <pre>{{ selectedReport()!.summary }}</pre>
+              </details>
+            } @else {
+              <p class="mb-0">{{ selectedReport()!.summary || 'No summary content was returned for this report.' }}</p>
+            }
+          </div>
+
+          @if (getParsedSummary()) {
+            <div class="row g-3 mt-1">
+              <div class="col-lg-6">
+                <div class="detail-body chart-card h-100">
+                    <h6 class="mb-3">{{ 'reports.intensityTrend' | t }}</h6>
+
+                  @if (hasTrendData()) {
+                    <div class="trend-shell" role="img" aria-label="Intensity trend chart">
+                      <svg viewBox="0 0 100 36" preserveAspectRatio="none" class="trend-chart">
+                        <polyline class="trend-line" [attr.points]="getIntensityTrendPoints()"></polyline>
+                      </svg>
+                    </div>
+                    <small class="text-secondary">{{ 'reports.trendExplanation' | t }}</small>
+                  } @else {
+                    <p class="text-secondary mb-0">Not enough points to render trend yet.</p>
+                  }
+                </div>
+              </div>
+
+              <div class="col-lg-6">
+                  <div class="detail-body chart-card h-100">
+                  <h6 class="mb-3">{{ 'reports.emotionDistribution' | t }}</h6>
+
+                  @if (getEmotionBars().length) {
+                    <div class="emotion-bars">
+                      @for (bar of getEmotionBars(); track bar.emotion) {
+                        <div class="emotion-row">
+                          <div class="emotion-head">
+                            <span class="text-capitalize">{{ bar.emotion }}</span>
+                            <small class="text-secondary">{{ bar.count }}</small>
+                          </div>
+                          <div class="emotion-track">
+                            <span class="emotion-fill" [style.width.%]="bar.width" [style.background]="bar.color"></span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <p class="text-secondary mb-0">{{ 'reports.noEmotionData' | t }}</p>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  

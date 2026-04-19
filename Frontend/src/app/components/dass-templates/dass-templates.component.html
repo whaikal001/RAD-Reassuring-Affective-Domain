@@ -1,0 +1,18 @@
+<div class="dass-templates" *ngIf="templates.length && !completed">
+  <div class="mb-2">
+    <strong class="d-block">{{ templates[index].intro }}</strong>
+    <div class="text-secondary small mt-1">{{ templates[index].prompt }}</div>
+  </div>
+
+  <div class="d-flex gap-2 justify-content-center my-3 flex-wrap">
+    <button class="btn btn-outline-primary btn-sm" 
+            *ngFor="let opt of templates[index].options" 
+            (click)="submitOption(opt.value)"
+            [disabled]="submitting">
+      <div><strong>{{ opt.value }}</strong></div>
+      <small class="text-muted">{{ opt.label }}</small>
+    </button>
+  </div>
+
+  <div class="text-center small text-secondary mt-2">Question {{ index + 1 }} of {{ templates.length }}</div>
+</div>

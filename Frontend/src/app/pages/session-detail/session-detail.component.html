@@ -1,0 +1,100 @@
+
+    <section class="page-shell">
+      <div class="d-flex justify-content-between align-items-center gap-3 mb-4 flex-wrap">
+        <div>
+          <a class="text-secondary text-decoration-none" routerLink="/history">
+            <i class="bi bi-arrow-left me-2"></i>{{ 'session.backToHistory' | t }}
+          </a>
+          <h2 class="text-gradient mt-2 mb-1">{{ 'session.detail' | t }}</h2>
+          <p class="text-secondary mb-0">{{ 'session.transcriptDescription' | t }}</p>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="card p-5 text-center">
+          <div class="spinner-border text-primary mx-auto" role="status"></div>
+        </div>
+      } @else if (error()) {
+        <div class="alert alert-danger">
+          <i class="bi bi-exclamation-circle me-2"></i>{{ error() }}
+        </div>
+      } @else if (details()) {
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <div class="card p-4 h-100">
+              <h5 class="mb-4"><i class="bi bi-info-circle me-2"></i>{{ 'session.summary' | t }}</h5>
+              <div class="summary-grid">
+                <div>
+                  <span class="text-secondary small">{{ 'session.sessionId' | t }}</span>
+                  <strong>{{ details()!.session.sessionId || details()!.session.id }}</strong>
+                </div>
+                <div>
+                  <span class="text-secondary small">{{ 'session.status' | t }}</span>
+                  <strong>{{ details()!.session.isActive ? ('session.active' | t) : ('session.ended' | t) }}</strong>
+                </div>
+                <div>
+                  <span class="text-secondary small">{{ 'session.messages' | t }}</span>
+                  <strong>{{ details()!.messageCount }}</strong>
+                </div>
+                <div>
+                  <span class="text-secondary small">{{ 'session.started' | t }}</span>
+                  <strong>{{ details()!.session.startedAt | date:'medium' }}</strong>
+                </div>
+                <div>
+                  <span class="text-secondary small">{{ 'session.userMessages' | t }}</span>
+                  <strong>{{ details()!.userMessageCount || 0 }}</strong>
+                </div>
+                <div>
+                  <span class="text-secondary small">{{ 'session.botMessages' | t }}</span>
+                  <strong>{{ details()!.botMessageCount || 0 }}</strong>
+                </div>
+              </div>
+
+              @if (details()!.sessionEmotions?.length) {
+                <div class="mt-4">
+                  <span class="text-secondary small d-block mb-2">{{ 'session.detectedEmotions' | t }}</span>
+                  <div class="d-flex flex-wrap gap-2">
+                    @for (emotion of details()!.sessionEmotions; track emotion) {
+                      <span class="badge emotion-badge" [style.background]="getEmotionColor(emotion)">
+                        {{ emotion }}
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="col-lg-8">
+            <div class="card p-4">
+              <h5 class="mb-4"><i class="bi bi-chat-left-text me-2"></i>{{ 'session.transcript' | t }}</h5>
+
+              @if (!details()!.messages.length) {
+                <p class="text-secondary mb-0">{{ 'session.noMessages' | t }}</p>
+              } @else {
+                <div class="transcript">
+                  @for (message of details()!.messages; track message.id) {
+                    <div class="message-bubble" [class.user]="isUserMessage(message.sender)" [class.bot]="!isUserMessage(message.sender)">
+                      <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                        <strong>{{ isUserMessage(message.sender) ? ('session.you' | t) : ('session.botName' | t) }}</strong>
+                        <small class="text-secondary">{{ message.timestamp | date:'short' }}</small>
+                      </div>
+                      <div class="content">{{ message.content }}</div>
+                      @if (message.emotion || message.intensity) {
+                        <small class="text-secondary mt-2 d-block">
+                          {{ message.emotion || ('session.unknownEmotion' | t) }}
+                          @if (message.intensity) {
+                            <span> · {{ 'session.intensity' | t }} {{ message.intensity }}</span>
+                          }
+                        </small>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </section>
+  

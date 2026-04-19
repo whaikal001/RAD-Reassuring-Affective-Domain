@@ -1,0 +1,433 @@
+<div class="chat-wrapper">
+  <ng-template #botFigure let-speaking="speaking" let-tone="tone">
+    <svg
+      class="bot-figure-svg"
+      [class.bot-figure-svg-speaking]="speaking"
+      [attr.data-bot-tone]="tone"
+      viewBox="0 0 72 72"
+      width="62"
+      height="62"
+      aria-hidden="true"
+      focusable="false"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect x="17" y="8" width="38" height="24" rx="11" class="bot-head" [attr.fill]="getBotColor(tone, 'head')" [attr.stroke]="getBotColor(tone, 'border')"></rect>
+      <rect x="24.5" y="13.2" width="7" height="1.8" rx="0.9" class="bot-brow" [attr.fill]="getBotColor(tone, 'line')"></rect>
+      <rect x="40.5" y="13.2" width="7" height="1.8" rx="0.9" class="bot-brow" [attr.fill]="getBotColor(tone, 'line')"></rect>
+      <circle cx="30" cy="19" r="3.1" class="bot-eye" [attr.fill]="getBotColor(tone, 'eye')"></circle>
+      <circle cx="42" cy="19" r="3.1" class="bot-eye" [attr.fill]="getBotColor(tone, 'eye')"></circle>
+      <rect x="33" y="24" width="6" height="3" rx="1.5" class="bot-mouth" [attr.fill]="getBotColor(tone, 'mouth')"></rect>
+      <circle cx="25.8" cy="23.8" r="1.8" class="bot-cheek bot-cheek-left" [attr.fill]="getBotColor(tone, 'cheek')"></circle>
+      <circle cx="46.2" cy="23.8" r="1.8" class="bot-cheek bot-cheek-right" [attr.fill]="getBotColor(tone, 'cheek')"></circle>
+      <rect x="19" y="32" width="34" height="25" rx="10" class="bot-body" [attr.fill]="getBotColor(tone, 'body')" [attr.stroke]="getBotColor(tone, 'border')"></rect>
+      <rect x="11" y="37" width="12" height="4" rx="2" class="bot-arm bot-arm-left" [attr.fill]="getBotColor(tone, 'arm')"></rect>
+      <rect x="49" y="37" width="12" height="4" rx="2" class="bot-arm bot-arm-right" [attr.fill]="getBotColor(tone, 'arm')"></rect>
+      <path
+        class="bot-heart"
+        [attr.fill]="getBotColor(tone, 'heart')"
+        d="M36 48.6L33.2 45.7C31.3 43.8 28.3 44 26.7 46.1C25.1 48.3 25.4 51.5 27.4 53.4L36 61L44.6 53.4C46.6 51.5 46.9 48.3 45.3 46.1C43.7 44 40.7 43.8 38.8 45.7L36 48.6Z"
+      ></path>
+    </svg>
+  </ng-template>
+
+  <div class="mobile-sidebar-backdrop" [class.visible]="mobileSidebarOpen()" (click)="closeMobileSidebar()"></div>
+
+  <aside class="emotion-sidebar" [class.collapsed]="sidebarCollapsed()" [class.mobile-open]="mobileSidebarOpen()">
+    <div class="sidebar-header">
+      <h5 class="mb-0">
+        <i class="bi bi-list me-2"></i>
+        <span *ngIf="!sidebarCollapsed()">{{ 'chat.more' | t }}</span>
+      </h5>
+      <button class="btn btn-sm btn-link" (click)="toggleSidebar()" [title]="sidebarCollapsed() ? ('chat.openSidebar' | t) : ('chat.closeSidebar' | t)">
+        <i class="bi" [class.bi-chevron-left]="!sidebarCollapsed()" [class.bi-chevron-right]="sidebarCollapsed()" aria-hidden="true"></i>
+        <span class="visually-hidden">Toggle sidebar</span>
+      </button>
+    </div>
+
+    @if (!sidebarCollapsed()) {
+      <!-- Sidebar language selector removed; language is managed in Profile -->
+
+      @if (!authService.isAnonymous()) {
+        <div class="quick-links mt-4">
+          <label class="form-label">{{ 'chat.more' | t }}</label>
+          <a class="quick-link-card" routerLink="/history" (click)="closeMobileSidebar()">
+            <div>
+              <strong>{{ 'nav.recentChat' | t }}</strong>
+              <div class="small text-secondary">{{ 'chat.openPastConversations' | t }}</div>
+            </div>
+            <i class="bi bi-clock-history"></i>
+          </a>
+          <a class="quick-link-card" routerLink="/reports" (click)="closeMobileSidebar()">
+            <div>
+              <strong>{{ 'nav.report' | t }}</strong>
+              <div class="small text-secondary">{{ 'chat.viewGeneratedReports' | t }}</div>
+            </div>
+            <i class="bi bi-file-earmark-text"></i>
+          </a>
+          <a class="quick-link-card" routerLink="/profile" (click)="closeMobileSidebar()">
+            <div>
+              <strong>{{ 'nav.profile' | t }}</strong>
+              <div class="small text-secondary">{{ 'chat.manageAccountLanguage' | t }}</div>
+            </div>
+            <i class="bi bi-person-gear"></i>
+          </a>
+        </div>
+      }
+
+        @if (authService.isAnonymous()) {
+          <div class="anonymous-preferences mt-4 p-3">
+            <h6 class="mb-2"><i class="bi bi-gear me-1"></i>{{ 'profile.preferences' | t }}</h6>
+
+            <div class="mb-3">
+              <label class="form-label small mb-1">{{ 'profile.language' | t }}</label>
+              <div class="btn-group w-100">
+                <button class="btn btn-sm" [class.btn-primary]="language() === 'en'" [class.btn-outline-secondary]="language() !== 'en'" (click)="setLanguage('en')">{{ 'common.english' | t }}</button>
+                <button class="btn btn-sm" [class.btn-primary]="language() === 'ms'" [class.btn-outline-secondary]="language() !== 'ms'" (click)="setLanguage('ms')">{{ 'common.malay' | t }}</button>
+              </div>
+            </div>
+
+            <div class="setting-switch mb-3">
+              <div>
+                <strong class="small">{{ 'profile.ttsAuto' | t }}</strong>
+                <div class="text-secondary small">{{ 'profile.ttsAutoDesc' | t }}</div>
+              </div>
+              <input type="checkbox" [checked]="ttsService.isAutoSpeakEnabled()" (change)="onAutoTtsChanged($event)">
+            </div>
+
+            <div class="setting-switch">
+              <div>
+                <strong class="small">{{ 'profile.dataConsent' | t }}</strong>
+                <div class="text-secondary small">{{ 'profile.dataConsentDesc' | t }}</div>
+              </div>
+              <input type="checkbox" [checked]="anonDataConsent()" (change)="setAnonDataConsent($event)">
+            </div>
+          </div>
+        }
+
+    }
+  </aside>
+
+  <!-- Main Chat Area -->
+  <main class="chat-main">
+    <div class="chat-container">
+      <!-- Chat Header -->
+      <div class="chat-header">
+        <div class="d-flex align-items-center">
+          <button class="btn btn-link p-0 mobile-sidebar-toggle" type="button" (click)="toggleMobileSidebar()" [attr.aria-label]="'chat.aria.openSidePanel' | t">
+            <i class="bi bi-list"></i>
+          </button>
+          <div class="avatar me-3 bot-themed" [class.avatar-speaking]="isBotFigureSpeaking()" [attr.data-bot-tone]="getBotTone(chatService.currentEmotion() || chatService.lastResponse()?.emotion)">
+            <img class="brand-logo header-logo" src="/assets/Gemini_Generated_Image_ym28zxym28zxym28-removebg-preview.png" alt="SocializerAI" />
+          </div>
+          <div>
+            <h5 class="mb-0">SocializerAI</h5>
+            <small class="text-secondary">{{ 'chat.subtitle' | t }}</small>
+          </div>
+        </div>
+        <div class="d-flex gap-2 chat-header-actions">
+          @if (chatService.currentEmotion()) {
+            <span class="badge bg-secondary">
+              <i class="bi bi-heart-pulse me-1"></i>
+              {{ chatService.currentEmotion() }}
+            </span>
+          }
+          @if (chatService.lastResponse()?.pathway) {
+            <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">
+              <i class="bi bi-diagram-3 me-1"></i>{{ chatService.lastResponse()?.pathway }}
+            </span>
+          }
+          @if (chatService.lastResponse()?.approach) {
+            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle" [title]="'Core FYP mechanic: empathy transitions to sympathy'"  >
+                  <i class="bi"
+                    [class.bi-heart]="isApproachEmpathy(chatService.lastResponse()?.approach)"
+                    [class.bi-hands-praying]="isApproachSympathy(chatService.lastResponse()?.approach)"
+                    class="me-1"></i>
+              {{ getResponseApproach(chatService.lastResponse()?.approach) }}
+            </span>
+          }
+          <button class="btn btn-outline-primary btn-sm header-action-btn" (click)="newChat()" [attr.title]="'chat.newChat' | t" [attr.aria-label]="'chat.aria.newChat' | t">
+            <i class="bi bi-plus-circle me-1"></i><span class="action-label">{{ 'chat.newChat' | t }}</span>
+          </button>
+          <button class="btn btn-outline-danger btn-sm header-action-btn" (click)="endSession()" [attr.title]="'chat.endSession' | t" [attr.aria-label]="'chat.aria.endSession' | t">
+            <i class="bi bi-x-circle me-1"></i><span class="action-label">{{ 'chat.endSession' | t }}</span>
+          </button>
+        </div>
+      </div>
+
+      @if (!consentGiven()) {
+        <div class="consent-banner alert alert-info d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <strong>{{ 'consent.title' | t }}</strong> {{ 'consent.body' | t }}
+          </div>
+          <div>
+            <button class="btn btn-sm btn-primary" (click)="acceptConsent()">{{ 'consent.button' | t }}</button>
+          </div>
+        </div>
+      }
+
+      @if (getHelpline()) {
+        <div class="helpline-banner alert alert-danger mb-2">
+          <strong>{{ 'helpline.immediateDanger' | t }}</strong> {{ getHelpline() }}
+        </div>
+      }
+
+      <!-- Messages Area -->
+      <div class="chat-messages" #messagesContainer role="log" aria-live="polite" [attr.aria-label]="'chat.aria.conversationMessages' | t">
+        @if (chatService.messages().length === 0 && !screeningCompleted()) {
+          <div class="welcome-message text-center py-5">
+            <div class="welcome-orb mb-4">
+              <img class="brand-logo welcome-logo" src="/assets/Gemini_Generated_Image_ym28zxym28zxym28-removebg-preview.png" alt="SocializerAI" />
+            </div>
+            <h3 class="text-gradient">{{ initialGreeting() }}</h3>
+            <p class="text-secondary mb-4">{{ 'welcome.subtext' | t }}</p>
+            
+            @if (showMemoryCard() && emotionalMemory()) {
+              <div class="memory-card">
+                <div class="memory-header">
+                  <i class="bi bi-brain"></i>
+                  <span>I Remember You</span>
+                </div>
+                <div class="memory-content">
+                  <p class="memory-message">{{ getMemoryMessage() }}</p>
+                  <div class="memory-emotions" *ngIf="emotionalMemory().recentEmotions?.length">
+                    <small class="text-secondary">Recent feelings:</small>
+                    <div class="emotion-tags">
+                      @for (emotion of emotionalMemory().recentEmotions; track emotion) {
+                        <span class="emotion-tag">
+                          {{ getHumanFriendlyEmotion(emotion.emotion, emotion.intensity) }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <div class="welcome-status mb-4">
+              <span class="badge bg-secondary me-2">{{ 'chat.language' | t }}: {{ language() === 'en' ? ( 'common.english' | t ) : ( 'common.malay' | t ) }}</span>
+              @if (!authService.isAnonymous()) {
+                <span class="badge bg-secondary">{{ 'nav.sessionRegistered' | t }}</span>
+              } @else {
+                <span class="badge bg-secondary">{{ 'nav.sessionAnonymous' | t }}</span>
+              }
+            </div>
+            <div class="welcome-features mb-4">
+              <span class="feature-pill"><i class="bi bi-stars"></i>{{ 'feature.emotionAware' | t }}</span>
+              <span class="feature-pill"><i class="bi bi-volume-up"></i>{{ 'feature.voicePlayback' | t }}</span>
+              <span class="feature-pill"><i class="bi bi-shield-check"></i>{{ 'feature.privateConversation' | t }}</span>
+            </div>
+            <div class="quick-start">
+              <ng-container *ngIf="!isScreeningVisible()">
+                <p class="small text-secondary mb-2">{{ 'welcome.trySaying' | t }}</p>
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                  @for (prompt of getSuggestedPrompts(); track prompt) {
+                    <button class="btn btn-outline-primary btn-sm" (click)="sendQuickMessage(prompt)">
+                      "{{ prompt }}"
+                    </button>
+                  }
+                </div>
+              </ng-container>
+              <div class="mt-3" *ngIf="isScreeningVisible()">
+                <app-dass-templates></app-dass-templates>
+              </div>
+            </div>
+          </div>
+        }
+
+        @for (message of chatService.messages(); track message.id; let idx = $index) {
+          <div class="message-row" [class.message-row-user]="message.isUser" [style.--msg-index]="idx">
+            <div
+                class="message-avatar bot-themed"
+              [class.message-avatar-user]="message.isUser"
+              [class.message-avatar-bot]="!message.isUser"
+              [class.message-avatar-speaking]="!message.isUser && isBotFigureSpeaking() && isLatestBotMessage(message.id)"
+                [attr.data-bot-tone]="!message.isUser ? getBotTone(chatService.currentEmotion() || message.emotion) : null"
+            >
+              @if (!message.isUser) {
+                <ng-container *ngTemplateOutlet="botFigure; context: { speaking: isBotFigureSpeaking() && isLatestBotMessage(message.id), tone: getBotTone(chatService.currentEmotion() || message.emotion) }"></ng-container>
+              }
+            </div>
+
+              <div class="message" [class.message-user]="message.isUser" [class.message-bot]="!message.isUser" [class.bot-themed]="!message.isUser" [attr.data-bot-tone]="!message.isUser ? getBotTone(message.emotion) : null">
+              @if (!message.isUser) {
+                <div class="message-header mb-2">
+                  <small class="text-secondary">
+                    <i class="bi bi-robot me-1"></i>SocializerAI
+                  </small>
+                  <button 
+                    class="btn btn-link btn-sm p-0 ms-2" 
+                    (click)="speakMessage(message.content, message.emotion)"
+                    [attr.title]="'chat.listen' | t"
+                    [attr.aria-label]="'chat.aria.readAloud' | t"
+                  >
+                    <i class="bi bi-volume-up"></i>
+                  </button>
+                </div>
+              }
+              <div class="message-content">{{ message.content }}</div>
+              @if (!message.isUser && message.tips?.length && (message.intensity || 0) >= 7) {
+                <div class="message-tools mt-2">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-success"
+                    (click)="toggleTips(message.id)"
+                    title="Sympathy Phase: Practical guidance & strategies"
+                  >
+                    <i class="bi" [class.bi-lightbulb]="!isTipsExpanded(message.id)" [class.bi-lightbulb-fill]="isTipsExpanded(message.id)"></i>
+                    <span class="badge bg-success ms-1">Sympathy</span>
+                    {{ isTipsExpanded(message.id) ? ('tips.hide' | t) : ('tips.helpful' | t) }}
+                  </button>
+                </div>
+
+                @if (isTipsExpanded(message.id)) {
+                  <div class="tips-panel mt-2">
+                    <div class="tips-header">
+                      <i class="bi bi-hands-praying me-1"></i>
+                      <strong>Practical Guidance (Sympathy Phase)</strong>
+                      <small class="text-secondary ms-2">Follow these tips when you're ready</small>
+                    </div>
+                    <div class="tips-grid">
+                      @for (tip of message.tips; track tip) {
+                        <div class="tip-card">
+                          <i class="bi bi-check2-circle"></i>
+                          <span>{{ tip }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              }
+              <small class="message-time text-secondary">
+                {{ message.timestamp | date:'shortTime' }}
+              </small>
+              @if (!message.isUser) {
+                <div class="message-actions mt-2">
+                  <button class="btn btn-sm btn-outline-secondary" type="button" (click)="copyMessage(message.content)" [attr.aria-label]="'action.copyTitle' | t">
+                    <i class="bi bi-clipboard me-1"></i>{{ 'action.copy' | t }}
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary" type="button" (click)="regenerateLastReply()" [attr.aria-label]="'action.regenerateTitle' | t">
+                    <i class="bi bi-arrow-repeat me-1"></i>{{ 'action.regenerate' | t }}
+                  </button>
+                </div>
+              }
+              @if (!message.isUser && (chatService.currentEmotion() || message.intensity)) {
+                <div class="message-meta-container">
+                  <small class="message-meta text-secondary">
+                    {{ getHumanFriendlyEmotion(chatService.currentEmotion() || message.emotion, message.intensity) }}
+                  </small>
+                  <small class="message-approach" [title]="'FYP Core: ' + getResponseApproach(chatService.lastResponse()?.approach)">
+                    {{ getResponseApproach(chatService.lastResponse()?.approach) }}
+                  </small>
+                  <small class="message-cycle" *ngIf="chatService.lastResponse()?.cycleNumber">
+                    {{ getCycleStatus(chatService.lastResponse()?.cycleNumber, chatService.lastResponse()?.shouldContinueLoop, message.intensity, false) }}
+                  </small>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (chatService.isLoading()) {
+          <div class="message-row">
+            <div class="message-avatar message-avatar-bot message-avatar-speaking">
+              <i class="bi bi-robot"></i>
+            </div>
+            <div class="typing-shell">
+              <div class="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <small class="text-secondary">{{ 'chat.typing' | t }}</small>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Input Area -->
+      <div class="chat-input">
+        @if (latestSafetyLevel() === 'high' || latestSafetyLevel() === 'critical') {
+          <div class="chat-safety mb-2" role="status" aria-live="polite">
+            <i class="bi bi-shield-exclamation me-2"></i>
+            {{ 'safety.active' | t }}
+          </div>
+        }
+
+        @if (activeGoals().length > 0) {
+          <div class="goal-strip mb-2">
+            <span class="goal-label">Goal</span>
+            <span class="goal-text">{{ activeGoals()[activeGoals().length - 1] }}</span>
+          </div>
+        }
+
+        <div class="quick-actions mb-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="triggerQuickAction('breathe')">
+            <i class="bi bi-wind me-1"></i>{{ 'quick.breathe' | t }}
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="triggerQuickAction('ground')">
+            <i class="bi bi-bullseye me-1"></i>{{ 'quick.ground' | t }}
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="triggerQuickAction('journal')">
+            <i class="bi bi-journal-text me-1"></i>{{ 'quick.journal' | t }}
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="triggerQuickAction('goal')">
+            <i class="bi bi-flag me-1"></i>{{ 'quick.goal' | t }}
+          </button>
+        </div>
+
+        <!-- Inline conversational screening (appears as chat-like controls above input) -->
+        <div *ngIf="screeningQuestions().length > 0 && !screeningCompleted()" class="inline-screening mb-2 p-3 border rounded bg-light">
+          <div class="screening-question mb-2"><strong>SocializerAI:</strong> {{ getCurrentQuestion() }}</div>
+          <div class="d-flex gap-2 justify-content-start mb-2">
+            <button class="btn btn-outline-secondary btn-sm" *ngFor="let v of [0,1,2,3]" (click)="answerScreening(v)" [disabled]="screeningSubmitting()">
+              <div><strong>{{ v }}</strong></div>
+              <small class="text-muted">{{ v === 0 ? 'Never' : v === 1 ? 'Sometimes' : v === 2 ? 'Often' : 'Almost always' }}</small>
+            </button>
+          </div>
+          <div class="text-center small text-secondary">Question {{ screeningIndex() + 1 }} of {{ screeningQuestions().length }}</div>
+        </div>
+
+        @if (sendError()) {
+          <div class="chat-error mb-2" role="alert">
+            <span><i class="bi bi-exclamation-octagon me-2"></i>{{ sendError() }}</span>
+            <button class="btn btn-sm btn-outline-danger" type="button" (click)="retryLastMessage()" [attr.aria-label]="'chat.retry' | t">
+              {{ 'chat.retry' | t }}
+            </button>
+          </div>
+        }
+
+        <form (ngSubmit)="sendMessage()" class="d-flex gap-2">
+          <textarea
+            #messageTextarea
+            class="form-control" 
+            [(ngModel)]="messageInput"
+            name="message"
+            [placeholder]="'chat.placeholder' | t"
+            [disabled]="chatService.isLoading()"
+            autocomplete="off"
+            rows="1"
+            (keydown)="onMessageKeydown($event)"
+            (input)="onMessageInput()"
+            [attr.aria-label]="'chat.aria.typeMessage' | t"
+          ></textarea>
+          <button 
+            type="button"
+            class="btn btn-outline-secondary"
+            (click)="toggleAI()"
+            [title]="useAI() ? 'AI Enhanced (click to disable)' : 'Basic Mode (click to enable AI)'"
+            [attr.aria-label]="useAI() ? 'Disable AI enhanced mode' : 'Enable AI enhanced mode'"
+          >
+            <i class="bi" [class.bi-stars]="useAI()" [class.bi-lightning]="!useAI()"></i>
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="!messageInput.trim() || chatService.isLoading()"
+          >
+            <i class="bi bi-send"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>

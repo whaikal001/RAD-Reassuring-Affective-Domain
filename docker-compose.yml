@@ -1,0 +1,84 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: socializerai-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: socializerai
+      POSTGRES_USER: ${DB_USER:-socializerai}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-socializerai123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./setup.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-socializerai} -d socializerai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - socializerai-net
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: socializerai-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      # Database (Supabase)
+      # Database - use local postgres for demo/dev, or Supabase for production
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/socializerai}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-socializerai}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-socializerai123}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      
+      # JWT
+      APP_JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production-min-32-chars}
+      APP_JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      
+      # HuggingFace (optional)
+      HF_API_TOKEN: ${HF_API_TOKEN:-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}
+      HF_CHAT_MODEL: ${HF_CHAT_MODEL:-openai/gpt-oss-120b:fastest}
+      HF_CHAT_API_MODE: ${HF_CHAT_API_MODE:-chat}
+      HF_EMOTION_MODEL: ${HF_EMOTION_MODEL:-j-hartmann/emotion-english-distilroberta-base}
+      HF_SCREENING_MODEL: ${HF_SCREENING_MODEL:-facebook/bart-large-mnli}
+      HF_SAFETY_MODEL: ${HF_SAFETY_MODEL:-unitary/toxic-bert}
+      HF_TTS_MODEL: ${HF_TTS_MODEL:-facebook/fastspeech2-en-ljspeech}
+      
+      # Server
+      SERVER_PORT: 8080
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-default}
+      # Default emergency helpline (set to Malaysia emergency number)
+      DEFAULT_HELPLINE: ${DEFAULT_HELPLINE:-If you're in immediate danger, call 999 (Malaysia emergency)}
+    networks:
+      - socializerai-net
+
+  # Angular Frontend (Nginx)
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: socializerai-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    networks:
+      - socializerai-net
+
+volumes:
+  postgres_data:
+
+networks:
+  socializerai-net:
+    driver: bridge

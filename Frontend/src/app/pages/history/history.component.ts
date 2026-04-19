@@ -1,0 +1,739 @@
+import { Component, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { catchError, forkJoin, of } from 'rxjs';
+import { ChatService } from '../../services/chat.service';
+import { EMOTIONS, EmotionalJourneyPoint, PaginatedSessions } from '../../models';
+import { TranslatePipe } from '../../pipes/t.pipe';
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
+
+@Component({
+  selector: 'app-history',
+  standalone: true,
+  imports: [CommonModule, RouterModule, TranslatePipe],
+  templateUrl: './history.component.html',
+  styleUrl: './history.component.scss'
+})
+export class HistoryComponent implements OnInit {
+  @ViewChild('emotionChart') emotionChart?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('intensityChart') intensityChart?: ElementRef<HTMLCanvasElement>;
+  
+  loading = signal(true);
+  error = signal<string | null>(null);
+  sessionsData = signal<PaginatedSessions | null>(null);
+  journey = signal<EmotionalJourneyPoint[]>([]);
+  currentPage = signal(0);
+  readonly pageSize = 8;
+  sessionThemes = signal<Map<string, string>>(new Map());
+  
+  // Chart stats
+  emotionStats = signal<any>(null);
+  trendIndicator = signal<string>('stable');
+  averageIntensity = signal<number>(0);
+  maxIntensity = signal<number>(0);
+  minIntensity = signal<number>(10);
+  intensityZoneStats = signal<any>(null);
+  chartInstance: Chart | null = null;
+  intensityChartInstance: Chart | null = null;
+  
+  // Make Object available to template
+  Object = Object;
+
+  constructor(private chatService: ChatService) {}
+
+  ngOnInit(): void {
+    this.loadData();
+  }
+
+  loadData(): void {
+    this.loading.set(true);
+    this.error.set(null);
+
+    forkJoin({
+      sessions: this.chatService.getSessions(this.currentPage(), this.pageSize),
+      journey: this.chatService.getEmotionalJourney().pipe(
+        catchError(error => {
+          console.warn('Unable to load emotional journey data', error);
+          return of([] as EmotionalJourneyPoint[]);
+        })
+      )
+    }).subscribe({
+      next: ({ sessions, journey }) => {
+        this.sessionsData.set(sessions);
+        this.journey.set(journey);
+        
+        // Load themes for each session
+        this.loadSessionThemes(sessions.sessions);
+        
+        // Build charts after journey is loaded
+        setTimeout(() => {
+          this.buildEmotionChart();
+          this.buildIntensityTrendChart();
+        }, 100);
+        
+        this.loading.set(false);
+      },
+      error: (error) => {
+        console.error('Failed to load history', error);
+        this.error.set('Unable to load session history right now.');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  /**
+   * Load chat themes for all sessions in parallel
+   */
+  private loadSessionThemes(sessions: any[]): void {
+    const themes = new Map<string, string>();
+    const requests = sessions.map(session =>
+      this.chatService.getSessionDetails(session.id).pipe(
+        catchError(() => of(null)) // Silently fail if theme can't be loaded
+      )
+    );
+
+    forkJoin(requests).subscribe({
+      next: (results) => {
+        results.forEach((details, index) => {
+          if (details && sessions[index]) {
+            const theme = this.extractChatTheme(details);
+            themes.set(sessions[index].id, theme);
+          }
+        });
+        this.sessionThemes.set(themes);
+      },
+      error: () => {} // Silently fail
+    });
+  }
+
+  goToPage(step: number): void {
+    const nextPage = this.currentPage() + step;
+
+    if (nextPage < 0) {
+      return;
+    }
+
+    this.currentPage.set(nextPage);
+    this.loadData();
+  }
+
+  canGoNext(): boolean {
+    const sessions = this.sessionsData();
+    return !!sessions && sessions.currentPage + 1 < sessions.totalPages;
+  }
+
+  getEmotionIcon(emotion: string): string {
+    const found = EMOTIONS.find(item => item.id.toLowerCase() === emotion.toLowerCase());
+    return found?.icon || 'bi-emoji-neutral';
+  }
+
+  journeyTail(): EmotionalJourneyPoint[] {
+    return this.journey().slice(-6);
+  }
+
+  /**
+   * Build Chart.js chart with emotion data
+   */
+  buildEmotionChart(): void {
+    if (!this.emotionChart?.nativeElement) {
+      return;
+    }
+
+    const journey = this.journey();
+    if (journey.length === 0) {
+      return;
+    }
+
+    // Destroy existing chart
+    if (this.chartInstance) {
+      this.chartInstance.destroy();
+    }
+
+    // Prepare data
+    const labels = journey.map(p => new Date(p.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }));
+    const intensities = journey.map(p => p.intensity);
+    const emotions = journey.map(p => p.emotion);
+    
+    // Color code emotions
+    const colors = emotions.map(emotion => this.getEmotionColor(emotion));
+
+    // Calculate stats
+    this.calculateStats(journey);
+
+    this.chartInstance = new Chart(this.emotionChart.nativeElement, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Emotional Intensity',
+            data: intensities,
+            borderColor: '#35d6c1',
+            backgroundColor: 'rgba(53, 214, 193, 0.1)',
+            fill: true,
+            tension: 0.4, // Smooth curves
+            pointRadius: 6,
+            pointBackgroundColor: colors,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointHoverRadius: 8,
+            borderWidth: 2.5,
+            segment: {
+              borderColor: (ctx: any) => {
+                const color = colors[ctx.p0DataIndex];
+                return color;
+              }
+            }
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: {
+            display: true,
+            labels: {
+              color: 'rgba(165, 178, 224, 0.7)',
+              font: { size: 12 }
+            }
+          },
+          tooltip: {
+            enabled: true,
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            titleColor: '#35d6c1',
+            bodyColor: 'rgba(255, 255, 255, 0.8)',
+            borderColor: 'rgba(53, 214, 193, 0.3)',
+            borderWidth: 1,
+            padding: 12,
+            displayColors: true,
+            callbacks: {
+              title: (context: any) => context[0].label,
+              label: (context: any) => {
+                const emotion = emotions[context.dataIndex];
+                const intensity = context.parsed.y;
+                return `${this.getEmotionEmoji(emotion)} ${emotion} (Intensity: ${intensity}/10)`;
+              },
+              afterLabel: (context: any) => {
+                const isLastPoint = context.dataIndex === intensities.length - 1;
+                const isPrevWorst = context.dataIndex > 0 && intensities[context.dataIndex] < intensities[context.dataIndex - 1];
+                
+                if (isPrevWorst) {
+                  return '↗️ Improving!';
+                }
+                return '';
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 10,
+            ticks: { color: 'rgba(165, 178, 224, 0.5)', stepSize: 2 },
+            grid: { color: 'rgba(165, 178, 224, 0.1)', drawTicks: false },
+            title: { display: true, text: 'Intensity', color: 'rgba(165, 178, 224, 0.7)' }
+          },
+          x: {
+            ticks: { color: 'rgba(165, 178, 224, 0.5)' },
+            grid: { color: 'rgba(165, 178, 224, 0.08)' }
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Calculate emotional statistics
+   */
+  private calculateStats(journey: EmotionalJourneyPoint[]): void {
+    if (journey.length === 0) return;
+
+    // Average intensity
+    const avgIntensity = journey.reduce((sum, p) => sum + p.intensity, 0) / journey.length;
+    this.averageIntensity.set(Math.round(avgIntensity * 10) / 10);
+
+    // Min/Max intensity
+    const intensities = journey.map(p => p.intensity);
+    this.maxIntensity.set(Math.max(...intensities));
+    this.minIntensity.set(Math.min(...intensities));
+
+    // Emotion distribution
+    const emotionMap: Record<string, number> = {};
+    journey.forEach(p => {
+      emotionMap[p.emotion] = (emotionMap[p.emotion] || 0) + 1;
+    });
+    this.emotionStats.set(emotionMap);
+
+    // Intensity zone statistics
+    this.calculateIntensityZones(intensities);
+
+    // Trend indicator
+    const recentAvg = journey.slice(-3).reduce((sum, p) => sum + p.intensity, 0) / Math.min(3, journey.length);
+    const earlierAvg = journey.slice(0, 3).reduce((sum, p) => sum + p.intensity, 0) / Math.min(3, journey.length);
+    
+    if (recentAvg < earlierAvg - 1) {
+      this.trendIndicator.set('improving');
+    } else if (recentAvg > earlierAvg + 1) {
+      this.trendIndicator.set('declining');
+    } else {
+      this.trendIndicator.set('stable');
+    }
+  }
+
+  /**
+   * Calculate intensity zone distribution
+   */
+  private calculateIntensityZones(intensities: number[]): void {
+    const zones = {
+      highStress: intensities.filter(i => i >= 7).length,
+      moderate: intensities.filter(i => i >= 4 && i < 7).length,
+      low: intensities.filter(i => i < 4).length
+    };
+    this.intensityZoneStats.set(zones);
+  }
+
+  /**
+   * Calculate moving average for trend
+   */
+  private calculateMovingAverage(data: number[], window: number = 3): number[] {
+    const result = [];
+    for (let i = 0; i < data.length; i++) {
+      const start = Math.max(0, i - Math.floor(window / 2));
+      const end = Math.min(data.length, i + Math.ceil(window / 2));
+      const avg = data.slice(start, end).reduce((a, b) => a + b, 0) / (end - start);
+      result.push(Math.round(avg * 100) / 100);
+    }
+    return result;
+  }
+
+  /**
+   * Build intensity trend chart
+   */
+  private buildIntensityTrendChart(): void {
+    if (!this.intensityChart || this.journey().length === 0) return;
+
+    const journey = this.journey();
+    const intensities = journey.map(p => p.intensity);
+    const dates = journey.map(p => new Date(p.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+    const movingAvg = this.calculateMovingAverage(intensities, 3);
+
+    // Zone background colors
+    const zoneColors = intensities.map(intensity => {
+      if (intensity >= 7) return 'rgba(239, 93, 108, 0.15)'; // High stress - red
+      if (intensity >= 4) return 'rgba(251, 113, 133, 0.08)'; // Moderate - orange
+      return 'rgba(119, 169, 255, 0.08)'; // Low - blue
+    });
+
+    this.intensityChartInstance = new Chart(this.intensityChart.nativeElement, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [
+          {
+            label: 'Actual Intensity',
+            data: intensities,
+            borderColor: '#35d6c1',
+            backgroundColor: 'rgba(53, 214, 193, 0.08)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5,
+            pointBackgroundColor: (ctx: any) => {
+              const intensity = intensities[ctx.dataIndex];
+              if (intensity >= 7) return '#ef5d6c';
+              if (intensity >= 4) return '#fb7185';
+              return '#77a9ff';
+            },
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointHoverRadius: 7,
+            borderWidth: 2,
+            segment: {
+              borderDash: (ctx: any) => ctx.p0DataIndex % 2 === 0 ? [0] : [0]
+            }
+          },
+          {
+            label: 'Trend (Moving Avg)',
+            data: movingAvg,
+            borderColor: '#fbbf24',
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0.4,
+            pointRadius: 0,
+            borderWidth: 2.5,
+            borderDash: [5, 5]
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          filler: { propagate: true },
+          legend: {
+            display: true,
+            labels: { color: 'rgba(165, 178, 224, 0.7)', font: { size: 11 } }
+          },
+          tooltip: {
+            enabled: true,
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            titleColor: '#35d6c1',
+            bodyColor: 'rgba(255, 255, 255, 0.8)',
+            borderColor: 'rgba(53, 214, 193, 0.3)',
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              title: (context: any) => context[0].label,
+              label: (context: any) => {
+                const intensity = context.parsed.y;
+                const label = context.dataset.label || '';
+                if (label === 'Trend (Moving Avg)') return `${label}: ${intensity.toFixed(1)}`;
+                
+                let zone = 'Low Stress';
+                if (intensity >= 7) zone = '🔴 High Stress';
+                else if (intensity >= 4) zone = '🟡 Moderate';
+                else zone = '🟢 Low Stress';
+                
+                return `${label}: ${intensity}/10 • ${zone}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 10,
+            ticks: { color: 'rgba(165, 178, 224, 0.5)', stepSize: 2 },
+            grid: {
+              color: 'rgba(165, 178, 224, 0.1)',
+              drawTicks: false,
+              lineWidth: (ctx: any) => ctx.tick.value === 7 || ctx.tick.value === 4 ? 1.5 : 1
+            },
+            title: { display: true, text: 'Intensity Level', color: 'rgba(165, 178, 224, 0.7)' }
+          },
+          x: {
+            ticks: { color: 'rgba(165, 178, 224, 0.5)' },
+            grid: { color: 'rgba(165, 178, 224, 0.05)' }
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Temporary method to access intensity percentages in template
+   */
+
+  /**
+   * Get most common emotion from stats
+   */
+  getMostCommonEmotion(): string {
+    const stats = this.emotionStats();
+    if (!stats || Object.keys(stats).length === 0) return '';
+    
+    const maxEmotion = Object.keys(stats).reduce((a, b) => 
+      stats[a] > stats[b] ? a : b
+    );
+    return maxEmotion;
+  }
+
+  /**
+   * Get emotion entries for template
+   */
+  getEmotionEntries(): Array<[string, number]> {
+    const stats = this.emotionStats();
+    if (!stats) return [];
+    return Object.entries(stats);
+  }
+
+  /**
+   * Get emotion color for visualization
+   */
+  private getEmotionColor(emotion: string): string {
+    const normalized = (emotion || '').toLowerCase();
+
+    const colorMap: Record<string, string> = {
+      stress: '#ef5d6c',
+      stressed: '#ef5d6c',
+      anxious: '#fb7185',
+      anxiety: '#fb7185',
+      worried: '#fb7185',
+      overwhelmed: '#ff8a9d',
+      sad: '#7d8bff',
+      sadness: '#7d8bff',
+      down: '#7d8bff',
+      lonely: '#9ea8ff',
+      isolated: '#a9b2ff',
+      happy: '#25d7d7',
+      happiness: '#25d7d7',
+      excited: '#18c78f',
+      joy: '#18c78f',
+      joyful: '#18c78f',
+      content: '#7ee7d5',
+      calm: '#77a9ff',
+      relaxed: '#77a9ff',
+      peaceful: '#a7c4ff',
+      angry: '#ff6b6b',
+      frustrated: '#ff8a9d',
+      irritable: '#ffb3ba',
+      neutral: '#8f9bff',
+      hopeless: '#ff0000',
+      panic: '#ff0000',
+      afraid: '#ff6b9d'
+    };
+
+    // Check for exact match
+    if (colorMap[normalized]) {
+      return colorMap[normalized];
+    }
+
+    // Partial match
+    for (const [emotion, color] of Object.entries(colorMap)) {
+      if (normalized.includes(emotion)) {
+        return color;
+      }
+    }
+
+    return '#8f9bff'; // Default
+  }
+
+  /**
+   * Get emotion emoji
+   */
+  getEmotionEmoji(emotion: string): string {
+    const normalized = (emotion || '').toLowerCase();
+    
+    if (normalized.includes('stress') || normalized.includes('anxious') || normalized.includes('worried')) return '😰';
+    if (normalized.includes('sad') || normalized.includes('down') || normalized.includes('lonely')) return '😔';
+    if (normalized.includes('happy') || normalized.includes('joy') || normalized.includes('excited')) return '😊';
+    if (normalized.includes('calm') || normalized.includes('peaceful') || normalized.includes('relaxed')) return '😌';
+    if (normalized.includes('angry') || normalized.includes('frustrated')) return '😠';
+    if (normalized.includes('afraid') || normalized.includes('panic') || normalized.includes('hopeless')) return '🆘';
+    
+    return '😐';
+  }
+
+  /**
+   * Public method for template to get emotion color
+   */
+  getEmotionColorForDist(emotion: string): string {
+    return this.getEmotionColor(emotion);
+  }
+
+  /**
+   * Get intensity zone label for UI
+   */
+  getIntensityZoneLabel(intensity: number): string {
+    if (intensity >= 7) return 'High Stress';
+    if (intensity >= 4) return 'Moderate';
+    return 'Low Stress';
+  }
+
+  /**
+   * Get intensity zone emoji
+   */
+  getIntensityZoneEmoji(intensity: number): string {
+    if (intensity >= 7) return '🔴';
+    if (intensity >= 4) return '🟡';
+    return '🟢';
+  }
+
+  /**
+   * Get intensity zone statistics for report
+   */
+  getIntensityZonePercentages(): any {
+    const stats = this.intensityZoneStats();
+    if (!stats) return null;
+    const total = stats.highStress + stats.moderate + stats.low;
+    return {
+      highStress: Math.round((stats.highStress / total) * 100),
+      moderate: Math.round((stats.moderate / total) * 100),
+      low: Math.round((stats.low / total) * 100),
+      counts: stats
+    };
+  }
+
+  /**
+   * Generate emotional wellbeing report
+   */
+  generateReport(): string {
+    const journey = this.journey();
+    if (journey.length === 0) return 'No data available';
+
+    const zonePercentages = this.getIntensityZonePercentages();
+    const mostCommon = this.getMostCommonEmotion();
+    const trend = this.trendIndicator();
+    const startDate = new Date(journey[0].timestamp).toLocaleDateString();
+    const endDate = new Date(journey[journey.length - 1].timestamp).toLocaleDateString();
+
+    let report = `EMOTIONAL WELLBEING REPORT\n`;
+    report += `${'='.repeat(50)}\n\n`;
+    
+    report += `📊 PERIOD: ${startDate} to ${endDate}\n`;
+    report += `📈 TOTAL DATA POINTS: ${journey.length}\n\n`;
+
+    report += `INTENSITY STATISTICS\n`;
+    report += `${'-'.repeat(50)}\n`;
+    report += `Average Intensity: ${this.averageIntensity()}/10\n`;
+    report += `Peak Intensity: ${this.maxIntensity()}/10\n`;
+    report += `Lowest Intensity: ${this.minIntensity()}/10\n`;
+    report += `Intensity Range: ${this.maxIntensity() - this.minIntensity()} points\n\n`;
+
+    report += `INTENSITY DISTRIBUTION\n`;
+    report += `🔴 High Stress (7-10): ${zonePercentages.counts.highStress} instances (${zonePercentages.highStress}%)\n`;
+    report += `🟡 Moderate (4-6): ${zonePercentages.counts.moderate} instances (${zonePercentages.moderate}%)\n`;
+    report += `🟢 Low Stress (0-3): ${zonePercentages.counts.low} instances (${zonePercentages.low}%)\n\n`;
+
+    report += `EMOTIONAL PATTERNS\n`;
+    report += `${'-'.repeat(50)}\n`;
+    report += `Most Common Emotion: ${mostCommon}\n`;
+    report += `Trend: ${trend === 'improving' ? '↗️ Improving' : trend === 'declining' ? '↘️ Declining' : '➡️ Stable'}\n\n`;
+
+    report += `RECOMMENDATIONS\n`;
+    report += `${'-'.repeat(50)}\n`;
+    if (zonePercentages.highStress > 40) {
+      report += `• Consider stress management techniques\n`;
+      report += `• Schedule more relaxation time\n`;
+    }
+    if (trend === 'declining') {
+      report += `• Intensity is increasing - be mindful of stressors\n`;
+      report += `• Consider seeking support if needed\n`;
+    }
+    if (trend === 'improving') {
+      report += `• Great progress! Continue current strategies\n`;
+      report += `• Keep maintaining these positive patterns\n`;
+    }
+    report += `• Use the emotional insights to guide your day\n`;
+
+    return report;
+  }
+
+  /**
+   * Download report as text file
+   */
+  downloadReport(): void {
+    const report = this.generateReport();
+    const element = document.createElement('a');
+    const file = new Blob([report], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = `emotional-report-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  }
+
+  /**
+   * Generate a meaningful session title based on chat content
+   * Example: "Work Stress" instead of "Apr 14, 02:22 PM"
+   */
+  getSessionTitle(session: any): string {
+    const theme = this.sessionThemes()?.get(session.id);
+    if (theme) {
+      return theme;
+    }
+
+    // Fallback to date if theme not yet loaded
+    if (session.startedAt) {
+      const date = new Date(session.startedAt);
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    return 'Chat Session';
+  }
+
+  /**
+   * Extract main theme/topic from session messages
+   * Example: "I can't sleep" → "Sleep Issues", "Work is overwhelming" → "Work Stress"
+   */
+  private extractChatTheme(sessionDetails: any): string {
+    if (!sessionDetails?.messages || sessionDetails.messages.length === 0) {
+      return '💬 Chat Session';
+    }
+
+    // Get first user message (most revealing)
+    const firstUserMsg = sessionDetails.messages.find((m: any) => m.sender?.toLowerCase() === 'user');
+    if (!firstUserMsg?.content) {
+      return '💬 Chat Session';
+    }
+
+    const text = firstUserMsg.content.toLowerCase();
+    const theme = this.classifyTheme(text);
+    return theme;
+  }
+
+  /**
+   * Classify chat theme from text content
+   * Examples: "Work Stress", "Sleep Issues", "Relationship Problems", etc.
+   */
+  private classifyTheme(text: string): string {
+    // Work/Career related
+    if (/(work|job|career|boss|deadline|project|meeting|office|stressed|pressure|workload)/.test(text)) {
+      return '💼 Work & Career';
+    }
+
+    // Sleep/Rest
+    if (/(sleep|insomnia|tired|exhausted|can't sleep|awake|night|rest|fatigue)/.test(text)) {
+      return '😴 Sleep & Rest';
+    }
+
+    // Relationships
+    if (/(relationship|boyfriend|girlfriend|partner|wife|husband|family|friend|breakup|arguing)/.test(text)) {
+      return '💑 Relationships';
+    }
+
+    // School/Education
+    if (/(school|exam|test|homework|study|grade|college|university|assignment)/.test(text)) {
+      return '📚 School & Study';
+    }
+
+    // Anxiety/Panic
+    if (/(anxiety|panic|attack|nervous|worried|anxious|fear|afraid)/.test(text)) {
+      return '😰 Anxiety & Worry';
+    }
+
+    // Depression/Sadness
+    if (/(depressed|depression|sad|down|blue|lonely|hopeless|suicide)/.test(text)) {
+      return '😔 Mental Health';
+    }
+
+    // Health/Medical
+    if (/(health|sick|illness|pain|body|doctor|medical|hospital|symptom)/.test(text)) {
+      return '🏥 Health & Wellness';
+    }
+
+    // Money/Financial
+    if (/(money|financial|debt|bill|expense|afford|cost|broke|income)/.test(text)) {
+      return '💰 Financial';
+    }
+
+    // Goals/Motivation
+    if (/(goal|motivation|improve|achieve|success|dream|aspiration|future)/.test(text)) {
+      return '🎯 Goals & Growth';
+    }
+
+    // Social/Loneliness
+    if (/(lonely|alone|isolation|isolated|social|friend|community)/.test(text)) {
+      return '👥 Social Connection';
+    }
+
+    // Happiness/Positive
+    if (/(happy|great|wonderful|excited|grateful|love|amazing|good)/.test(text)) {
+      return '😊 Positive Vibes';
+    }
+
+    // General emotional
+    if (/(feeling|emotion|mood|feel|how are you)/.test(text)) {
+      return '💭 Emotional Check-in';
+    }
+
+    // Default
+    return '💬 Chat Session';
+  }
+}

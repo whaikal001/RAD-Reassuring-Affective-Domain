@@ -1,0 +1,19 @@
+# Ignore unnecessary files for Docker build
+.git
+.gitignore
+.gradle
+.mvn/wrapper
+target/
+*.log
+.DS_Store
+.idea
+*.iml
+.vscode
+node_modules
+dist
+*.jar.original
+socializer-frontend/node_modules
+socializer-frontend/dist
+README.md
+HELP.md
+*.md

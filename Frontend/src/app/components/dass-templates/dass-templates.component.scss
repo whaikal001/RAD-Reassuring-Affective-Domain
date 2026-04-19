@@ -1,0 +1,69 @@
+.dass-templates {
+  background: transparent;
+  border-radius: 8px;
+  padding: 0;
+}
+
+.dass-templates .mb-2 {
+  color: #fff;
+  text-align: center;
+}
+
+.dass-templates strong {
+  color: #fff;
+  font-size: 1.1rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.dass-templates .text-secondary {
+  color: #ccc !important;
+}
+
+.dass-templates .input-group {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.dass-templates .form-control {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.dass-templates .form-control::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.dass-templates .form-control:focus {
+  background: transparent;
+  border: none;
+  color: #fff;
+  box-shadow: none;
+  outline: none;
+}
+
+.dass-templates .btn-primary {
+  background: #7c3aed;
+  border: none;
+  color: #fff;
+  font-weight: 500;
+}
+
+.dass-templates .btn-primary:hover:not(:disabled) {
+  background: #6d28d9;
+}
+
+.dass-templates .btn-primary:disabled {
+  background: #5b21b6;
+  opacity: 0.6;
+}
+
+.dass-templates .form-select { 
+  min-width: 160px; 
+  background: transparent;
+  color: #fff;
+}

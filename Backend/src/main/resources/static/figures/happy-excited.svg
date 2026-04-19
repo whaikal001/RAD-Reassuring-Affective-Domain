@@ -1,0 +1,10 @@
+<!-- Happy/Excited -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <circle cx="100" cy="100" r="80" fill="#FFF9C4" stroke="#FBC02D" stroke-width="3"/>
+  <circle cx="75" cy="85" r="10" fill="#F57F17"/>
+  <circle cx="125" cy="85" r="10" fill="#F57F17"/>
+  <path d="M 65 115 Q 100 145 135 115" stroke="#F57F17" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M 50 70 L 65 75 L 55 85" stroke="#F57F17" stroke-width="2" fill="none"/>
+  <path d="M 150 70 L 135 75 L 145 85" stroke="#F57F17" stroke-width="2" fill="none"/>
+  <text x="100" y="180" text-anchor="middle" font-family="Arial" font-size="14" fill="#F57F17">Happy</text>
+</svg>

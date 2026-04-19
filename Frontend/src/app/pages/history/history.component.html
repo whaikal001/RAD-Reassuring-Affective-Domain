@@ -1,0 +1,191 @@
+
+    <section class="page-shell">
+      <div class="page-header">
+        <div>
+          <p class="kicker mb-2">Review</p>
+          <h2 class="text-gradient mb-1">{{ 'history.title' | t }}</h2>
+          <p class="text-secondary mb-0">{{ 'history.subtitle' | t }}</p>
+        </div>
+        <button class="btn btn-outline-primary" (click)="loadData()">
+          <i class="bi bi-arrow-clockwise me-2"></i>{{ 'dashboard.refresh' | t }}
+        </button>
+      </div>
+
+      @if (loading()) {
+        <div class="card p-5 text-center">
+          <div class="spinner-border text-primary mx-auto" role="status"></div>
+          <p class="text-secondary mt-3 mb-0">Loading history...</p>
+        </div>
+      } @else if (error()) {
+        <div class="alert alert-danger">
+          <i class="bi bi-exclamation-circle me-2"></i>{{ error() }}
+        </div>
+      } @else {
+        <div class="snapshot-grid mb-4">
+          <div class="snapshot-card">
+            <span class="snapshot-label">{{ 'history.snapshot.sessionsLoaded' | t }}</span>
+            <strong>{{ sessionsData()?.sessions?.length || 0 }}</strong>
+          </div>
+          <div class="snapshot-card">
+            <span class="snapshot-label">{{ 'history.snapshot.currentPage' | t }}</span>
+            <strong>{{ currentPage() + 1 }}</strong>
+          </div>
+          <div class="snapshot-card">
+            <span class="snapshot-label">{{ 'history.snapshot.journeyPoints' | t }}</span>
+            <strong>{{ journey().length }}</strong>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <div class="card panel p-4 h-100">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0"><i class="bi bi-chat-square-text me-2"></i>{{ 'history.sessions' | t }}</h5>
+                <small class="text-secondary">{{ 'history.page' | t }} {{ currentPage() + 1 }} {{ 'history.of' | t }} {{ sessionsData()?.totalPages || 1 }}</small>
+              </div>
+
+              @if (!sessionsData()?.sessions?.length) {
+                <p class="text-secondary text-center py-4 mb-0">{{ 'history.noSessions' | t }}</p>
+              } @else {
+                <div class="session-list">
+                  @for (session of sessionsData()?.sessions; track session.id) {
+                    <a class="session-card" [routerLink]="['/session', session.id]">
+                      <div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                          <strong>{{ getSessionTitle(session) }}</strong>
+                          <span class="badge" [class]="session.isActive ? 'bg-success' : 'bg-secondary'">
+                            {{ session.isActive ? ('session.active' | t) : ('session.ended' | t) }}
+                          </span>
+                        </div>
+                        <div class="text-secondary small">{{ 'history.started' | t }} {{ session.startedAt | date:'medium' }}</div>
+                      </div>
+                      <div class="text-end">
+                        <div class="fw-semibold">{{ session.messageCount }} {{ 'history.messagesLabel' | t }}</div>
+                        <small class="text-secondary">{{ 'history.duration' | t }} {{ session.sessionDuration || 0 }} {{ 'history.minutes' | t }}</small>
+                      </div>
+                      <i class="bi bi-chevron-right text-secondary"></i>
+                    </a>
+                  }
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                  <button class="btn btn-outline-primary" (click)="goToPage(-1)" [disabled]="currentPage() === 0">
+                    {{ 'history.previous' | t }}
+                  </button>
+                  <button class="btn btn-outline-primary" (click)="goToPage(1)" [disabled]="!canGoNext()">
+                    {{ 'history.next' | t }}
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="card panel p-4 h-100">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0"><i class="bi bi-graph-up-arrow me-2"></i>Emotional Journey</h5>
+                <button class="btn btn-sm btn-outline-success" (click)="downloadReport()" [disabled]="!journey().length" title="Download report">
+                  <i class="bi bi-download me-1"></i>Report
+                </button>
+              </div>
+
+              @if (!journey().length) {
+                <p class="text-secondary text-center py-4 mb-0">No emotional journey data is available yet.</p>
+              } @else {
+                <!-- Trend Indicator -->
+                <div class="trend-indicator mb-4" [class]="'trend-' + trendIndicator()">
+                  @if (trendIndicator() === 'improving') {
+                    <span><i class="bi bi-graph-up"></i>Improving! Keep going!</span>
+                  } @else if (trendIndicator() === 'declining') {
+                    <span><i class="bi bi-graph-down"></i>Needs attention</span>
+                  } @else {
+                    <span><i class="bi bi-dash-lg"></i>Stable state</span>
+                  }
+                </div>
+
+                <!-- Emotion Chart -->
+                <div class="chart-container mb-4">
+                  <canvas #emotionChart></canvas>
+                </div>
+
+                <!-- Intensity Zone Badges -->
+                @if (getIntensityZonePercentages()) {
+                  <div class="intensity-zones mb-4 p-3 rounded" style="background: rgba(165, 178, 224, 0.05);">
+                    <p class="small text-secondary mb-2"><i class="bi bi-speedometer2 me-1"></i>Intensity Distribution</p>
+                    <div class="d-flex gap-2">
+                      <div class="flex-grow-1 text-center">
+                        <div class="intensity-badge high-stress">
+                          🔴<br><small>{{ getIntensityZonePercentages().counts.highStress }}</small>
+                        </div>
+                        <small class="d-block mt-1">High Stress ({{ getIntensityZonePercentages().highStress }}%)</small>
+                      </div>
+                      <div class="flex-grow-1 text-center">
+                        <div class="intensity-badge moderate">
+                          🟡<br><small>{{ getIntensityZonePercentages().counts.moderate }}</small>
+                        </div>
+                        <small class="d-block mt-1">Moderate ({{ getIntensityZonePercentages().moderate }}%)</small>
+                      </div>
+                      <div class="flex-grow-1 text-center">
+                        <div class="intensity-badge low-stress">
+                          🟢<br><small>{{ getIntensityZonePercentages().counts.low }}</small>
+                        </div>
+                        <small class="d-block mt-1">Low Stress ({{ getIntensityZonePercentages().low }}%)</small>
+                      </div>
+                    </div>
+                  </div>
+                }
+
+                <!-- Intensity Trend Chart -->
+                <div class="chart-container mb-4">
+                  <canvas #intensityChart></canvas>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-grid">
+                  <div class="stat-card">
+                    <span class="stat-label">Average Intensity</span>
+                    <strong class="stat-value">{{ averageIntensity() }}/10</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span class="stat-label">Peak</span>
+                    <strong class="stat-value">{{ maxIntensity() }}/10</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span class="stat-label">Lowest</span>
+                    <strong class="stat-value">{{ minIntensity() }}/10</strong>
+                  </div>
+                  @if (getMostCommonEmotion()) {
+                    <div class="stat-card">
+                      <span class="stat-label">Most Common</span>
+                      <strong class="stat-value">
+                        {{ getEmotionEmoji(getMostCommonEmotion()) }}
+                        {{ getMostCommonEmotion() | titlecase }}
+                      </strong>
+                    </div>
+                  }
+                </div>
+
+                <!-- Emotion Distribution -->
+                @if (getEmotionEntries().length > 0) {
+                  <div class="emotion-distribution mt-4 pt-4" style="border-top: 1px solid var(--border-color);">
+                    <p class="small text-secondary mb-2">Emotion Distribution</p>
+                    <div class="emotion-list">
+                      @for (entry of getEmotionEntries(); track entry[0]) {
+                        <div class="emotion-row">
+                          <div class="emotion-info">
+                            <span class="emotion-dot" [style.backgroundColor]="getEmotionColorForDist(entry[0])"></span>
+                            <span class="emotion-name">{{ entry[0] | titlecase }}</span>
+                          </div>
+                          <span class="emotion-count">{{ entry[1] }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </section>
+  

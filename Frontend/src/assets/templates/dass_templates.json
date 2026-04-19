@@ -1,0 +1,74 @@
+[
+  {
+    "id": "stress_wind_down",
+    "anonymous": true,
+    "intro": "Hey, welcome. This is a safe space — no pressure at all. I just want to gently check in with you first.",
+    "prompt": "Over the past week, did you find it hard to calm yourself down after something stressful happened?",
+    "options": [
+      {"label":"� I was able to calm down easily","value":0},
+      {"label":"😐 Sometimes I struggled to wind down","value":1},
+      {"label":"😟 I often couldn't calm myself down","value":2},
+      {"label":"😰 I almost never could calm down","value":3}
+    ],
+    "followUp": {
+      "0": "That's really wonderful to hear. Being able to find your calm even after tough moments is something to be proud of. I'm glad you're doing well.",
+      "1": "I see — it happens to a lot of us. Some days are harder to shake off than others, and that's okay. I'm here with you.",
+      "2": "That sounds really draining. When your mind keeps holding on even after the moment has passed, it takes so much out of you. Thank you for being honest with me.",
+      "3": "I hear you, and I want you to know — what you're carrying right now sounds really heavy. You don't have to face that alone. I'm truly glad you're here today."
+    }
+  },
+  {
+    "id": "stress_nervous_energy",
+    "anonymous": true,
+    "intro": "Thank you for being here. Let me check in on how you've truly been feeling.",
+    "prompt": "This past week, did you feel like you were running on nervous energy — restless, tense, or unable to find stillness?",
+    "options": [
+      {"label":"😌 I felt calm and at ease","value":0},
+      {"label":"😐 I felt restless every now and then","value":1},
+      {"label":"😟 I was tense and restless quite often","value":2},
+      {"label":"😰 I felt wired and restless almost constantly","value":3}
+    ],
+    "followUp": {
+      "0": "That's so good to hear. Finding stillness isn't always easy, so it means a lot that you've been able to feel grounded this week.",
+      "1": "A little restlessness here and there is something many of us feel. You're not alone in that. I'm here, and we'll work through this together.",
+      "2": "Feeling tense and restless that often sounds truly exhausting — especially when you just want to feel at ease. Thank you for trusting me with that.",
+      "3": "Living in that constant state of tension must be so overwhelming. I really appreciate you sharing that with me. You deserve to feel at peace, and I want to help you get there."
+    }
+  },
+  {
+    "id": "stress_upset_reactive",
+    "anonymous": true,
+    "intro": "I'm really glad you stopped by today. Before we begin, I'd love to gently check in with you.",
+    "prompt": "Over the past week, did you feel like things got to you more deeply than usual — like you were more easily upset than you expected?",
+    "options": [
+      {"label":"😌 I felt emotionally steady","value":0},
+      {"label":"😐 A few things got to me a little","value":1},
+      {"label":"😟 I was more sensitive and reactive than usual","value":2},
+      {"label":"😰 Almost everything felt overwhelming to me","value":3}
+    ],
+    "followUp": {
+      "0": "That's really reassuring to hear. Feeling emotionally steady is something to hold onto. I hope that sense of balance stays with you.",
+      "1": "That's completely understandable. Our emotions can surprise us sometimes, and it's okay to not always have it figured out. I'm right here with you.",
+      "2": "When things keep touching a nerve more than they used to, it can feel really confusing and tiring. What you're feeling is real, and it truly matters.",
+      "3": "That sounds like a really painful place to be — feeling raw and on edge almost every day. I'm so glad you showed up today. You took a brave step just by being here."
+    }
+  },
+  {
+    "id": "stress_difficulty_relaxing",
+    "anonymous": true,
+    "intro": "Hi, I'm so glad you're here. Let me take a gentle moment to see how you're doing.",
+    "prompt": "Over the past week, even when you had free time — did you find it hard to truly relax, like your mind just kept racing?",
+    "options": [
+      {"label":"😌 I could relax and rest well","value":0},
+      {"label":"😐 My mind wandered a bit but it was okay","value":1},
+      {"label":"😟 I had a hard time switching my mind off","value":2},
+      {"label":"😰 My mind was racing almost all the time","value":3}
+    ],
+    "followUp": {
+      "0": "Oh, that's really lovely. Being able to rest and actually feel restored is such a gift. I'm glad your mind has been giving you some peace.",
+      "1": "A racing mind every now and then is something so many people experience. You're not alone in this, and I'm glad you're here to talk about it.",
+      "2": "When rest doesn't feel restful, it can leave you feeling empty even on your quietest days. That's really hard, and I want you to know I see that.",
+      "3": "Not being able to truly rest — even when you so desperately need it — sounds absolutely exhausting. Thank you for telling me. You matter, and how you feel matters."
+    }
+  }
+]

@@ -1,0 +1,131 @@
+
+    <section class="page-shell">
+      <div class="page-header">
+        <div>
+          <h2 class="text-gradient mb-1">{{ 'profile.title' | t }}</h2>
+          <p class="text-secondary mb-0">{{ 'profile.subtitle' | t }}</p>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="card p-5 text-center">
+          <div class="spinner-border text-primary mx-auto" role="status"></div>
+        </div>
+      } @else if (error()) {
+        <div class="alert alert-danger">
+          <i class="bi bi-exclamation-circle me-2"></i>{{ error() }}
+        </div>
+      } @else {
+        @if (success()) {
+          <div class="alert alert-success mb-4">
+            <i class="bi bi-check-circle me-2"></i>{{ success() }}
+          </div>
+        }
+
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <div class="card p-4 h-100">
+              <h5 class="mb-4"><i class="bi bi-person me-2"></i>{{ 'profile.account' | t }}</h5>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'register.username' | t }}</label>
+                  <input class="form-control" [(ngModel)]="profileForm.username" name="username">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'auth.email' | t }}</label>
+                  <input class="form-control" [ngModel]="profileForm.email" disabled>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'profile.fullName' | t }}</label>
+                  <input class="form-control" [(ngModel)]="profileForm.fullName" name="fullName">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'profile.phone' | t }}</label>
+                  <input class="form-control" [(ngModel)]="profileForm.phone" name="phone">
+                </div>
+                <!-- Avatar URL, Current Emotional State and Bio removed per request -->
+              </div>
+
+              <hr class="my-4" style="border-color: var(--border-color);">
+
+              <h6 class="mb-3"><i class="bi bi-shield-lock me-2"></i>{{ 'profile.accountSecurity' | t }}</h6>
+              <p class="text-secondary small mb-3">{{ 'profile.optionalPassword' | t }}</p>
+
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label">{{ 'profile.currentPassword' | t }}</label>
+                  <input type="password" class="form-control" [(ngModel)]="currentPassword" name="currentPassword">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">{{ 'profile.newPassword' | t }}</label>
+                  <input type="password" class="form-control" [(ngModel)]="newPassword" name="newPassword">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">{{ 'profile.confirmNewPassword' | t }}</label>
+                  <input type="password" class="form-control" [(ngModel)]="confirmNewPassword" name="confirmNewPassword">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="card p-4 h-100">
+              <h5 class="mb-4"><i class="bi bi-sliders me-2"></i>{{ 'profile.preferences' | t }}</h5>
+
+              <div class="mb-3">
+                <label class="form-label">{{ 'profile.language' | t }}</label>
+                <select class="form-control" [(ngModel)]="preferencesForm.language" (ngModelChange)="onLanguageChanged($event)" name="language">
+                  <option value="en">{{ 'common.english' | t }}</option>
+                  <option value="ms">{{ 'common.malay' | t }}</option>
+                </select>
+              </div>
+
+              <!-- Theme and Timezone removed per request -->
+
+              <div class="setting-switch">
+                <div>
+                  <strong>{{ 'profile.ttsAuto' | t }}</strong>
+                  <div class="text-secondary small">{{ 'profile.ttsAutoDesc' | t }}</div>
+                </div>
+                <input type="checkbox" [(ngModel)]="autoTtsEnabled" (ngModelChange)="onAutoTtsChanged($event)" name="autoTtsEnabled">
+              </div>
+
+              <div class="setting-switch">
+                <div>
+                  <strong>{{ 'profile.notifications' | t }}</strong>
+                  <div class="text-secondary small">{{ 'profile.notificationsDesc' | t }}</div>
+                </div>
+                <input type="checkbox" [(ngModel)]="preferencesForm.notificationEnabled" name="notificationEnabled">
+              </div>
+
+              <div class="setting-switch">
+                <div>
+                  <strong>{{ 'profile.emailNotifications' | t }}</strong>
+                  <div class="text-secondary small">{{ 'profile.emailNotificationsDesc' | t }}</div>
+                </div>
+                <input type="checkbox" [(ngModel)]="preferencesForm.emailNotifications" name="emailNotifications">
+              </div>
+
+              <div class="setting-switch border-0 pb-0">
+                <div>
+                  <strong>{{ 'profile.dataConsent' | t }}</strong>
+                  <div class="text-secondary small">{{ 'profile.dataConsentDesc' | t }}</div>
+                </div>
+                <input type="checkbox" [(ngModel)]="preferencesForm.dataCollectionConsent" name="dataCollectionConsent">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+          <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+            @if (saving()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            {{ 'profile.saveChanges' | t }}
+          </button>
+        </div>
+      }
+    </section>
+  

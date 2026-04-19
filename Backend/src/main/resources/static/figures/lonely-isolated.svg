@@ -1,0 +1,9 @@
+<!-- Lonely/Isolated -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <circle cx="100" cy="100" r="80" fill="#F3E5F5" stroke="#7B1FA2" stroke-width="3"/>
+  <circle cx="75" cy="90" r="7" fill="#4A148C"/>
+  <circle cx="125" cy="90" r="7" fill="#4A148C"/>
+  <path d="M 75 125 Q 100 122 125 125" stroke="#4A148C" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <circle cx="100" cy="100" r="85" fill="none" stroke="#CE93D8" stroke-width="1" stroke-dasharray="5,5"/>
+  <text x="100" y="180" text-anchor="middle" font-family="Arial" font-size="14" fill="#4A148C">Lonely</text>
+</svg>

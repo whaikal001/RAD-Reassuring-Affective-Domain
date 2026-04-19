@@ -1,0 +1,262 @@
+
+    .auth-container {
+      padding: 2rem 0;
+    }
+    
+    .min-vh-75 {
+      min-height: 75vh;
+    }
+    
+    .text-primary {
+      color: var(--primary-color) !important;
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .auth-container {
+        padding: 1rem 0;
+      }
+
+      .min-vh-75 {
+        min-height: auto;
+      }
+
+      .card {
+        padding: 1.25rem !important;
+        border-radius: 18px;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+
+      .btn {
+        min-height: 46px;
+      }
+    }
+
+    /* Left login card styling: dark purple rounded design */
+    .card {
+      background: linear-gradient(180deg, #1a0f26 0%, #261232 60%);
+      border-radius: 18px;
+      color: #e6e9f2;
+      border: 1px solid rgba(255,255,255,0.03);
+      box-shadow: 0 12px 40px rgba(6,6,10,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      padding: 2.2rem !important;
+    }
+
+    .card .text-center .display-4 {
+      color: #cdbef0;
+    }
+
+    .text-gradient {
+      color: #a367c9;
+    }
+
+    .card h2 {
+      color: #dfe7ff;
+      font-weight: 600;
+      margin-top: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .card p.text-secondary {
+      color: rgba(230,234,252,0.7);
+    }
+
+    /* Inputs: light rounded boxes */
+    .card .form-control {
+      background: #eef6ff;
+      color: #0b1220;
+      border: none;
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      box-shadow: inset 0 1px 0 rgba(0,0,0,0.03);
+    }
+
+    .card .form-control::placeholder {
+      color: #6b7280;
+    }
+
+    /* Primary gradient button */
+    .card .btn-primary {
+      background: linear-gradient(90deg,#a76bff 0%, #7b3cff 100%);
+      border: none;
+      border-radius: 28px;
+      padding: 0.85rem 1rem;
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(123,60,255,0.18);
+    }
+
+    .card .btn-primary:disabled {
+      opacity: 0.7;
+    }
+
+    /* Secondary ghost button */
+    .card .btn-outline-secondary {
+      background: transparent;
+      color: rgba(230,234,252,0.9);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 24px;
+      padding: 0.7rem 1rem;
+    }
+
+    .card .btn-outline-secondary i {
+      color: rgba(230,234,252,0.9);
+    }
+
+    /* Footer link */
+    .card p a.text-primary {
+      color: #caa2ff;
+    }
+
+    /* Slight spacing tweaks for mobile */
+    @media (max-width: 992px) {
+      .card { padding: 1.6rem !important; }
+      .card .form-control { padding: 0.75rem 0.9rem; }
+    }
+
+    .info-panel {
+      max-width: 540px;
+      background: rgba(247,247,248,0.98);
+      border-radius: 14px;
+      box-shadow: 0 6px 20px rgba(12,15,20,0.06);
+      color: #0f1724; /* stronger base text color */
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      opacity: 1;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .feature-badge {
+      width: 44px;
+      height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      color: #4d01a4;
+      background: #fff3e6;
+      border-radius: 8px;
+      flex: 0 0 44px;
+      box-shadow: none;
+    }
+
+    /* Stronger heading and label colors for readability */
+    .info-panel h3 {
+      color: #0b1220;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .info-panel .feature-item strong {
+      display: block;
+      color: #0b1220;
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: 0.98rem;
+    }
+
+    /* description text darker and slightly larger */
+    .info-panel .text-muted,
+    .info-panel .feature-desc,
+    .info-panel small {
+      color: #4b5563 !important;
+      font-size: 0.93rem;
+      line-height: 1.5;
+      opacity: 1 !important;
+    }
+
+    /* Force description visibility even if utility classes attempt lighter colors */
+    .info-panel .feature-desc {
+      color: #4b5563 !important;
+    }
+
+    /* Ensure icons/badges are visible */
+    .feature-badge i {
+      color: #4d01a4 !important;
+      font-size: 1.05rem;
+    }
+
+    /* Slightly stronger panel background for contrast */
+    .info-panel {
+      background: #f6f6f7;
+    }
+
+    .info-panel .callout {
+      background: #fff7f2;
+      border: 1px solid #f3d4bf;
+      color: #5b3b2a;
+    }
+
+    .text-orange {
+      color: #4d01a4;
+    }
+
+    /* How section (three cards) - dark themed to match cosmic layout */
+    .how-section {
+      margin-top: 1.25rem;
+      background: linear-gradient(180deg,#120321 0%, #260a2f 100%);
+      padding: 2rem;
+      border-radius: 14px;
+    }
+
+    .how-section h3 {
+      color: #f3e8ff;
+      font-weight: 700;
+    }
+
+    .how-section p.text-muted {
+      color: rgba(243,232,255,0.75);
+    }
+
+    .how-card {
+      background: rgba(255,255,255,0.03);
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: 0 12px 36px rgba(6,6,10,0.45);
+      color: #f3e8ff;
+      min-height: 150px;
+    }
+
+    .how-card h5 { font-weight: 700; color: #ffffff; }
+
+    .how-card p.small { color: rgba(255,255,255,0.72); }
+
+    /* numbered circular badge with subtle dashed circle */
+    .how-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      background: radial-gradient(circle at 30% 30%, #7b3cff 0%, #3aa5ff 70%);
+      box-shadow: 0 10px 30px rgba(58,165,255,0.08), inset 0 -6px 16px rgba(0,0,0,0.12);
+      position: relative;
+    }
+
+    .how-icon::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 999px;
+      border: 1px dashed rgba(255,255,255,0.06);
+    }
+
+    @media (max-width: 992px) {
+      .how-card { padding: 1rem !important; }
+      .how-icon { width: 44px; height: 44px; }
+    }
+  

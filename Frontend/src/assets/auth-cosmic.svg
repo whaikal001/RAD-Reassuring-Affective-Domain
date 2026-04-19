@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#060915"/>
+      <stop offset="58%" stop-color="#100832"/>
+      <stop offset="100%" stop-color="#2a0964"/>
+    </linearGradient>
+    <linearGradient id="flare" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#ff66ff" stop-opacity="0.8"/>
+      <stop offset="45%" stop-color="#b94dff" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#7f3fff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+  <rect width="1920" height="1080" fill="url(#flare)"/>
+
+  <g opacity="0.82" fill="#ffffff" filter="url(#softGlow)">
+    <circle cx="55" cy="40" r="2"/>
+    <circle cx="190" cy="130" r="1.8"/>
+    <circle cx="320" cy="70" r="1.6"/>
+    <circle cx="410" cy="180" r="1.7"/>
+    <circle cx="580" cy="90" r="1.6"/>
+    <circle cx="740" cy="40" r="2"/>
+    <circle cx="880" cy="150" r="1.6"/>
+    <circle cx="1020" cy="72" r="1.9"/>
+    <circle cx="1160" cy="110" r="1.7"/>
+    <circle cx="1300" cy="42" r="1.8"/>
+    <circle cx="1460" cy="95" r="1.7"/>
+    <circle cx="1600" cy="50" r="1.9"/>
+    <circle cx="1750" cy="120" r="1.8"/>
+    <circle cx="1880" cy="80" r="1.7"/>
+    <circle cx="150" cy="300" r="1.7"/>
+    <circle cx="295" cy="250" r="1.6"/>
+    <circle cx="510" cy="295" r="1.8"/>
+    <circle cx="690" cy="260" r="1.7"/>
+    <circle cx="905" cy="305" r="1.7"/>
+    <circle cx="1130" cy="255" r="1.8"/>
+    <circle cx="1325" cy="300" r="1.7"/>
+    <circle cx="1520" cy="255" r="1.7"/>
+    <circle cx="1710" cy="305" r="1.8"/>
+    <circle cx="1865" cy="260" r="1.6"/>
+  </g>
+
+  <g opacity="0.75" stroke="#d47bff" stroke-width="3" stroke-linecap="round" filter="url(#softGlow)">
+    <line x1="130" y1="20" x2="130" y2="110"/>
+    <line x1="260" y1="120" x2="260" y2="260"/>
+    <line x1="370" y1="60" x2="370" y2="190"/>
+    <line x1="560" y1="150" x2="560" y2="300"/>
+    <line x1="745" y1="50" x2="745" y2="190"/>
+    <line x1="940" y1="140" x2="940" y2="290"/>
+    <line x1="1085" y1="75" x2="1085" y2="245"/>
+    <line x1="1240" y1="20" x2="1240" y2="145"/>
+    <line x1="1410" y1="125" x2="1410" y2="305"/>
+    <line x1="1565" y1="40" x2="1565" y2="205"/>
+    <line x1="1725" y1="150" x2="1725" y2="330"/>
+    <line x1="1850" y1="85" x2="1850" y2="245"/>
+  </g>
+
+  <g opacity="0.45" stroke="#8b3dff" stroke-width="2" stroke-linecap="round">
+    <line x1="80" y1="260" x2="80" y2="650"/>
+    <line x1="240" y1="340" x2="240" y2="960"/>
+    <line x1="460" y1="290" x2="460" y2="1000"/>
+    <line x1="650" y1="360" x2="650" y2="1020"/>
+    <line x1="880" y1="300" x2="880" y2="1040"/>
+    <line x1="1110" y1="360" x2="1110" y2="1030"/>
+    <line x1="1320" y1="310" x2="1320" y2="1060"/>
+    <line x1="1560" y1="340" x2="1560" y2="1020"/>
+    <line x1="1770" y1="290" x2="1770" y2="1000"/>
+  </g>
+</svg>
