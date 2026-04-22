@@ -1,4 +1,4 @@
-SocializerAI
+# SocializerAI
 SocializerAI is an empathetic AI chatbot designed to provide social and mental health guidance. It leverages a modern full-stack architecture to create a supportive environment for users to improve their social well-being.
 
 | Features |
