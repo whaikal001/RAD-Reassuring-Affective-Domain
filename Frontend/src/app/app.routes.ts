@@ -7,8 +7,8 @@ import { noAdminGuard } from './guards/no-admin.guard';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'chat',
-    pathMatch: 'full'
+    loadComponent: () => import('./pages/landing/landing.component').then(m => m.LandingComponent),
+    data: { animation: 'LandingPage' }
   },
   {
     path: 'login',

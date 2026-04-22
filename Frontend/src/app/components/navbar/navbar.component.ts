@@ -10,92 +10,94 @@ import { TranslatePipe } from '../../pipes/t.pipe';
   standalone: true,
   imports: [CommonModule, RouterModule, TranslatePipe],
   template: `
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-      <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2" routerLink="/">
-          <img class="brand-logo" src="/assets/Gemini_Generated_Image_ym28zxym28zxym28-removebg-preview.png" alt="SocializerAI" width="56" height="56" />
-          <span class="fw-bold">SocializerAI</span>
-        </a>
-        
-        <button class="navbar-toggler" type="button" (click)="toggleSidebar()">
-          <i class="bi" [class]="sidebarOpen() ? 'bi-x-lg' : 'bi-list'"></i>
-        </button>
-        
-        <div class="navbar-collapse" [class.show]="sidebarOpen()">
-          <ul class="navbar-nav me-auto">
-            @if (authService.isAuthenticated()) {
-              @if (!authService.hasRole('ADMIN')) {
-                <li class="nav-item">
-                  <a class="nav-link" routerLink="/chat" routerLinkActive="active">
-                    <i class="bi bi-chat-dots me-1"></i>{{ 'nav.chat' | t }}
-                  </a>
-                </li>
-              }
-              @if (!authService.isAnonymous()) {
-                @if (authService.hasRole('ADMIN')) {
+    @if (!isLandingPage()) {
+      <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+          <a class="navbar-brand d-flex align-items-center gap-2" routerLink="/">
+            <img class="brand-logo" src="/assets/Gemini_Generated_Image_ym28zxym28zxym28-removebg-preview.png" alt="SocializerAI" width="56" height="56" />
+            <span class="fw-bold">SocializerAI</span>
+          </a>
+          
+          <button class="navbar-toggler" type="button" (click)="toggleSidebar()">
+            <i class="bi" [class]="sidebarOpen() ? 'bi-x-lg' : 'bi-list'"></i>
+          </button>
+          
+          <div class="navbar-collapse" [class.show]="sidebarOpen()">
+            <ul class="navbar-nav me-auto">
+              @if (authService.isAuthenticated()) {
+                @if (!authService.hasRole('ADMIN')) {
                   <li class="nav-item">
-                    <a class="nav-link" routerLink="/admin" routerLinkActive="active">
-                      <i class="bi bi-graph-up me-1"></i>Admin
+                    <a class="nav-link" routerLink="/chat" routerLinkActive="active">
+                      <i class="bi bi-chat-dots me-1"></i>{{ 'nav.chat' | t }}
                     </a>
                   </li>
                 }
-                <li class="nav-item">
-                  <a class="nav-link" routerLink="/history" routerLinkActive="active">
-                    <i class="bi bi-clock-history me-1"></i>{{ 'nav.recentChat' | t }}
+                @if (!authService.isAnonymous()) {
+                  @if (authService.hasRole('ADMIN')) {
+                    <li class="nav-item">
+                      <a class="nav-link" routerLink="/admin" routerLinkActive="active">
+                        <i class="bi bi-graph-up me-1"></i>Admin
+                      </a>
+                    </li>
+                  }
+                  <li class="nav-item">
+                    <a class="nav-link" routerLink="/history" routerLinkActive="active">
+                      <i class="bi bi-clock-history me-1"></i>{{ 'nav.recentChat' | t }}
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" routerLink="/reports" routerLinkActive="active">
+                      <i class="bi bi-file-earmark-text me-1"></i>{{ 'nav.report' | t }}
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" routerLink="/profile" routerLinkActive="active">
+                      <i class="bi bi-person-gear me-1"></i>{{ 'nav.profile' | t }}
+                    </a>
+                  </li>
+                }
+              }
+            </ul>
+            
+            <ul class="navbar-nav">
+              @if (!isChatPage) {
+                <li class="nav-item dropdown me-2">
+                  <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="flag me-1">{{ languageService.language() === 'en' ? '🇬🇧' : '🇲🇾' }}</span>
+                    <span class="lang-label">{{ languageService.language() === 'en' ? ('common.english' | t) : ('common.malay' | t) }}</span>
                   </a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" routerLink="/reports" routerLinkActive="active">
-                    <i class="bi bi-file-earmark-text me-1"></i>{{ 'nav.report' | t }}
-                  </a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" routerLink="/profile" routerLinkActive="active">
-                    <i class="bi bi-person-gear me-1"></i>{{ 'nav.profile' | t }}
-                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li><button class="dropdown-item d-flex align-items-center" (click)="setLanguage('en')"><span class="me-2">🇬🇧</span>{{ 'common.english' | t }}</button></li>
+                    <li><button class="dropdown-item d-flex align-items-center" (click)="setLanguage('ms')"><span class="me-2">🇲🇾</span>{{ 'common.malay' | t }}</button></li>
+                  </ul>
                 </li>
               }
-            }
-          </ul>
-          
-          <ul class="navbar-nav">
-            @if (!isChatPage) {
-              <li class="nav-item dropdown me-2">
-                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  <span class="flag me-1">{{ languageService.language() === 'en' ? '🇬🇧' : '🇲🇾' }}</span>
-                  <span class="lang-label">{{ languageService.language() === 'en' ? ('common.english' | t) : ('common.malay' | t) }}</span>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end">
-                  <li><button class="dropdown-item d-flex align-items-center" (click)="setLanguage('en')"><span class="me-2">🇬🇧</span>{{ 'common.english' | t }}</button></li>
-                  <li><button class="dropdown-item d-flex align-items-center" (click)="setLanguage('ms')"><span class="me-2">🇲🇾</span>{{ 'common.malay' | t }}</button></li>
-                </ul>
-              </li>
-            }
-            @if (authService.isAuthenticated()) {
-              <li class="nav-item d-flex align-items-center me-2">
-                <span class="session-pill" [class.anonymous]="authService.isAnonymous()">
-                  {{ authService.isAnonymous() ? ('nav.sessionAnonymous' | t) : ('nav.sessionRegistered' | t) }}
-                </span>
-              </li>
-              <li class="nav-item">
-                <button class="btn btn-outline-light btn-sm" (click)="logout()">
-                  <i class="bi bi-box-arrow-right me-1"></i>{{ 'nav.logout' | t }}
-                </button>
-              </li>
-            } @else {
-              @if (!isAuthPage()) {
-                <li class="nav-item">
-                  <a class="nav-link" routerLink="/login">{{ 'nav.login' | t }}</a>
+              @if (authService.isAuthenticated()) {
+                <li class="nav-item d-flex align-items-center me-2">
+                  <span class="session-pill" [class.anonymous]="authService.isAnonymous()">
+                    {{ authService.isAnonymous() ? ('nav.sessionAnonymous' | t) : ('nav.sessionRegistered' | t) }}
+                  </span>
                 </li>
                 <li class="nav-item">
-                  <a class="btn btn-primary btn-sm ms-2" routerLink="/register">{{ 'nav.signUp' | t }}</a>
+                  <button class="btn btn-outline-light btn-sm" (click)="logout()">
+                    <i class="bi bi-box-arrow-right me-1"></i>{{ 'nav.logout' | t }}
+                  </button>
                 </li>
+              } @else {
+                @if (!isAuthPage()) {
+                  <li class="nav-item">
+                    <a class="nav-link" routerLink="/login">{{ 'nav.login' | t }}</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="btn btn-primary btn-sm ms-2" routerLink="/register">{{ 'nav.signUp' | t }}</a>
+                  </li>
+                }
               }
-            }
-          </ul>
+            </ul>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    }
   `,
   styles: [`
     .navbar {
@@ -268,5 +270,11 @@ export class NavbarComponent implements OnInit {
   isAuthPage(): boolean {
     const url = this.router.url || '';
     return url.startsWith('/login') || url.startsWith('/register');
+  }
+
+  isLandingPage(): boolean {
+    const url = this.router.url || '';
+    // Check if on landing page (including hash sections like /#features or /#how-it-works)
+    return url === '/' || url === '' || url.startsWith('/#') || url.startsWith('?');
   }
 }

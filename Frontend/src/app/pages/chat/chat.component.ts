@@ -1,5 +1,4 @@
 import { Component, signal, ViewChild, ElementRef, AfterViewChecked, OnInit } from '@angular/core';
-import { DassTemplatesComponent } from '../../components/dass-templates/dass-templates.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -8,12 +7,13 @@ import { TtsService } from '../../services/tts.service';
 import { AuthService } from '../../services/auth.service';
 import { UiFeedbackService } from '../../services/ui-feedback.service';
 import { ScreeningService } from '../../services/screening.service';
+import { TemplatesService, TemplateItem } from '../../services/templates.service';
 import { TranslatePipe } from '../../pipes/t.pipe';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe, DassTemplatesComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss'
 })
@@ -43,6 +43,20 @@ export class ChatComponent implements AfterViewChecked, OnInit {
   screeningAction = signal<string | null>(localStorage.getItem('screening_action'));
   screeningMessage = signal<string | null>(localStorage.getItem('screening_message'));
   screeningResources = signal<string[] | null>(null);
+  currentIntensity = signal<number | null>(null);
+
+  // DASS Template properties
+  dassTemplates: TemplateItem[] = [];
+  dassCurrent: TemplateItem | null = null;
+  dassLoading = false;
+  dassIndex = 0;
+  dassAnswers: number[] = [];
+  dassUserInput = '';
+  dassSubmitting = false;
+  dassCompleted = false;
+  greetingShown = false;
+  dassQuestionsLoaded = false;
+  selectedDassQuestions: TemplateItem[] = [];
 
   private shouldScroll = false;
 
@@ -51,7 +65,8 @@ export class ChatComponent implements AfterViewChecked, OnInit {
     public authService: AuthService,
     public ttsService: TtsService,
     private uiFeedback: UiFeedbackService,
-    private screeningService: ScreeningService
+    private screeningService: ScreeningService,
+    private templatesService: TemplatesService
   ) {}
 
   ngOnInit(): void {
@@ -72,14 +87,26 @@ export class ChatComponent implements AfterViewChecked, OnInit {
       this.loadEmotionalMemory();
     }
 
+    // Load DASS templates for screening
+    this.loadDassTemplatesForScreening();
+
     // Start conversational screening for anonymous users
     if (this.authService.isAnonymous()) {
       // Reset chat session for fresh anonymous start
       this.chatService.resetSession().subscribe({
         next: () => {
           this.shouldScroll = true;
+          // Show greeting and questions after session reset
+          if (this.isScreeningVisible() && this.dassQuestionsLoaded) {
+            this.showGreetingAndStartScreening();
+          }
         },
-        error: () => {}
+        error: () => {
+          // Even on error, try to show greeting
+          if (this.isScreeningVisible() && this.dassQuestionsLoaded) {
+            this.showGreetingAndStartScreening();
+          }
+        }
       });
 
       // Reset any previous anonymous screening when a fresh anonymous session begins
@@ -92,50 +119,19 @@ export class ChatComponent implements AfterViewChecked, OnInit {
       this.screeningCompleted.set(false);
       this.screeningAction.set(null);
       this.screeningMessage.set(null);
-
-      if (this.isScreeningVisible()) {
-        this.startConversationalScreening();
-      }
     } else {
-      if (this.isScreeningVisible()) {
-        this.startConversationalScreening();
+      // For registered users, use past session data
+      this.loadPastSessionIntensity();
+      if (this.isScreeningVisible() && this.dassQuestionsLoaded) {
+        this.showGreetingAndStartScreening();
       }
     }
   }
 
   startConversationalScreening(): void {
-      const stressItems = [
-        'I found it hard to wind down',
-        'I tended to over-react to situations',
-        'I felt that I was using a lot of nervous energy',
-        'I found myself getting agitated',
-        'I found it difficult to relax',
-        'I was intolerant of anything that kept me from getting on with what I was doing',
-        'I felt that I was rather touchy'
-      ];
-    
-      // choose 2 or 3 random unique items
-      const n = Math.random() < 0.5 ? 2 : 3;
-      const chosen: string[] = [];
-      const used = new Set<number>();
-      while (chosen.length < n) {
-        const idx = Math.floor(Math.random() * stressItems.length);
-        if (!used.has(idx)) {
-          used.add(idx);
-          chosen.push(stressItems[idx]);
-        }
-      }
-    
-      this.screeningQuestions.set(chosen);
-      this.screeningAnswers.set(Array(chosen.length).fill(-1));
-      this.screeningIndex.set(0);
-
-      // Present the first question as a bot chat message for a conversational feel
-      const first = chosen[0];
-      if (first) {
-        this.chatService.addLocalBotMessage(first, 'neutral', 4);
-      }
-    }
+    // This method is deprecated in favor of showGreetingAndStartScreening
+    // Kept for backward compatibility
+  }
   
     getCurrentQuestion(): string | null {
       const qs = this.screeningQuestions();
@@ -202,7 +198,10 @@ export class ChatComponent implements AfterViewChecked, OnInit {
     }
 
   isScreeningVisible(): boolean {
-    return this.authService.isAnonymous() && !this.screeningCompleted();
+    // Show screening for anonymous users OR new registered users who haven't completed it
+    const isAnonymous = this.authService.isAnonymous();
+    const screeningNotCompleted = !this.screeningCompleted();
+    return (isAnonymous || !this.currentIntensity()) && screeningNotCompleted;
   }
 
   setScreeningAnswer(index: number, value: number): void {
@@ -260,6 +259,238 @@ export class ChatComponent implements AfterViewChecked, OnInit {
     } catch (e) {
       console.warn('Unable to persist screening flag', e);
     }
+  }
+
+  /**
+   * Load past session intensity for registered users
+   */
+  private loadPastSessionIntensity(): void {
+    this.chatService.getEmotionalJourney().subscribe({
+      next: (journey) => {
+        if (journey && journey.length > 0) {
+          const lastEntry = journey[journey.length - 1];
+          if (lastEntry && typeof lastEntry.intensity === 'number') {
+            this.currentIntensity.set(lastEntry.intensity);
+          }
+        }
+      },
+      error: () => {} // Silently fail
+    });
+  }
+
+  /**
+   * Show greeting and start screening with 4 DASS questions
+   */
+  private showGreetingAndStartScreening(): void {
+    // Don't add greeting as a chat message - let it show in welcome panel
+    this.greetingShown = true;
+    this.shouldScroll = true;
+
+    // Wait before showing first question (gives user time to see welcome panel)
+    setTimeout(() => {
+      this.startNaturalQuestionFlow();
+    }, 1200);
+  }
+
+  /**
+   * Start the natural question flow with 4 DASS questions
+   */
+  private startNaturalQuestionFlow(): void {
+    if (this.dassQuestionsLoaded && this.selectedDassQuestions.length > 0) {
+      this.dassCurrent = this.selectedDassQuestions[0];
+      this.dassIndex = 0;
+      this.dassAnswers = [];
+      this.dassCompleted = false;
+
+      // Show first question as natural bot message (this triggers chat scroll)
+      this.chatService.addLocalBotMessage(this.dassCurrent.prompt, 'neutral', 3);
+      this.shouldScroll = true;
+    }
+  }
+
+  /**
+   * Load 4 random DASS templates for screening
+   */
+  loadDassTemplatesForScreening(): void {
+    this.dassLoading = true;
+    this.templatesService.fetchTemplates().subscribe({
+      next: t => {
+        this.dassTemplates = t || [];
+        // Select 4 random questions
+        this.selectedDassQuestions = this.selectRandomQuestions(this.dassTemplates, 4);
+        this.dassQuestionsLoaded = true;
+        this.dassLoading = false;
+      },
+      error: () => { this.dassLoading = false; }
+    });
+  }
+
+  /**
+   * Select N random unique questions from array
+   */
+  private selectRandomQuestions(questions: TemplateItem[], n: number): TemplateItem[] {
+    const shuffled = [...questions].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, Math.min(n, questions.length));
+  }
+
+  submitDassUserInput(): void {
+    if (!this.dassUserInput.trim()) return;
+    const input = this.dassUserInput.toLowerCase();
+    const value = this.matchDassInputToValue(input);
+    this.dassUserInput = '';
+    this.processDassAnswer(value);
+  }
+
+  submitDassOption(value: number): void {
+    this.processDassAnswer(value);
+  }
+
+  private matchDassInputToValue(text: string): number {
+    // Match keywords to 0-3 intensity
+    // 3: very, always, all, most, extremely, stressed, overwhelmed, tense
+    // 2: yes, often, quite, pretty, many, a lot
+    // 1: some, sometimes, little, bit, occasionally, maybe, ok
+    // 0: not, no, nope, never, nothing, good, fine, well
+    
+    if (/\b(very|always|all|most|extremely|stressed|overwhelmed|tense|constant|continuously)\b/.test(text)) {
+      return 3;
+    }
+    if (/\b(yes|often|quite|pretty|many|a lot|good amount)\b/.test(text)) {
+      return 2;
+    }
+    if (/\b(some|sometimes|little|bit|occasionally|maybe|ok|kinda|sort of)\b/.test(text)) {
+      return 1;
+    }
+    return 0;
+  }
+
+  private processDassAnswer(value: number) {
+    if (!this.dassCurrent) return;
+    this.dassAnswers.push(value);
+    
+    // Find the selected option label
+    const selectedOption = this.dassCurrent.options.find(opt => opt.value === value);
+    const selectedLabel = selectedOption?.label || `Option ${value}`;
+    
+    // Add user's selection as a message bubble
+    this.chatService.addLocalUserMessage(selectedLabel);
+    
+    // Add bot's empathic follow-up
+    const follow = (this.dassCurrent.followUp || {})[value];
+    if (follow) {
+      this.chatService.addLocalBotMessage(follow, 'neutral', 3);
+    }
+    this.templatesService.trackResponse(this.dassCurrent.id, value, this.dassCurrent.prompt);
+
+    // Move to next question or finish
+    if (this.dassIndex + 1 < this.selectedDassQuestions.length) {
+      this.dassIndex++;
+      this.dassCurrent = this.selectedDassQuestions[this.dassIndex];
+      // Show next question as natural bot message
+      setTimeout(() => {
+        this.chatService.addLocalBotMessage(this.dassCurrent!.prompt, 'neutral', 3);
+      }, 500);
+    } else {
+      // All 4 questions answered - calculate and track current intensity
+      this.dassCompleted = true;
+      this.trackCurrentIntensity();
+    }
+  }
+
+  /**
+   * Calculate and track current intensity after 4 questions answered
+   * Only for anonymous users
+   */
+  private trackCurrentIntensity(): void {
+    if (!this.authService.isAnonymous()) {
+      // For registered users, intensity is already loaded from past session
+      this.chatService.addLocalBotMessage('Thank you for sharing. I understand how you\'re feeling. Let\'s talk more if you\'d like.', 'neutral', 3);
+      this.screeningCompleted.set(true);
+      return;
+    }
+
+    // Calculate average intensity from 4 answers
+    const sum = this.dassAnswers.reduce((a, b) => a + b, 0);
+    const avg = Math.round(sum / (this.dassAnswers.length || 1));
+    this.currentIntensity.set(avg);
+
+    // Scale to 7-point DASS format
+    const filled = this.dassAnswers.slice();
+    while (filled.length < 7) filled.push(avg);
+
+    const consent = localStorage.getItem('socializer_consent') === 'true';
+    const language = localStorage.getItem('socializer_language') || 'en';
+
+    // Submit screening for anonymous user
+    this.screeningService.submitScreening(consent, language, filled).subscribe({
+      next: res => {
+        try { localStorage.setItem('screening_completed', 'true'); } catch(e){}
+        localStorage.setItem('screening_action', res.action || 'allow');
+        if (res.message) localStorage.setItem('screening_message', res.message);
+        this.screeningCompleted.set(true);
+        this.screeningAction.set(res.action || 'allow');
+        this.screeningMessage.set(res.message || null);
+        
+        // Show intensity level and message
+        const intensityLevel = this.getIntensityLabel(avg);
+        const intensityMessage = this.buildIntensityMessage(avg, intensityLevel, language === 'ms');
+        this.chatService.addLocalBotMessage(intensityMessage, intensityLevel, 3);
+        
+        // Set screening context emotion for follow-up messages to maintain intensity tone
+        this.chatService.setScreeningContextEmotion(intensityLevel);
+        
+        if (res.action === 'intervention') {
+          this.uiFeedback.error('Safety', res.message || 'High stress detected.');
+        } else if (res.action === 'prevention') {
+          this.uiFeedback.info('Prevention', res.message || 'Mild stress detected.');
+        } else {
+          this.uiFeedback.success('Welcome', 'You may proceed to chat.');
+        }
+      },
+      error: err => {
+        console.error('Screening submit failed', err);
+        this.uiFeedback.error('Screening failed', 'Unable to submit screening.');
+        this.screeningCompleted.set(true);
+      }
+    });
+  }
+
+  /**
+   * Get intensity label based on numeric value (0-3)
+   */
+  private getIntensityLabel(intensity: number): string {
+    if (intensity === 0) return 'calm';
+    if (intensity === 1) return 'neutral';
+    if (intensity === 2) return 'anxious';
+    return 'stressed';
+  }
+
+  /**
+   * Build intensity message with clear labeling
+   */
+  private buildIntensityMessage(intensity: number, label: string, isMalay: boolean): string {
+    const intensityMap: { [key: number]: { en: string; ms: string } } = {
+      0: { 
+        en: 'Low Intensity - You seem calm and relaxed. Great! Let\'s continue our conversation.',
+        ms: 'Keamatan Rendah - Anda nampak tenang dan rileks. Bagus! Mari kita teruskan perbincangan kami.'
+      },
+      1: { 
+        en: 'Mild Intensity - You\'re feeling a bit stressed, but manageable. I\'m here to listen and support you.',
+        ms: 'Keamatan Ringan - Anda mengalami sedikit tekanan, tetapi dapat dikendalikan. Saya di sini untuk mendengar dan menyokong anda.'
+      },
+      2: { 
+        en: 'Moderate Intensity - You\'re experiencing noticeable stress. Let\'s explore what\'s on your mind and find some relief.',
+        ms: 'Keamatan Sederhana - Anda mengalami tekanan yang ketara. Mari kita terokai apa yang ada di fikiran anda dan cari beberapa kelegaan.'
+      },
+      3: { 
+        en: 'High Intensity - You\'re feeling quite stressed. I\'m here to help. Let\'s talk through what you\'re experiencing.',
+        ms: 'Keamatan Tinggi - Anda mengalami banyak tekanan. Saya di sini untuk membantu. Mari kita bincangkan apa yang anda alami.'
+      }
+    };
+
+    return intensityMap[intensity]?.[isMalay ? 'ms' : 'en'] || 
+      (isMalay ? 'Terima kasih atas perkongsian anda. Mari kita bincangkan lebih lanjut.' : 
+       'Thank you for sharing. Let\'s talk more if you\'d like.');
   }
 
   /**
@@ -548,11 +779,18 @@ export class ChatComponent implements AfterViewChecked, OnInit {
   private submitMessage(message: string, appendUserMessage: boolean): void {
     this.sendError.set(null);
     this.lastSentUserMessage.set(message);
-    const inferredIntensity = this.inferIntensityFromMessage(message);
+    
+    // Use screening intensity if just completed, otherwise infer from message
+    let messageIntensity = this.inferIntensityFromMessage(message);
+    const screeningIntensity = this.currentIntensity();
+    if (this.screeningCompleted() && screeningIntensity !== null) {
+      // Use current intensity from screening for bot context awareness
+      messageIntensity = screeningIntensity;
+    }
 
     this.shouldScroll = true;
 
-    this.chatService.sendMessage(message, inferredIntensity, this.useAI(), appendUserMessage)
+    this.chatService.sendMessage(message, messageIntensity, this.useAI(), appendUserMessage)
       .subscribe({
         next: () => {
           this.autoSpeakLatestBotMessage();
@@ -873,9 +1111,25 @@ export class ChatComponent implements AfterViewChecked, OnInit {
   }
 
   private buildInitialGreeting(): string {
+    const isMalay = this.language() === 'ms';
+
+    if (this.authService.isAnonymous()) {
+      // Simple greeting for anonymous user
+      return isMalay 
+        ? 'Hi there! 👋\n\nI am here to listen and support you. What\'s on your mind?'
+        : 'Hi there! 👋\n\nI am here to listen and support you. What\'s on your mind?';
+    }
+
+    const displayName = this.authService.getDisplayName() || 'there';
+    return isMalay
+      ? `Hi ${displayName}! 👋\n\nI am here to listen and support you. What's on your mind?`
+      : `Hi ${displayName}! 👋\n\nI am here to listen and support you. What's on your mind?`;
+  }
+
+  public getInitialGreeting(): string {
+    const isMalay = this.language() === 'ms';
     const hour = new Date().getHours();
     const timeOfDay = this.getTimeOfDayLabel(hour);
-    const isMalay = this.language() === 'ms';
 
     if (this.authService.isAnonymous()) {
       return isMalay
@@ -887,11 +1141,6 @@ export class ChatComponent implements AfterViewChecked, OnInit {
     return isMalay
       ? `${timeOfDay}, ${displayName}! Selamat datang kembali. Apa yang ingin anda bincangkan hari ini?`
       : `${timeOfDay}, ${displayName}! Welcome back. What's on your mind today?`;
-  }
-
-  // Expose greeting to the template so the welcome panel matches the header greeting
-  public getInitialGreeting(): string {
-    return this.buildInitialGreeting();
   }
 
   private getTimeOfDayLabel(hour: number): string {

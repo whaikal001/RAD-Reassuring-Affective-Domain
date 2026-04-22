@@ -1,0 +1,312 @@
+<div class="landing-container auth-cosmic-bg">
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a class="navbar-brand" href="/">
+        <i class="bi bi-chat-heart fs-3 text-gradient"></i>
+        <span class="brand-text ms-2">SocializerAI</span>
+      </a>
+      
+      <div class="nav-center">
+        <a href="#features" class="nav-link-item">{{ 'nav.features' | t }}</a>
+        <a href="#how-it-works" class="nav-link-item">{{ 'nav.howItWorks' | t }}</a>
+      </div>
+
+      <div class="nav-links">
+        <div class="language-selector-wrapper">
+          <button 
+            class="language-selector"
+            (click)="toggleLanguageDropdown()"
+            type="button"
+          >
+            <span class="flag">{{ languageService.language() === 'en' ? '🇬🇧' : '🇲🇾' }}</span>
+            <span class="lang-label">{{ languageService.language() === 'en' ? ('common.english' | t) : ('common.malay' | t) }}</span>
+            <i class="bi bi-chevron-down"></i>
+          </button>
+          
+          @if (showLanguageDropdown) {
+            <div class="language-dropdown">
+              <button 
+                class="dropdown-item"
+                (click)="setLanguage('en')"
+                [class.active]="languageService.language() === 'en'"
+              >
+                <span class="flag">🇬🇧</span>
+                <span>{{ 'common.english' | t }}</span>
+              </button>
+              <button 
+                class="dropdown-item"
+                (click)="setLanguage('ms')"
+                [class.active]="languageService.language() === 'ms'"
+              >
+                <span class="flag">🇲🇾</span>
+                <span>{{ 'common.malay' | t }}</span>
+              </button>
+            </div>
+          }
+        </div>
+        <button routerLink="/login" class="btn btn-outline-light btn-sm">{{ 'auth.signIn' | t }}</button>
+        <button routerLink="/register" class="btn btn-primary btn-sm">{{ 'auth.signUp' | t }}</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container-xl">
+      <div class="row align-items-center min-vh-100">
+        <div class="col-lg-6 mb-5 mb-lg-0">
+          <h1 class="display-3 fw-bold mb-4 text-gradient">
+            {{ 'home.title' | t }}
+          </h1>
+          <p class="lead text-secondary mb-5">
+            {{ 'home.subtitle' | t }}
+          </p>
+          <div class="button-group">
+            <button 
+              routerLink="/register" 
+              class="btn btn-primary btn-lg px-5"
+            >
+              {{ 'auth.signUp' | t }}
+            </button>
+            <button 
+              (click)="loginAnonymously()" 
+              [disabled]="isLoading"
+              class="btn btn-outline-primary btn-lg px-5 ms-3"
+            >
+              @if (isLoading) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              } @else {
+                <i class="bi bi-incognito me-2"></i>
+              }
+              {{ 'auth.continueAnonymous' | t }}
+            </button>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="hero-image">
+            <img 
+              src="/assets/hero-person.png" 
+              alt="AI Wellness Support" 
+              class="hero-person-image"
+            />
+            <div class="image-card-overlay p-4 rounded-4 shadow-lg">
+              <div class="mb-3">
+                <div class="badge bg-primary mb-3">{{ 'home.featureTag' | t }}</div>
+                <h3 class="text-gradient fw-bold">{{ 'home.heroCardTitle' | t }}</h3>
+              </div>
+              <div class="stats d-flex gap-4">
+                <div>
+                  <div class="stat-number text-gradient fw-bold">100+</div>
+                  <div class="text-secondary small">{{ 'home.usersStat' | t }}</div>
+                </div>
+                <div>
+                  <div class="stat-number text-gradient fw-bold">95%</div>
+                  <div class="text-secondary small">{{ 'home.satisfactionStat' | t }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features-section py-5">
+    <div class="container-xl">
+      <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold mb-3">{{ 'home.featuresTitle' | t }}</h2>
+        <p class="text-secondary fs-5">{{ 'home.featuresSubtitle' | t }}</p>
+      </div>
+      
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card p-4 h-100 rounded-3 border">
+            <div class="feature-icon mb-3">
+              <i class="bi bi-emoji-smile fs-2 text-primary"></i>
+            </div>
+            <h5 class="fw-bold mb-3">{{ 'home.feature1.title' | t }}</h5>
+            <p class="text-secondary small">{{ 'home.feature1.desc' | t }}</p>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card p-4 h-100 rounded-3 border">
+            <div class="feature-icon mb-3">
+              <i class="bi bi-graph-up fs-2 text-success"></i>
+            </div>
+            <h5 class="fw-bold mb-3">{{ 'home.feature2.title' | t }}</h5>
+            <p class="text-secondary small">{{ 'home.feature2.desc' | t }}</p>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card p-4 h-100 rounded-3 border">
+            <div class="feature-icon mb-3">
+              <i class="bi bi-shield-check fs-2 text-info"></i>
+            </div>
+            <h5 class="fw-bold mb-3">{{ 'home.feature3.title' | t }}</h5>
+            <p class="text-secondary small">{{ 'home.feature3.desc' | t }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section id="how-it-works" class="how-section py-5" style="background: rgba(0, 208, 206, 0.05); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+    <div class="container-xl">
+      <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold mb-3">{{ 'home.howTitle' | t }}</h2>
+        <p class="text-secondary fs-5">{{ 'home.howSubtitle' | t }}</p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+          <div class="how-card p-4 text-center h-100">
+            <div class="step-number rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
+              1
+            </div>
+            <h5 class="fw-bold mb-2">{{ 'home.step1.title' | t }}</h5>
+            <p class="text-secondary small">{{ 'home.step1.desc' | t }}</p>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <div class="how-card p-4 text-center h-100">
+            <div class="step-number rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
+              2
+            </div>
+            <h5 class="fw-bold mb-2">{{ 'home.step2.title' | t }}</h5>
+            <p class="text-secondary small">{{ 'home.step2.desc' | t }}</p>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <div class="how-card p-4 text-center h-100">
+            <div class="step-number rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
+              3
+            </div>
+            <h5 class="fw-bold mb-2">{{ 'home.step3.title' | t }}</h5>
+            <p class="text-secondary small">{{ 'home.step3.desc' | t }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats-section py-5" #statsSection>
+    <div class="container-xl">
+      <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold mb-3">{{ 'home.statsTitle' | t }}</h2>
+      </div>
+
+      <div class="row g-4 text-center">
+        <div class="col-md-4">
+          <div class="stat-box p-4">
+            <div class="stat-number text-gradient fw-bold display-5">{{ formatNumber(activeUsers()) }}+</div>
+            <p class="text-secondary mt-2">{{ 'home.statUsers' | t }}</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stat-box p-4">
+            <div class="stat-number text-gradient fw-bold display-5">{{ formatNumber(supportiveMessages()) }}+</div>
+            <p class="text-secondary mt-2">{{ 'home.statMessages' | t }}</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stat-box p-4">
+            <div class="stat-number text-gradient fw-bold display-5">{{ satisfaction() }}%</div>
+            <p class="text-secondary mt-2">{{ 'home.statSatisfaction' | t }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section id="cta" class="cta-section py-5" style="background: linear-gradient(135deg, rgba(0, 123, 255, 0.1), rgba(0, 208, 206, 0.1)); border: 1px solid var(--border-color); border-radius: 1rem;">
+    <div class="container-xl text-center">
+      <h2 class="display-5 fw-bold mb-3">{{ 'home.ctaTitle' | t }}</h2>
+      <p class="text-secondary fs-5 mb-5">{{ 'home.ctaSubtitle' | t }}</p>
+      
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <button 
+          (click)="loginAnonymously()" 
+          [disabled]="isLoading"
+          class="btn btn-primary btn-lg px-5 fw-bold"
+        >
+          @if (isLoading) {
+            <span class="spinner-border spinner-border-sm me-2"></span>
+          } @else {
+            <i class="bi bi-incognito me-2"></i>
+          }
+          {{ 'auth.continueAnonymous' | t }}
+        </button>
+        
+        <button 
+          routerLink="/register" 
+          class="btn btn-outline-primary btn-lg px-5 fw-bold"
+        >
+          <i class="bi bi-person-plus me-2"></i>
+          {{ 'auth.signUp' | t }}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer-section py-5 border-top" style="border-color: var(--border-color) !important;">
+    <div class="container-xl">
+      <div class="row g-4 mb-5">
+        <div class="col-md-3">
+          <h6 class="fw-bold mb-3">SocializerAI</h6>
+          <p class="text-secondary small">{{ 'home.footerDesc' | t }}</p>
+        </div>
+        <div class="col-md-3">
+          <h6 class="fw-bold mb-3">{{ 'footer.product' | t }}</h6>
+          <ul class="list-unstyled small">
+            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.features' | t }}</a></li>
+            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.pricing' | t }}</a></li>
+            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.security' | t }}</a></li>
+          </ul>
+        </div>
+        <div class="col-md-3">
+          <h6 class="fw-bold mb-3">{{ 'footer.company' | t }}</h6>
+          <ul class="list-unstyled small">
+            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.about' | t }}</a></li>
+            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.blog' | t }}</a></li>
+            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.careers' | t }}</a></li>
+          </ul>
+        </div>
+        <div class="col-md-3">
+          <h6 class="fw-bold mb-3">{{ 'footer.legal' | t }}</h6>
+          <ul class="list-unstyled small">
+            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.privacy' | t }}</a></li>
+            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.terms' | t }}</a></li>
+            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.contact' | t }}</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <hr style="border-color: var(--border-color) !important;">
+      
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <p class="text-secondary small mb-0">&copy; 2026 SocializerAI. {{ 'footer.allRights' | t }}</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <div class="social-links">
+            <a href="#" class="text-secondary me-3"><i class="bi bi-facebook"></i></a>
+            <a href="#" class="text-secondary me-3"><i class="bi bi-twitter"></i></a>
+            <a href="#" class="text-secondary me-3"><i class="bi bi-linkedin"></i></a>
+            <a href="#" class="text-secondary"><i class="bi bi-instagram"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+

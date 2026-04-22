@@ -1063,3 +1063,155 @@
     display: none;
   }
 }
+
+/* ===== DASS Templates Integrated Styles ===== */
+.dass-templates-integrated {
+  background: transparent;
+  border-radius: 8px;
+  padding: 0;
+}
+
+.dass-templates-integrated .mb-2 {
+  color: #fff;
+  text-align: center;
+}
+
+.dass-templates-integrated strong {
+  color: #fff;
+  font-size: 1.1rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.dass-templates-integrated .text-secondary {
+  color: #ccc !important;
+}
+
+.dass-templates-integrated .btn-outline-primary {
+  color: rgba(200, 215, 255, 0.9);
+  border-color: rgba(139, 155, 255, 0.5);
+  background: rgba(139, 155, 255, 0.08);
+  transition: all 0.2s ease;
+}
+
+.dass-templates-integrated .btn-outline-primary:hover:not(:disabled) {
+  background: rgba(139, 155, 255, 0.18);
+  border-color: rgba(180, 200, 255, 0.8);
+  color: rgba(220, 235, 255, 1);
+  box-shadow: 0 4px 12px rgba(139, 155, 255, 0.15);
+}
+
+.dass-templates-integrated .btn-outline-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dass-templates-integrated .btn-sm {
+  padding: 0.8rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.dass-templates-integrated .btn-sm strong {
+  font-size: 1.1rem;
+  color: rgba(220, 235, 255, 1);
+  margin-bottom: 0;
+}
+
+.dass-templates-integrated .btn-sm small {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(200, 215, 255, 0.8);
+}
+
+/* DASS Response Buttons in Message */
+.dass-response-buttons {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(165, 178, 224, 0.1);
+  animation: fade-in 0.3s ease;
+}
+
+.dass-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.8rem 1rem !important;
+  min-width: 80px;
+  border: 2px solid rgba(139, 155, 255, 0.5) !important;
+  background: rgba(139, 155, 255, 0.08) !important;
+  color: rgba(200, 215, 255, 0.9) !important;
+  transition: all 0.25s ease;
+  font-size: 0.85rem;
+  border-radius: 10px;
+}
+
+.dass-btn:hover:not(:disabled) {
+  background: rgba(139, 155, 255, 0.18) !important;
+  border-color: rgba(180, 200, 255, 0.8) !important;
+  color: rgba(220, 235, 255, 1) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 155, 255, 0.15);
+}
+
+.dass-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.dass-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dass-btn-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: rgba(220, 235, 255, 1);
+}
+
+.dass-btn-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(200, 215, 255, 0.8);
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Intensity Badge */
+.intensity-badge {
+  display: inline-block;
+  padding: 0.45rem 0.85rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 0.75rem;
+}
+
+.intensity-badge.calm {
+  background: rgba(24, 199, 143, 0.15);
+  color: rgba(126, 231, 213, 0.95);
+  border: 1px solid rgba(24, 199, 143, 0.3);
+}
+
+.intensity-badge.neutral {
+  background: rgba(165, 178, 224, 0.15);
+  color: rgba(200, 215, 255, 0.95);
+  border: 1px solid rgba(165, 178, 224, 0.3);
+}
+
+.intensity-badge.anxious {
+  background: rgba(255, 193, 7, 0.15);
+  color: rgba(255, 213, 79, 0.95);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.intensity-badge.stressed {
+  background: rgba(239, 93, 108, 0.15);
+  color: rgba(255, 179, 191, 0.95);
+  border: 1px solid rgba(239, 93, 108, 0.3);
+}

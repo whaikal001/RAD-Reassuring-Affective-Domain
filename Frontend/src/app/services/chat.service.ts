@@ -28,6 +28,7 @@ export class ChatService {
   private _currentIntensity = signal<number>(5);
   private _language = signal<string>('en');
   private _lastResponse = signal<ChatResponse | null>(null);
+  private _screeningContextEmotion = signal<string | null>(null);  // Maintain screening intensity emotion
 
   messages = this._messages.asReadonly();
   isLoading = this._isLoading.asReadonly();
@@ -77,13 +78,16 @@ export class ChatService {
           this._currentIntensity.set(response.intensity);
           this._lastResponse.set(response);
 
+          // Use screening context emotion if available (maintain post-screening intensity tone)
+          const botEmotion = this._screeningContextEmotion() || response.emotion;
+
           // Add bot response
           this.addMessage({
             id: this.generateId(),
             content: this.buildMessageContent(response),
             isUser: false,
             timestamp: new Date(),
-            emotion: response.emotion,
+            emotion: botEmotion,
             intensity: response.intensity,
             tips: this.extractTips(response.strategies)
           });
@@ -205,12 +209,20 @@ export class ChatService {
     localStorage.setItem(this.LANGUAGE_KEY, lang);
   }
 
+  /**
+   * Set the screening context emotion to maintain intensity tone for follow-up bot messages
+   */
+  setScreeningContextEmotion(emotion: string | null): void {
+    this._screeningContextEmotion.set(emotion);
+  }
+
   clearChat(): void {
     this._messages.set([]);
     this._conversationId.set(null);
     this._currentEmotion.set(null);
     this._currentIntensity.set(5);
     this._lastResponse.set(null);
+    this._screeningContextEmotion.set(null);
   }
 
   addLocalBotMessage(content: string, emotion = 'neutral', intensity = 4): void {
