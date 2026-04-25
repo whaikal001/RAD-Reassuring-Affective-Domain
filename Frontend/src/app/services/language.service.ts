@@ -126,6 +126,7 @@ const TRANSLATIONS: Record<AppLanguage, Dictionary> = {
     'reports.trendExplanation': 'Higher line means stronger intensity across the selected period.',
     'reports.emotionDistribution': 'Emotion Distribution',
     'reports.noEmotionData': 'No emotion distribution data available for this range.',
+    'reports.emotionalJourney': 'Emotional Journey',
 
     'session.backToHistory': 'Back to history',
     'session.detail': 'Session Detail',
@@ -161,8 +162,8 @@ const TRANSLATIONS: Record<AppLanguage, Dictionary> = {
     'chat.manageAccountLanguage': 'Manage account and language',
 
     'common.english': 'English',
-    'common.malay': 'Malay'
-,
+    'common.malay': 'Malay',
+    'common.back': 'Back',
     'welcome.greeting': "Good afternoon! How's your day going so far?",
     'welcome.subtext': "I am here to listen and support you. What's on your mind?",
     'feature.emotionAware': 'Emotion-aware replies',
@@ -373,6 +374,7 @@ const TRANSLATIONS: Record<AppLanguage, Dictionary> = {
     'reports.trendExplanation': 'Garis yang lebih tinggi bermaksud intensiti lebih kuat sepanjang tempoh yang dipilih.',
     'reports.emotionDistribution': 'Taburan Emosi',
     'reports.noEmotionData': 'Tiada data taburan emosi untuk julat ini.',
+    'reports.emotionalJourney': 'Perjalanan Emosi',
 
     'session.backToHistory': 'Kembali ke sejarah',
     'session.detail': 'Butiran Sesi',
@@ -408,8 +410,8 @@ const TRANSLATIONS: Record<AppLanguage, Dictionary> = {
     'chat.manageAccountLanguage': 'Urus akaun dan bahasa',
 
     'common.english': 'Inggeris',
-    'common.malay': 'Melayu'
-,
+    'common.malay': 'Melayu',
+    'common.back': 'Kembali',
     'welcome.greeting': 'Selamat petang! Bagaimana hari anda setakat ini?',
     'welcome.subtext': 'Saya di sini untuk mendengar dan menyokong anda. Apa yang bermain di fikiran anda?',
     'feature.emotionAware': 'Balasan peka emosi',

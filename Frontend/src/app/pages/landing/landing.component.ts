@@ -59,7 +59,7 @@ export class LandingComponent implements AfterViewInit {
   }
 
   animateStats(): void {
-    this.animateCounter(0, 100, 1500, (value) => this.activeUsers.set(value));
+    this.animateCounter(0, 2000, 1500, (value) => this.activeUsers.set(value));
     this.animateCounter(0, 2500, 1500, (value) => this.supportiveMessages.set(value));
     this.animateCounter(0, 95, 1500, (value) => this.satisfaction.set(value));
   }

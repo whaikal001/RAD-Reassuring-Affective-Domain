@@ -1,12 +1,13 @@
 
     <section class="page-shell">
       <div class="page-header">
-        <div>
-          <p class="kicker mb-2">Analytics</p>
-          <h2 class="text-gradient mb-1">{{ 'reports.title' | t }}</h2>
-          <p class="text-secondary mb-0">{{ 'reports.subtitle' | t }}</p>
-        </div>
-        <button class="btn btn-outline-primary" (click)="loadReports()">
+        <button class="btn btn-outline-secondary btn-sm me-3" (click)="goBack()" [title]="'common.back' | t">
+          <i class="bi bi-chevron-left me-1"></i>{{ 'common.back' | t }}
+        </button>
+        <p class="kicker mb-2">Analytics</p>
+        <h2 class="text-gradient mb-1">{{ 'reports.title' | t }}</h2>
+        <p class="text-secondary mb-0">{{ 'reports.subtitle' | t }}</p>
+        <button class="btn btn-outline-primary ms-auto" (click)="loadReports()">
           <i class="bi bi-arrow-clockwise me-2"></i>{{ 'dashboard.refresh' | t }}
         </button>
       </div>
@@ -149,7 +150,7 @@
             <div class="row g-3 mt-1">
               <div class="col-lg-6">
                 <div class="detail-body chart-card h-100">
-                    <h6 class="mb-3">{{ 'reports.intensityTrend' | t }}</h6>
+                    <h6 class="mb-3"><i class="bi bi-graph-up me-2"></i>Intensity Pattern</h6>
 
                   @if (hasTrendData()) {
                     <div class="trend-shell" role="img" aria-label="Intensity trend chart">
@@ -166,7 +167,7 @@
 
               <div class="col-lg-6">
                   <div class="detail-body chart-card h-100">
-                  <h6 class="mb-3">{{ 'reports.emotionDistribution' | t }}</h6>
+                  <h6 class="mb-3"><i class="bi bi-pie-chart me-2"></i>Emotion Distribution</h6>
 
                   @if (getEmotionBars().length) {
                     <div class="emotion-bars">
@@ -189,6 +190,216 @@
               </div>
             </div>
           }
+
+          <!-- Wellbeing Activities Section -->
+          <div class="row g-3 mt-4">
+            <div class="col-12">
+              <div class="detail-body">
+                <h6 class="mb-3"><i class="bi bi-heart-pulse me-2"></i>Wellbeing Activities</h6>
+                
+                @if (loadingDetails()) {
+                  <div class="text-center py-4">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <p class="text-secondary mt-2 small mb-0">Loading activities...</p>
+                  </div>
+                } @else if (wellbeingActivities().length === 0) {
+                  <p class="text-secondary mb-0">No wellbeing activities recorded during this period.</p>
+                } @else {
+                  <div class="activity-list">
+                    @for (activity of wellbeingActivities(); track activity.id) {
+                      <div class="activity-card">
+                        <div class="activity-header">
+                          <div>
+                            <strong class="d-block">{{ activity.sessionTopic || 'Session' }}</strong>
+                            <small class="text-secondary">{{ activity.startedAt | date:'medium' }}</small>
+                          </div>
+                          <div class="activity-meta">
+                            <span class="badge bg-info">{{ activity.messageCount }} messages</span>
+                            @if (activity.sessionDuration) {
+                              <span class="badge bg-secondary ms-2">{{ activity.sessionDuration }} min</span>
+                            }
+                          </div>
+                        </div>
+                        @if (activity.dominantEmotion) {
+                          <div class="activity-emotion mt-2">
+                            <span class="me-2">{{ getEmotionEmoji(activity.dominantEmotion) }}</span>
+                            <span class="small">{{ activity.dominantEmotion | titlecase }}</span>
+                          </div>
+                        }
+                        <button class="btn btn-sm btn-outline-primary mt-3" (click)="resumeSession(activity.id)">
+                          <i class="bi bi-chat-dots me-1"></i>Continue Chat
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Coping Strategies & Suggestions Based on Emotion & Intensity -->
+          <div class="row g-3 mt-4">
+            <div class="col-12">
+              <div class="detail-body">
+                <h6 class="mb-3"><i class="bi bi-lightbulb me-2"></i>Personalized Coping Strategies</h6>
+                
+                @if (graphLogs().length > 0) {
+                  <div class="coping-strategies">
+                    <!-- High Intensity Alert -->
+                    @if (getGraphLogStats().maxIntensity >= 8) {
+                      <div class="alert alert-warning border-start border-4" role="alert">
+                        <strong><i class="bi bi-exclamation-triangle me-2"></i>High Stress Detected</strong>
+                        <p class="mb-0 mt-2">Your emotional intensity reached {{ getGraphLogStats().maxIntensity }}/10. Try these strategies:</p>
+                        <ul class="mt-2 mb-0 ps-4">
+                          <li>Take deep breathing exercises (5-10 minutes)</li>
+                          <li>Take a short walk or engage in light physical activity</li>
+                          <li>Try progressive muscle relaxation techniques</li>
+                          <li>Practice mindfulness meditation</li>
+                          <li>Reach out to a trusted friend or counselor</li>
+                        </ul>
+                      </div>
+                    }
+
+                    <!-- Emotion-Specific Suggestions -->
+                    @if (getMostCommonEmotion()) {
+                      <div class="emotion-strategies mt-3 p-3 rounded" [ngSwitch]="getMostCommonEmotion()?.toLowerCase()">
+                        <strong class="d-block mb-2">
+                          <i class="bi me-1" 
+                            [class.bi-emoji-angry]="getMostCommonEmotion()?.toLowerCase() === 'anger'"
+                            [class.bi-emoji-frown]="getMostCommonEmotion()?.toLowerCase() === 'sadness'"
+                            [class.bi-emoji-smile]="getMostCommonEmotion()?.toLowerCase() === 'joy'"
+                            [class.bi-emoji-neutral]="getMostCommonEmotion()?.toLowerCase() === 'neutral'"
+                            [class.bi-dash-circle]="getMostCommonEmotion()?.toLowerCase() !== 'anger' && getMostCommonEmotion()?.toLowerCase() !== 'sadness' && getMostCommonEmotion()?.toLowerCase() !== 'joy' && getMostCommonEmotion()?.toLowerCase() !== 'neutral'"></i>
+                          Managing {{ getMostCommonEmotion() | titlecase }}
+                        </strong>
+
+                        <ng-container *ngSwitchCase="'anger'">
+                          <p class="small mb-0">Try anger management techniques:</p>
+                          <ul class="small ps-4 mb-0">
+                            <li>Count down from 10 to calm your mind</li>
+                            <li>Express your feelings through journaling</li>
+                            <li>Engage in physical exercise to release tension</li>
+                            <li>Practice assertive communication</li>
+                          </ul>
+                        </ng-container>
+
+                        <ng-container *ngSwitchCase="'sadness'">
+                          <p class="small mb-0">To lift your mood:</p>
+                          <ul class="small ps-4 mb-0">
+                            <li>Engage in activities you enjoy</li>
+                            <li>Connect with supportive friends or family</li>
+                            <li>Practice gratitude journaling</li>
+                            <li>Consider professional support if needed</li>
+                          </ul>
+                        </ng-container>
+
+                        <ng-container *ngSwitchCase="'joy'">
+                          <p class="small mb-0">Great! You're feeling positive. Ways to maintain it:</p>
+                          <ul class="small ps-4 mb-0">
+                            <li>Share your happiness with others</li>
+                            <li>Engage in meaningful activities</li>
+                            <li>Continue healthy habits</li>
+                            <li>Express gratitude for positive moments</li>
+                          </ul>
+                        </ng-container>
+
+                        <ng-container *ngSwitchDefault>
+                          <p class="small mb-0">General wellness tips:</p>
+                          <ul class="small ps-4 mb-0">
+                            <li>Maintain regular sleep and exercise routines</li>
+                            <li>Practice mindfulness or meditation</li>
+                            <li>Engage in hobbies and social activities</li>
+                            <li>Seek support when needed</li>
+                          </ul>
+                        </ng-container>
+                      </div>
+                    }
+
+                    <!-- Low Intensity Positive Note -->
+                    @if (getGraphLogStats().avgIntensity < 5 && getGraphLogStats().maxIntensity < 7) {
+                      <div class="alert alert-success mt-3 border-start border-4" role="alert">
+                        <strong><i class="bi bi-check-circle me-2"></i>You're Doing Well!</strong>
+                        <p class="mb-0 mt-2">Your average intensity is {{ getGraphLogStats().avgIntensity }}/10. Keep up the positive momentum with regular self-care practices.</p>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <p class="text-secondary mb-0">Start tracking your emotional journey to receive personalized coping strategies.</p>
+                }
+              </div>
+            </div>
+          </div>
+          <div class="row g-3 mt-3">
+            <div class="col-12">
+              <div class="detail-body">
+                <h6 class="mb-3"><i class="bi bi-heart-pulse me-2"></i>{{ 'reports.emotionalJourney' | t }}</h6>
+                
+                @if (loadingDetails()) {
+                  <div class="text-center py-4">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                  </div>
+                } @else if (graphLogs().length === 0) {
+                  <p class="text-secondary mb-0">No emotional journey data available for this period.</p>
+                } @else {
+                  <!-- Graph Stats -->
+                  <div class="row g-2 mb-4">
+                    <div class="col-md-3">
+                      <div class="stat-badge">
+                        <span class="stat-label">Total Entries</span>
+                        <strong>{{ getGraphLogStats().totalPoints }}</strong>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="stat-badge">
+                        <span class="stat-label">Average Intensity</span>
+                        <strong>{{ getGraphLogStats().avgIntensity }}/10</strong>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="stat-badge">
+                        <span class="stat-label">Peak Intensity</span>
+                        <strong>{{ getGraphLogStats().maxIntensity }}/10</strong>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="stat-badge">
+                        <span class="stat-label">Lowest Intensity</span>
+                        <strong>{{ getGraphLogStats().minIntensity }}/10</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Graph Logs Timeline -->
+                  <div class="graph-logs-timeline">
+                    @for (dateGroup of getGroupedGraphLogs(); track dateGroup.date) {
+                      <div class="log-date-group">
+                        <div class="log-date-header">
+                          <strong class="small text-secondary">{{ dateGroup.date }}</strong>
+                          <span class="badge bg-secondary">{{ dateGroup.points.length }} entries</span>
+                        </div>
+                        <div class="log-entries">
+                          @for (point of dateGroup.points; track point.timestamp) {
+                            <div class="log-entry">
+                              <div class="log-time">{{ point.timestamp | date:'shortTime' }}</div>
+                              <div class="log-emotion">
+                                <span class="emoji">{{ getEmotionEmoji(point.emotion) }}</span>
+                                <span class="emotion-name">{{ point.emotion | titlecase }}</span>
+                              </div>
+                              <div class="log-intensity">
+                                <span [class]="getIntensityBadgeClass(point.intensity)">
+                                  {{ getIntensityLabel(point.intensity) }} ({{ point.intensity }}/10)
+                                </span>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
         </div>
       }
     </section>

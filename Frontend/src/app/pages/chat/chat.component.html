@@ -33,6 +33,21 @@
   <div class="mobile-sidebar-backdrop" [class.visible]="mobileSidebarOpen()" (click)="closeMobileSidebar()"></div>
 
   <aside class="emotion-sidebar" [class.collapsed]="sidebarCollapsed()" [class.mobile-open]="mobileSidebarOpen()">
+    <!-- Sidebar Branding Section -->
+    @if (!sidebarCollapsed()) {
+      <div class="sidebar-branding">
+        <div class="branding-logo">
+          <div class="logo-circle">
+            <i class="bi bi-heart-fill"></i>
+          </div>
+          <div class="logo-text">
+            <h4 class="app-name mb-0">SocializerAI</h4>
+            <small class="text-muted">Your Mental Wellness Companion</small>
+          </div>
+        </div>
+      </div>
+    }
+    
     <div class="sidebar-header">
       <h5 class="mb-0">
         <i class="bi bi-list me-2"></i>
@@ -45,64 +60,65 @@
     </div>
 
     @if (!sidebarCollapsed()) {
-      <!-- Sidebar language selector removed; language is managed in Profile -->
+      <!-- Navigation Menu for Registered Users -->
+      <nav class="sidebar-nav mt-4">
+        <ul class="nav flex-column">
+          @if (!authService.isAnonymous()) {
+            @if (!authService.hasRole('ADMIN')) {
+              <li class="nav-item">
+                <a class="nav-link" routerLink="/chat" routerLinkActive="active">
+                  <i class="bi bi-chat-dots me-2"></i>{{ 'nav.chat' | t }}
+                </a>
+              </li>
+            }
+            @if (authService.hasRole('ADMIN')) {
+              <li class="nav-item">
+                <a class="nav-link" routerLink="/admin" routerLinkActive="active">
+                  <i class="bi bi-graph-up me-2"></i>Admin
+                </a>
+              </li>
+            }
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/history" routerLinkActive="active">
+                <i class="bi bi-clock-history me-2"></i>{{ 'nav.recentChat' | t }}
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/reports" routerLinkActive="active">
+                <i class="bi bi-file-earmark-text me-2"></i>{{ 'nav.report' | t }}
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/profile" routerLinkActive="active">
+                <i class="bi bi-person-gear me-2"></i>{{ 'nav.profile' | t }}
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
 
-      @if (!authService.isAnonymous()) {
-        <div class="quick-links mt-4">
-          <label class="form-label">{{ 'chat.more' | t }}</label>
-          <a class="quick-link-card" routerLink="/history" (click)="closeMobileSidebar()">
-            <div>
-              <strong>{{ 'nav.recentChat' | t }}</strong>
-              <div class="small text-secondary">{{ 'chat.openPastConversations' | t }}</div>
-            </div>
-            <i class="bi bi-clock-history"></i>
-          </a>
-          <a class="quick-link-card" routerLink="/reports" (click)="closeMobileSidebar()">
-            <div>
-              <strong>{{ 'nav.report' | t }}</strong>
-              <div class="small text-secondary">{{ 'chat.viewGeneratedReports' | t }}</div>
-            </div>
-            <i class="bi bi-file-earmark-text"></i>
-          </a>
-          <a class="quick-link-card" routerLink="/profile" (click)="closeMobileSidebar()">
-            <div>
-              <strong>{{ 'nav.profile' | t }}</strong>
-              <div class="small text-secondary">{{ 'chat.manageAccountLanguage' | t }}</div>
-            </div>
-            <i class="bi bi-person-gear"></i>
-          </a>
-        </div>
-      }
+      <!-- User Preferences for Anonymous Users -->
+      @if (authService.isAnonymous()) {
+        <div class="anonymous-preferences mt-4 p-3">
+          <h6 class="mb-3"><i class="bi bi-gear me-1"></i>{{ 'profile.preferences' | t }}</h6>
 
-        @if (authService.isAnonymous()) {
-          <div class="anonymous-preferences mt-4 p-3">
-            <h6 class="mb-2"><i class="bi bi-gear me-1"></i>{{ 'profile.preferences' | t }}</h6>
-
-            <div class="mb-3">
-              <label class="form-label small mb-1">{{ 'profile.language' | t }}</label>
-              <div class="btn-group w-100">
-                <button class="btn btn-sm" [class.btn-primary]="language() === 'en'" [class.btn-outline-secondary]="language() !== 'en'" (click)="setLanguage('en')">{{ 'common.english' | t }}</button>
-                <button class="btn btn-sm" [class.btn-primary]="language() === 'ms'" [class.btn-outline-secondary]="language() !== 'ms'" (click)="setLanguage('ms')">{{ 'common.malay' | t }}</button>
-              </div>
-            </div>
-
-            <div class="setting-switch mb-3">
-              <div>
-                <strong class="small">{{ 'profile.ttsAuto' | t }}</strong>
-                <div class="text-secondary small">{{ 'profile.ttsAutoDesc' | t }}</div>
-              </div>
-              <input type="checkbox" [checked]="ttsService.isAutoSpeakEnabled()" (change)="onAutoTtsChanged($event)">
-            </div>
-
-            <div class="setting-switch">
-              <div>
-                <strong class="small">{{ 'profile.dataConsent' | t }}</strong>
-                <div class="text-secondary small">{{ 'profile.dataConsentDesc' | t }}</div>
-              </div>
-              <input type="checkbox" [checked]="anonDataConsent()" (change)="setAnonDataConsent($event)">
+          <div class="mb-3">
+            <label class="form-label small mb-1">{{ 'profile.language' | t }}</label>
+            <div class="btn-group w-100">
+              <button class="btn btn-sm" [class.btn-primary]="language() === 'en'" [class.btn-outline-secondary]="language() !== 'en'" (click)="setLanguage('en')">{{ 'common.english' | t }}</button>
+              <button class="btn btn-sm" [class.btn-primary]="language() === 'ms'" [class.btn-outline-secondary]="language() !== 'ms'" (click)="setLanguage('ms')">{{ 'common.malay' | t }}</button>
             </div>
           </div>
-        }
+
+          <div class="setting-switch">
+            <div>
+              <strong class="small">{{ 'profile.ttsAuto' | t }}</strong>
+              <div class="text-secondary small">{{ 'profile.ttsAutoDesc' | t }}</div>
+            </div>
+            <input type="checkbox" [checked]="ttsService.isAutoSpeakEnabled()" (change)="onAutoTtsChanged($event)">
+          </div>
+        </div>
+      }
 
     }
   </aside>
@@ -192,10 +208,12 @@
                   <div class="memory-emotions" *ngIf="emotionalMemory().recentEmotions?.length">
                     <small class="text-secondary">Recent feelings:</small>
                     <div class="emotion-tags">
-                      @for (emotion of emotionalMemory().recentEmotions; track emotion) {
-                        <span class="emotion-tag">
-                          {{ getHumanFriendlyEmotion(emotion.emotion, emotion.intensity) }}
-                        </span>
+                      @for (emotion of emotionalMemory().recentEmotions; track emotion; let hasNonNeutral = $first) {
+                        @if (emotion.emotion?.toLowerCase() !== 'neutral') {
+                          <span class="emotion-tag">
+                            {{ getHumanFriendlyEmotion(emotion.emotion, emotion.intensity) }}
+                          </span>
+                        }
                       }
                     </div>
                   </div>

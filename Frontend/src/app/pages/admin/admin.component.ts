@@ -1,13 +1,15 @@
 import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import Chart from 'chart.js/auto';
+import { TranslatePipe } from '../../pipes/t.pipe';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss'],
 })
@@ -17,7 +19,7 @@ export class AdminComponent implements AfterViewInit {
 
   users: Array<any> = [];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   ngAfterViewInit(): void {
     this.http.get<any[]>(`${environment.apiUrl}/admin/emotions`).subscribe({
@@ -89,5 +91,9 @@ export class AdminComponent implements AfterViewInit {
         }
       }
     });
+  }
+
+  goBack(): void {
+    this.router.navigate(['/chat']);
   }
 }

@@ -1,9 +1,9 @@
 import { Component, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
 import { ChatService } from '../../services/chat.service';
-import { EMOTIONS, EmotionalJourneyPoint, PaginatedSessions } from '../../models';
+import { EMOTIONS, EmotionalJourneyPoint, PaginatedSessions, SessionDetails } from '../../models';
 import { TranslatePipe } from '../../pipes/t.pipe';
 import { Chart, registerables } from 'chart.js';
 
@@ -28,6 +28,11 @@ export class HistoryComponent implements OnInit {
   readonly pageSize = 8;
   sessionThemes = signal<Map<string, string>>(new Map());
   
+  // Selected session for side panel
+  selectedSessionId = signal<string | null>(null);
+  sessionDetailsMap = signal<Map<string, SessionDetails>>(new Map());
+  loadingSessionDetails = signal(false);
+  
   // Chart stats
   emotionStats = signal<any>(null);
   trendIndicator = signal<string>('stable');
@@ -41,7 +46,10 @@ export class HistoryComponent implements OnInit {
   // Make Object available to template
   Object = Object;
 
-  constructor(private chatService: ChatService) {}
+  constructor(
+    private chatService: ChatService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadData();
@@ -735,5 +743,95 @@ export class HistoryComponent implements OnInit {
 
     // Default
     return '💬 Chat Session';
+  }
+
+  /**
+   * Toggle session expansion to show details
+   */
+  selectSession(sessionId: string): void {
+    this.selectedSessionId.set(sessionId);
+    this.loadSessionDetailsIfNeeded(sessionId);
+  }
+
+  closeSessionPanel(): void {
+    this.selectedSessionId.set(null);
+  }
+
+  getCurrentSession() {
+    const sessions = this.sessionsData()?.sessions || [];
+    const selectedId = this.selectedSessionId();
+    return sessions.find(s => s.id === selectedId);
+  }
+
+  /**
+   * Load session details if not already loaded
+   */
+  private loadSessionDetailsIfNeeded(sessionId: string): void {
+    const detailsMap = this.sessionDetailsMap();
+    if (detailsMap.has(sessionId)) {
+      return; // Already loaded
+    }
+
+    this.loadingSessionDetails.set(true);
+    this.chatService.getSessionDetails(sessionId).subscribe({
+      next: (details) => {
+        const updated = new Map(detailsMap);
+        updated.set(sessionId, details);
+        this.sessionDetailsMap.set(updated);
+        this.loadingSessionDetails.set(false);
+      },
+      error: (error) => {
+        console.error('Failed to load session details', error);
+        this.loadingSessionDetails.set(false);
+      }
+    });
+  }
+
+  /**
+   * Get session details from map
+   */
+  getSessionDetails(sessionId: string): SessionDetails | undefined {
+    return this.sessionDetailsMap().get(sessionId);
+  }
+
+  /**
+   * Resume a chat session
+   */
+  resumeSession(sessionId: string): void {
+    this.router.navigate(['/chat', { sessionId }]);
+  }
+
+  /**
+   * Get session report
+   */
+  getSessionReport(sessionId: string): string {
+    const details = this.getSessionDetails(sessionId);
+    if (!details || !details.session) {
+      return 'No report available';
+    }
+
+    const session = details.session;
+    const messageCount = details.messageCount || 0;
+    const emotions = details.sessionEmotions || [];
+
+    let report = `SESSION REPORT\n`;
+    report += `${'='.repeat(50)}\n\n`;
+    
+    report += `Session Topic: ${session.sessionTopic || 'General Chat'}\n`;
+    report += `Started: ${new Date(session.startedAt || '').toLocaleString()}\n`;
+    report += `Duration: ${session.sessionDuration || 0} minutes\n`;
+    report += `Messages: ${messageCount}\n\n`;
+
+    report += `EMOTIONAL INSIGHTS\n`;
+    report += `${'-'.repeat(50)}\n`;
+    report += `Dominant Emotion: ${session.dominantEmotion || 'Not recorded'}\n`;
+    report += `Emotions Recorded: ${emotions.length > 0 ? emotions.join(', ') : 'None'}\n`;
+    report += `Status: ${session.isActive ? 'Active' : 'Ended'}\n\n`;
+
+    return report;
+  }
+
+  goBack(): void {
+    this.router.navigate(['/chat']);
   }
 }

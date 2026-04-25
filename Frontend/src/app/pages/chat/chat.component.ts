@@ -926,7 +926,7 @@ export class ChatComponent implements AfterViewChecked, OnInit {
       },
       neutral: {
         emoji: '😐',
-        phrases: ['Neutral', 'Steady state', 'Balanced']
+        phrases: ['Steady state', 'Balanced', 'Centered']
       }
     };
 

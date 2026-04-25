@@ -140,7 +140,7 @@
     /* Chart.js Styles */
     .chart-container {
       position: relative;
-      height: 280px;
+      height: 420px;
       margin-bottom: 1.5rem;
       border-radius: 12px;
       background: rgba(255, 255, 255, 0.02);
@@ -326,5 +326,187 @@
         flex-direction: column;
         align-items: stretch;
       }
+    }
+
+    /* Expanded Session Details Styles */
+    .session-card-wrapper {
+      border-radius: 14px;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    .session-card {
+      width: 100%;
+      border-radius: 14px 14px 0 0;
+      cursor: pointer;
+
+      &.expanded {
+        border-bottom: none;
+        border-radius: 14px 14px 0 0;
+      }
+
+      i[class*="bi-chevron"] {
+        transition: transform 0.2s ease;
+      }
+
+      &.expanded i[class*="bi-chevron"] {
+        transform: rotate(180deg);
+      }
+    }
+
+    .session-details {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-top: none;
+      border-radius: 0 0 14px 14px;
+      padding: 1.2rem;
+      animation: slideDown 0.2s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .details-content {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .summary-section {
+      background: rgba(111, 124, 255, 0.03);
+      border: 1px solid rgba(111, 124, 255, 0.15);
+      border-radius: 10px;
+      padding: 1rem;
+
+      h6 {
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+      }
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1rem;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(165, 178, 224, 0.1);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .label {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+
+      .value {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+    }
+
+    .report-section {
+      h6 {
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+      }
+    }
+
+    .report-text {
+      margin: 0;
+      max-height: 220px;
+      overflow-y: auto;
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'Courier New', monospace;
+
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: rgba(165, 178, 224, 0.05);
+        border-radius: 3px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: rgba(165, 178, 224, 0.2);
+        border-radius: 3px;
+
+        &:hover {
+          background: rgba(165, 178, 224, 0.3);
+        }
+      }
+    }
+
+    .action-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+
+      .btn {
+        font-size: 0.85rem;
+        padding: 0.6rem 1rem;
+      }
+
+      @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* History Layout with Side Panel */
+    .history-layout {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 1.5rem;
+      align-items: start;
+
+      @media (max-width: 1024px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sessions-panel {
+      grid-column: 1;
+    }
+
+    .details-panel {
+      grid-column: 2;
+      grid-row: 1;
+      position: sticky;
+      top: 1rem;
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
+
+      @media (max-width: 1024px) {
+        grid-column: 1;
+        grid-row: auto;
+        position: static;
+        max-height: none;
+      }
+    }
+
+    .details-panel.open {
+      display: block;
+    }
+
+    .session-card.selected {
+      background: rgba(111, 124, 255, 0.15);
+      border-color: var(--primary-color);
     }
   

@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { forkJoin, of, switchMap } from 'rxjs';
 import { ProfileService } from '../../services/profile.service';
 import { UserPreferences, UserProfile } from '../../models';
@@ -54,7 +55,8 @@ export class ProfileComponent implements OnInit {
     private chatService: ChatService,
     public authService: AuthService,
     private languageService: LanguageService,
-    private ttsService: TtsService
+    private ttsService: TtsService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -204,5 +206,9 @@ export class ProfileComponent implements OnInit {
     }
 
     return null;
+  }
+
+  goBack(): void {
+    this.router.navigate(['/chat']);
   }
 }

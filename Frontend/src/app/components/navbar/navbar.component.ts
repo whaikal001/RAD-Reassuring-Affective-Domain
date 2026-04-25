@@ -23,61 +23,8 @@ import { TranslatePipe } from '../../pipes/t.pipe';
           </button>
           
           <div class="navbar-collapse" [class.show]="sidebarOpen()">
-            <ul class="navbar-nav me-auto">
+            <ul class="navbar-nav ms-auto">
               @if (authService.isAuthenticated()) {
-                @if (!authService.hasRole('ADMIN')) {
-                  <li class="nav-item">
-                    <a class="nav-link" routerLink="/chat" routerLinkActive="active">
-                      <i class="bi bi-chat-dots me-1"></i>{{ 'nav.chat' | t }}
-                    </a>
-                  </li>
-                }
-                @if (!authService.isAnonymous()) {
-                  @if (authService.hasRole('ADMIN')) {
-                    <li class="nav-item">
-                      <a class="nav-link" routerLink="/admin" routerLinkActive="active">
-                        <i class="bi bi-graph-up me-1"></i>Admin
-                      </a>
-                    </li>
-                  }
-                  <li class="nav-item">
-                    <a class="nav-link" routerLink="/history" routerLinkActive="active">
-                      <i class="bi bi-clock-history me-1"></i>{{ 'nav.recentChat' | t }}
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" routerLink="/reports" routerLinkActive="active">
-                      <i class="bi bi-file-earmark-text me-1"></i>{{ 'nav.report' | t }}
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" routerLink="/profile" routerLinkActive="active">
-                      <i class="bi bi-person-gear me-1"></i>{{ 'nav.profile' | t }}
-                    </a>
-                  </li>
-                }
-              }
-            </ul>
-            
-            <ul class="navbar-nav">
-              @if (!isChatPage) {
-                <li class="nav-item dropdown me-2">
-                  <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <span class="flag me-1">{{ languageService.language() === 'en' ? '🇬🇧' : '🇲🇾' }}</span>
-                    <span class="lang-label">{{ languageService.language() === 'en' ? ('common.english' | t) : ('common.malay' | t) }}</span>
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                    <li><button class="dropdown-item d-flex align-items-center" (click)="setLanguage('en')"><span class="me-2">🇬🇧</span>{{ 'common.english' | t }}</button></li>
-                    <li><button class="dropdown-item d-flex align-items-center" (click)="setLanguage('ms')"><span class="me-2">🇲🇾</span>{{ 'common.malay' | t }}</button></li>
-                  </ul>
-                </li>
-              }
-              @if (authService.isAuthenticated()) {
-                <li class="nav-item d-flex align-items-center me-2">
-                  <span class="session-pill" [class.anonymous]="authService.isAnonymous()">
-                    {{ authService.isAnonymous() ? ('nav.sessionAnonymous' | t) : ('nav.sessionRegistered' | t) }}
-                  </span>
-                </li>
                 <li class="nav-item">
                   <button class="btn btn-outline-light btn-sm" (click)="logout()">
                     <i class="bi bi-box-arrow-right me-1"></i>{{ 'nav.logout' | t }}
@@ -257,10 +204,6 @@ export class NavbarComponent implements OnInit {
     this.sidebarOpen.set(false);
     localStorage.removeItem('sidebarOpen');
     this.authService.logout();
-  }
-
-  setLanguage(lang: 'en' | 'ms'): void {
-    this.languageService.setLanguage(lang);
   }
 
   get isChatPage(): boolean {

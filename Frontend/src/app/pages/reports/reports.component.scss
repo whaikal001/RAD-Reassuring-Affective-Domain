@@ -190,4 +190,148 @@
         align-items: stretch;
       }
     }
+
+    /* Wellbeing Activities Styles */
+    .activity-list {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .activity-card {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 1rem;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: var(--primary-color);
+        background: rgba(111, 124, 255, 0.05);
+      }
+    }
+
+    .activity-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .activity-meta {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .activity-emotion {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 8px;
+      width: fit-content;
+      font-size: 0.9rem;
+    }
+
+    /* Graph Logs Styles */
+    .stat-badge {
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 0.9rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+
+      .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+
+      strong {
+        font-size: 1.25rem;
+        color: var(--text-primary);
+      }
+    }
+
+    .graph-logs-timeline {
+      display: grid;
+      gap: 1.2rem;
+    }
+
+    .log-date-group {
+      border-left: 2px solid var(--primary-color);
+      padding-left: 1rem;
+      position: relative;
+    }
+
+    .log-date-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.8rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .log-entries {
+      display: grid;
+      gap: 0.7rem;
+    }
+
+    .log-entry {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 1rem;
+      align-items: center;
+      padding: 0.7rem;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+
+      @media (max-width: 576px) {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+    }
+
+    .log-time {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      font-family: 'Courier New', monospace;
+    }
+
+    .log-emotion {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      .emoji {
+        font-size: 1.2rem;
+      }
+
+      .emotion-name {
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+    }
+
+    .log-intensity {
+      text-align: right;
+
+      @media (max-width: 576px) {
+        text-align: left;
+      }
+
+      .badge {
+        font-size: 0.8rem;
+        padding: 0.35rem 0.6rem;
+      }
+    }
   

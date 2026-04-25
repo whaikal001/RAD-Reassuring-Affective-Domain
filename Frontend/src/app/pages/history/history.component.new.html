@@ -1,0 +1,64 @@
+<!-- This is the corrected session list block using only *ngIf -->
+                <div class="session-list">
+                  <div *ngFor="let session of sessionsData()?.sessions; trackBy: trackBySessionId" class="session-card-wrapper">
+                    <button class="session-card" type="button" (click)="toggleSessionExpansion(session.id)" [class.expanded]="expandedSessionId() === session.id">
+                      <div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                          <strong>{{ getSessionTitle(session) }}</strong>
+                          <span class="badge" [class]="session.isActive ? 'bg-success' : 'bg-secondary'">
+                            {{ session.isActive ? ('session.active' | t) : ('session.ended' | t) }}
+                          </span>
+                        </div>
+                        <div class="text-secondary small">{{ 'history.started' | t }} {{ session.startedAt | date:'medium' }}</div>
+                      </div>
+                      <div class="text-end">
+                        <div class="fw-semibold">{{ session.messageCount }} {{ 'history.messagesLabel' | t }}</div>
+                        <small class="text-secondary">{{ 'history.duration' | t }} {{ session.sessionDuration || 0 }} {{ 'history.minutes' | t }}</small>
+                      </div>
+                      <i class="bi" [class]="expandedSessionId() === session.id ? 'bi-chevron-up' : 'bi-chevron-down'" style="color: var(--text-secondary);"></i>
+                    </button>
+
+                    <div class="session-details" *ngIf="expandedSessionId() === session.id">
+                      <div class="text-center py-4" *ngIf="loadingSessionDetails()">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                      </div>
+                      <div *ngIf="!loadingSessionDetails() && (getSessionDetails(session.id) as details)">
+                        <div class="details-content">
+                          <div class="summary-section mb-3">
+                            <h6 class="mb-2">Session Summary</h6>
+                            <div class="summary-row" *ngIf="details.session.dominantEmotion">
+                              <span class="label">Primary Emotion:</span>
+                              <span class="value">
+                                {{ getEmotionEmoji(details.session.dominantEmotion) }}
+                                {{ details.session.dominantEmotion | titlecase }}
+                              </span>
+                            </div>
+                            <div class="summary-row">
+                              <span class="label">Total Messages:</span>
+                              <span class="value">{{ details.messageCount }}</span>
+                            </div>
+                            <div class="summary-row" *ngIf="details.userMessageCount !== undefined && details.botMessageCount !== undefined">
+                              <span class="label">You:</span>
+                              <span class="value">{{ details.userMessageCount }} | Bot: {{ details.botMessageCount }}</span>
+                            </div>
+                          </div>
+
+                          <div class="report-section mb-3 p-2 rounded" style="background: rgba(111, 124, 255, 0.05); border: 1px solid var(--border-color);">
+                            <h6 class="mb-2"><i class="bi bi-file-earmark-text me-1"></i>Session Report</h6>
+                            <pre class="report-text">{{ getSessionReport(session.id) }}</pre>
+                          </div>
+
+                          <div class="action-buttons">
+                            <button class="btn btn-sm btn-primary" (click)="resumeSession(session.id)">
+                              <i class="bi bi-chat-dots me-1"></i>Continue Chat
+                            </button>
+                            <a class="btn btn-sm btn-outline-primary" [routerLink]="['/session', session.id]">
+                              <i class="bi bi-eye me-1"></i>View Full Session
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                      <p class="text-secondary small mb-0" *ngIf="!loadingSessionDetails() && !getSessionDetails(session.id)">Failed to load session details</p>
+                    </div>
+                  </div>
+                </div>

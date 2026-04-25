@@ -1,10 +1,11 @@
 
     <section class="page-shell">
       <div class="page-header">
-        <div>
-          <h2 class="text-gradient mb-1">{{ 'profile.title' | t }}</h2>
-          <p class="text-secondary mb-0">{{ 'profile.subtitle' | t }}</p>
-        </div>
+        <button class="btn btn-outline-secondary btn-sm me-3" (click)="goBack()" [title]="'common.back' | t">
+          <i class="bi bi-chevron-left me-1"></i>{{ 'common.back' | t }}
+        </button>
+        <h2 class="text-gradient mb-1">{{ 'profile.title' | t }}</h2>
+        <p class="text-secondary mb-0">{{ 'profile.subtitle' | t }}</p>
       </div>
 
       @if (loading()) {
