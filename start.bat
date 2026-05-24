@@ -1,6 +1,6 @@
 @echo off
 echo ============================================
-echo    SocializerAI - Docker Quick Start
+echo    RadAI - Docker Quick Start
 echo ============================================
 echo.
 
@@ -22,7 +22,7 @@ if not exist .env (
     echo.
 )
 
-echo Starting SocializerAI...
+echo Starting RadAI...
 echo This may take a few minutes on first run.
 echo.
 
@@ -31,7 +31,7 @@ docker-compose up --build -d
 
 echo.
 echo ============================================
-echo    SocializerAI is starting up!
+echo    RadAI is starting up!
 echo ============================================
 echo.
 echo Frontend: http://localhost

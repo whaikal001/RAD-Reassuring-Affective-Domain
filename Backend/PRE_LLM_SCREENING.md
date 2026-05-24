@@ -42,7 +42,7 @@ Adjust these thresholds in configuration if you want different sensitivity.
 - Security & Privacy: store DASS responses encrypted at rest; retain only what's necessary per your retention policy.
 
 ## Integration points
-- Place controller under `SocializerAI/Backend/src/main/java/...` as `PreLLMScreeningController` and middleware as `PreLLMFilter` (or equivalent Spring `HandlerInterceptor`).
+- Place controller under `RadAI/Backend/src/main/java/...` as `PreLLMScreeningController` and middleware as `PreLLMFilter` (or equivalent Spring `HandlerInterceptor`).
 - Use existing user/session store to link screening results to the active chat session.
 
 ## Quick example pseudocode (server)

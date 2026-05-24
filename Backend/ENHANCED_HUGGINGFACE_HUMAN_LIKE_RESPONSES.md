@@ -476,7 +476,7 @@ Safety Compliance:    100%
 
 Enable debug logging:
 ```properties
-logging.level.com.SocializerAI.chat.flow.service.HuggingFaceResponseEnhancer=DEBUG
+logging.level.com.radai.chat.flow.service.HuggingFaceResponseEnhancer=DEBUG
 ```
 
 Check logs for:
@@ -487,7 +487,7 @@ DEBUG: AI Prompt: [Full prompt sent to HF]
 ### Monitor Response Quality
 
 ```properties
-logging.level.com.SocializerAI.chat.flow.service.HuggingFaceResponseEnhancer=INFO
+logging.level.com.radai.chat.flow.service.HuggingFaceResponseEnhancer=INFO
 ```
 
 Look for:

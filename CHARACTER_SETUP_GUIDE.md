@@ -1,7 +1,7 @@
 # 3D Character Animation Setup Guide
 
 ## Overview
-Your SocializerAI chatbot now displays an animated character that changes expressions based on the conversation emotion. The character reacts dynamically to different emotional states during chat.
+Your RadAI chatbot now displays an animated character that changes expressions based on the conversation emotion. The character reacts dynamically to different emotional states during chat.
 
 ## File Structure
 

@@ -13,10 +13,10 @@ export class AuthService {
   private readonly API_URL = `${environment.apiUrl}/auth`;
   private readonly USERS_API_URL = `${environment.apiUrl}/users`;
   private readonly PREFERENCES_API_URL = `${environment.apiUrl}/user/preferences`;
-  private readonly TOKEN_KEY = 'socializerai_token';
-  private readonly USER_ID_KEY = 'socializerai_user_id';
-  private readonly AUTH_MODE_KEY = 'socializerai_auth_mode';
-  private readonly DISPLAY_NAME_KEY = 'socializerai_display_name';
+  private readonly TOKEN_KEY = 'radai_token';
+  private readonly USER_ID_KEY = 'radai_user_id';
+  private readonly AUTH_MODE_KEY = 'radai_auth_mode';
+  private readonly DISPLAY_NAME_KEY = 'radai_display_name';
 
   private _isAuthenticated = signal<boolean>(false);
   private _userId = signal<string | null>(null);

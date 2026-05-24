@@ -2,31 +2,31 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: socializerai-db
+    container_name: radai-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: socializerai
-      POSTGRES_USER: ${DB_USER:-socializerai}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-socializerai123}
+      POSTGRES_DB: radai
+      POSTGRES_USER: ${DB_USER:-radai}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-radai123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./setup.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-socializerai} -d socializerai"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-radai} -d radai"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - socializerai-net
+      - radai-net
 
   # Spring Boot Backend
   backend:
     build:
       context: ./Backend
       dockerfile: Dockerfile
-    container_name: socializerai-backend
+    container_name: radai-backend
     restart: unless-stopped
     depends_on:
       postgres:
@@ -36,9 +36,9 @@ services:
     environment:
       # Database (Supabase)
       # Database - use local postgres for demo/dev, or Supabase for production
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/socializerai}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-socializerai}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-socializerai123}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/radai}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-radai}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-radai123}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       
       # JWT
@@ -60,25 +60,25 @@ services:
       # Default emergency helpline (set to Malaysia emergency number)
       DEFAULT_HELPLINE: ${DEFAULT_HELPLINE:-If you're in immediate danger, call 999 (Malaysia emergency)}
     networks:
-      - socializerai-net
+      - radai-net
 
   # Angular Frontend (Nginx)
   frontend:
     build:
       context: ./Frontend
       dockerfile: Dockerfile
-    container_name: socializerai-frontend
+    container_name: radai-frontend
     restart: unless-stopped
     depends_on:
       - backend
     ports:
       - "3000:80"
     networks:
-      - socializerai-net
+      - radai-net
 
 volumes:
   postgres_data:
 
 networks:
-  socializerai-net:
+  radai-net:
     driver: bridge

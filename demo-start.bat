@@ -2,7 +2,7 @@
 setlocal
 
 echo ============================================
-echo   SocializerAI Demo URL Starter
+echo   RadAI Demo URL Starter
 echo ============================================
 echo.
 

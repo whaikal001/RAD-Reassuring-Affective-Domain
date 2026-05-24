@@ -14,8 +14,8 @@ import { TranslatePipe } from '../../pipes/t.pipe';
       <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
           <a class="navbar-brand d-flex align-items-center gap-2" routerLink="/">
-            <img class="brand-logo" src="/assets/Gemini_Generated_Image_ym28zxym28zxym28-removebg-preview.png" alt="SocializerAI" width="56" height="56" />
-            <span class="fw-bold">SocializerAI</span>
+            <img class="brand-logo" src="/assets/Gemini_Generated_Image_ym28zxym28zxym28-removebg-preview.png" alt="RadAI" width="56" height="56" />
+            <span class="fw-bold">RadAI</span>
           </a>
           
           <button class="navbar-toggler" type="button" (click)="toggleSidebar()">

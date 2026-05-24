@@ -1,6 +1,6 @@
 @echo off
-echo Stopping SocializerAI...
+echo Stopping RadAI...
 docker-compose down
 echo.
-echo SocializerAI stopped.
+echo RadAI stopped.
 pause

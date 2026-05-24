@@ -21,7 +21,7 @@ module.exports = function (config) {
       suppressAll: true
     },
     coverageReporter: {
-      dir: require('path').join(__dirname, './coverage/socializerai-frontend'),
+      dir: require('path').join(__dirname, './coverage/radai-frontend'),
       subdir: '.',
       reporters: [
         { type: 'html' },

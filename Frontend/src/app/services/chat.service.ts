@@ -19,7 +19,7 @@ import { AuthService } from './auth.service';
 })
 export class ChatService {
   private readonly API_URL = `${environment.apiUrl}/chat/flow`;
-  private readonly LANGUAGE_KEY = 'socializerai_language';
+  private readonly LANGUAGE_KEY = 'radai_language';
   
   private _messages = signal<Message[]>([]);
   private _isLoading = signal<boolean>(false);

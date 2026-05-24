@@ -1,4 +1,4 @@
-import { Component, signal, ViewChild, ElementRef, AfterViewChecked, OnInit } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef, AfterViewChecked, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -21,6 +21,7 @@ import { AnimatedCharacterComponent } from '../../components/animated-character/
 export class ChatComponent implements AfterViewChecked, OnInit {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
   @ViewChild('messageTextarea') private messageTextarea?: ElementRef<HTMLTextAreaElement>;
+  @ViewChild('characterDisplayRef') private characterDisplay?: ElementRef;
 
   messageInput = '';
   language = signal('en');
@@ -45,6 +46,10 @@ export class ChatComponent implements AfterViewChecked, OnInit {
   screeningMessage = signal<string | null>(localStorage.getItem('screening_message'));
   screeningResources = signal<string[] | null>(null);
   currentIntensity = signal<number | null>(null);
+  // Signals to manage crossfade between character images
+  currentCharacter = signal<string>(this.characterImage());
+  // Control visibility to trigger fade-in when character changes
+  imageVisible = signal<boolean>(true);
 
   // DASS Template properties
   dassTemplates: TemplateItem[] = [];
@@ -70,6 +75,50 @@ export class ChatComponent implements AfterViewChecked, OnInit {
     private templatesService: TemplatesService
   ) {}
 
+  /**
+   * Map current emotion + intensity to a static character image asset.
+   * Uses `Frontend/src/assets/characters/*.png` files.
+   */
+  characterImage(): string {
+    // Prefer explicit currentEmotion (from backend), then the latest message's emotion (local bot messages),
+    // then the lastResponse stored object. This ensures local/addLocalBotMessage emotions are respected.
+    const msgs = this.chatService.messages();
+    const lastMsgEmotion = msgs && msgs.length ? msgs[msgs.length - 1].emotion : null;
+    const resp = (this.chatService.currentEmotion() || lastMsgEmotion || this.chatService.lastResponse()?.emotion || 'neutral') as string;
+    const emotion = (resp || 'neutral').toString().toLowerCase();
+    const intensity = this.currentIntensity() ?? 0;
+
+    // High intensity sadness
+    if (emotion.includes('sad') || emotion.includes('depressed')) {
+      return intensity >= 2 ? '/assets/characters/RadSadHigh.png' : '/assets/characters/RadSadLow.png';
+    }
+
+    if (emotion.includes('happy') || emotion.includes('joy') || emotion.includes('smile') || emotion.includes('glad') ) {
+      return '/assets/characters/RadSmiling.png';
+    }
+
+    if (emotion.includes('thinking') || emotion.includes('ponder')) {
+      return '/assets/characters/RadThinking.png';
+    }
+
+    if (emotion.includes('welcome') || emotion.includes('welcoming') || emotion.includes('hello')) {
+      return '/assets/characters/RadWelcoming.png';
+    }
+
+    if (emotion.includes('encourage') || emotion.includes('encouraging') || emotion.includes('empathy')) {
+      return '/assets/characters/RadEncouraging.png';
+    }
+
+    if (emotion.includes('good') || emotion.includes('proud') || emotion.includes('congrats')) {
+      return '/assets/characters/RadGoodJob.png';
+    }
+
+    // default neutral
+    return '/assets/characters/RadNeutral.png';
+  }
+
+  
+
   ngOnInit(): void {
     this.language.set(this.chatService.language());
     this.chatService.getContext().subscribe({
@@ -82,6 +131,8 @@ export class ChatComponent implements AfterViewChecked, OnInit {
       next: (res) => this.activeGoals.set(res.goals || []),
       error: () => this.activeGoals.set([])
     });
+
+    // parallax removed — character stays fixed
 
     // Load emotional memory for registered users
     if (!this.authService.isAnonymous()) {
@@ -127,6 +178,20 @@ export class ChatComponent implements AfterViewChecked, OnInit {
         this.showGreetingAndStartScreening();
       }
     }
+
+    // Keep the static character image in sync with emotion/intensity changes
+    effect(() => {
+      const img = this.characterImage();
+      if (img && img !== this.currentCharacter()) {
+        // trigger fade-out, swap src, then fade-in to avoid stacking
+        this.imageVisible.set(false);
+        setTimeout(() => {
+          this.currentCharacter.set(img);
+          // small delay to allow browser to register src change before fading in
+          setTimeout(() => this.imageVisible.set(true), 40);
+        }, 120);
+      }
+    });
   }
 
   startConversationalScreening(): void {
@@ -305,7 +370,7 @@ export class ChatComponent implements AfterViewChecked, OnInit {
 
       // Show bot greeting message first
       const greetingMessage = this.authService.isAnonymous() 
-        ? "Hi there! 👋 I'm SocializerAI, your mental wellness companion. Before we start our chat, I'd like to understand how you're feeling today. I'll ask you a few quick questions to get a better sense of your emotional state. Ready?"
+        ? "Hi there! 👋 I'm RadAI, your mental wellness companion. Before we start our chat, I'd like to understand how you're feeling today. I'll ask you a few quick questions to get a better sense of your emotional state. Ready?"
         : "Welcome back! 😊 Before we continue, let me check in with how you're feeling today. I'll ask you a few quick questions. Ready?";
       
       this.chatService.addLocalBotMessage(greetingMessage, 'joy', 1);
@@ -709,7 +774,6 @@ export class ChatComponent implements AfterViewChecked, OnInit {
       this.shouldScroll = false;
     }
   }
-
   setLanguage(lang: string): void {
     this.language.set(lang);
     this.chatService.setLanguage(lang);
@@ -965,7 +1029,7 @@ export class ChatComponent implements AfterViewChecked, OnInit {
 
   /**
    * Show the response transformation: empathy → sympathy
-   * This is the CORE mechanic of SocializerAI
+   * This is the CORE mechanic of RadAI
    */
   getResponseApproach(approach?: string | null): string {
     if (!approach) {
@@ -1024,7 +1088,7 @@ export class ChatComponent implements AfterViewChecked, OnInit {
   }
 
   getBotColor(tone: string, part: 'head' | 'body' | 'arm' | 'heart' | 'border' | 'line' | 'eye' | 'mouth' | 'cheek'): string {
-    const palettes: Record<string, Record<typeof part, string>> = {
+    const palettes: Record<string, Record<string, string>> = {
       happy: {
         head: '#25d7d7', body: '#18c78f', arm: '#9ff0dd', heart: '#ffd166', border: '#24c78f', line: '#ffffff', eye: '#ffffff', mouth: '#ffffff', cheek: 'rgba(255,255,255,0.30)'
       },

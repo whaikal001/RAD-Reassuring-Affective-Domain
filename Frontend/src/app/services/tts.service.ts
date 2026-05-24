@@ -21,7 +21,7 @@ export interface TtsResponse {
 })
 export class TtsService {
   private readonly API_URL = `${environment.apiUrl}/tts`;
-  private readonly AUTO_TTS_KEY = 'socializerai_tts_enabled';
+  private readonly AUTO_TTS_KEY = 'radai_tts_enabled';
   private synth: SpeechSynthesis | null = null;
   private readonly speakingState = signal(false);
   private readonly autoSpeakState = signal(true);

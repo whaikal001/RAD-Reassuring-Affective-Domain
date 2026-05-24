@@ -1,6 +1,6 @@
-# Package Reorganization Script for SocializerAI Backend
+# Package Reorganization Script for RadAI Backend
 
-$basePath = "src\main\java\com\SocializerAI"
+$basePath = "src\main\java\com\radai"
 
 Write-Host "Starting package reorganization..." -ForegroundColor Green
 
@@ -29,8 +29,8 @@ function Move-JavaFile {
         $content = Get-Content $destPath -Raw
         
         # Update package declaration
-        $newPackage = "package com.SocializerAI.$type;"
-        $content = $content -replace "package com\.SocializerAI\.[^;]+;", $newPackage
+        $newPackage = "package com.radai.$type;"
+        $content = $content -replace "package com\.radai\.[^;]+;", $newPackage
         
         # Write updated content
         Set-Content $destPath $content -NoNewline
@@ -153,13 +153,13 @@ foreach ($file in $repositoryFiles) {
 
 Write-Host "`n✅ Reorganization complete!" -ForegroundColor Green
 Write-Host "`nNew structure:" -ForegroundColor Yellow
-Write-Host "  com.SocializerAI.model       - All entity/model classes"
-Write-Host "  com.SocializerAI.dto         - All DTOs"
-Write-Host "  com.SocializerAI.service     - All service classes"
-Write-Host "  com.SocializerAI.controller  - All controllers"
-Write-Host "  com.SocializerAI.repository  - All repositories"
-Write-Host "  com.SocializerAI.config      - Configuration (unchanged)"
-Write-Host "  com.SocializerAI.common      - Common/Utility (unchanged)"
+Write-Host "  com.radai.model       - All entity/model classes"
+Write-Host "  com.radai.dto         - All DTOs"
+Write-Host "  com.radai.service     - All service classes"
+Write-Host "  com.radai.controller  - All controllers"
+Write-Host "  com.radai.repository  - All repositories"
+Write-Host "  com.radai.config      - Configuration (unchanged)"
+Write-Host "  com.radai.common      - Common/Utility (unchanged)"
 
 Write-Host "`n⚠️  Next steps:" -ForegroundColor Yellow
 Write-Host "1. Update all import statements in files"

@@ -28,7 +28,7 @@ if (action === 'intervention') showInterventionModal()
 - Accessibility: ensure keyboard navigation and screen-reader labels for each question.
 
 ## Notes for Frontend Engineers
-- Locate chat bootstrap in `SocializerAI/Frontend/src/...` and call screening before initializing the LLM chat component.
+- Locate chat bootstrap in `RadAI/Frontend/src/...` and call screening before initializing the LLM chat component.
 - Provide a visible banner when the session is under monitoring and a clear path to contact human support.
 
 ---

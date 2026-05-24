@@ -1,6 +1,6 @@
-# SocializerAI Frontend
+# RadAI Frontend
 
-Angular 17+ frontend for the SocializerAI mental health companion application.
+Angular 17+ frontend for the RadAI mental health companion application.
 
 ## Prerequisites
 
@@ -76,7 +76,7 @@ The frontend connects to the Spring Boot backend at:
 npm run build
 ```
 
-Output will be in `dist/socializerai-frontend/`
+Output will be in `dist/radai-frontend/`
 
 ## Styling
 

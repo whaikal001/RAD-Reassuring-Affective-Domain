@@ -39,7 +39,16 @@ describe('ChatComponent', () => {
       error: jasmine.createSpy('error')
     };
 
-    return new ChatComponent(chatServiceMock, authServiceMock, ttsServiceMock, uiFeedbackMock);
+    const screeningServiceMock: any = {
+      submitScreening: jasmine.createSpy('submitScreening').and.returnValue(of({ action: 'allow' }))
+    };
+
+    const templatesServiceMock: any = {
+      fetchTemplates: jasmine.createSpy('fetchTemplates').and.returnValue(of([])),
+      trackResponse: jasmine.createSpy('trackResponse')
+    };
+
+    return new ChatComponent(chatServiceMock, authServiceMock, ttsServiceMock, uiFeedbackMock, screeningServiceMock, templatesServiceMock);
   }
 
   it('sends message on Enter key without Shift', () => {

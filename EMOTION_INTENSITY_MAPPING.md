@@ -1,4 +1,4 @@
-# Character Expression Mapping - SocializerAI
+# Character Expression Mapping - RadAI
 
 ## Your Character Assets
 

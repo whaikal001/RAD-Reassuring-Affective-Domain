@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "socializerai-frontend": {
+    "radai-frontend": {
       "projectType": "application",
       "root": "",
       "schematics": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/socializerai-frontend",
+            "outputPath": "dist/radai-frontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
@@ -67,10 +67,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "socializerai-frontend:build:production"
+              "buildTarget": "radai-frontend:build:production"
             },
             "development": {
-              "buildTarget": "socializerai-frontend:build:development"
+              "buildTarget": "radai-frontend:build:development"
             }
           },
           "defaultConfiguration": "development"

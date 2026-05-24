@@ -12,7 +12,7 @@ COPY Backend/.mvn .mvn
 RUN ./mvnw -B -DskipTests clean package
 
 # Copy the JAR from target
-RUN cp target/socializerai-*.jar app.jar
+RUN cp target/radai-*.jar app.jar
 
 # Expose port (default 8080, override with PORT env var)
 EXPOSE 8080

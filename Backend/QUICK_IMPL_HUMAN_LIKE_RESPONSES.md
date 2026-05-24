@@ -26,7 +26,7 @@ You now have **3 new advanced components**:
 Check that these files exist in your Backend:
 
 ```
-Backend/src/main/java/com/SocializerAI/chat/flow/service/
+Backend/src/main/java/com/radai/chat/flow/service/
 ├── HuggingFaceResponseEnhancer.java          ✅ NEW
 ├── EmotionAwarePersonalization.java          ✅ NEW
 ├── FlowWithAIService.java                    ✅ UPDATED
@@ -77,8 +77,8 @@ hf.enable.emotion.personalization=true
 hf.conversation.history.size=3
 
 # ===== Logging =====
-logging.level.com.SocializerAI.chat.flow.service.HuggingFaceResponseEnhancer=INFO
-logging.level.com.SocializerAI.chat.flow.service.EmotionAwarePersonalization=INFO
+logging.level.com.radai.chat.flow.service.HuggingFaceResponseEnhancer=INFO
+logging.level.com.radai.chat.flow.service.EmotionAwarePersonalization=INFO
 ```
 
 ---
@@ -231,7 +231,7 @@ Enable debug logging to see what prompts are sent to HuggingFace:
 
 ```bash
 # In application.properties
-logging.level.com.SocializerAI.chat.flow.service=DEBUG
+logging.level.com.radai.chat.flow.service=DEBUG
 ```
 
 Then check logs for:
@@ -455,7 +455,7 @@ public ResponseEntity<?> processWithAI() { ... }
 
 ```
 Backend/
-├── src/main/java/com/SocializerAI/
+├── src/main/java/com/radai/
 │   └── chat/
 │       └── flow/
 │           ├── controller/

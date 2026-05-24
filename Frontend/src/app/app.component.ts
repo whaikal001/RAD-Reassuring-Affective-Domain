@@ -143,7 +143,7 @@ import { TranslatePipe } from './pipes/t.pipe';
   `]
 })
 export class AppComponent {
-  title = 'SocializerAI';
+  title = 'RadAI';
 
   constructor(public uiFeedback: UiFeedbackService) {}
 

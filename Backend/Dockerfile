@@ -26,15 +26,15 @@ FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
 # Create non-root user
-RUN groupadd -r socializerai && useradd -r -g socializerai socializerai
+RUN groupadd -r radai && useradd -r -g radai radai
 
 # Copy JAR from builder
-COPY --from=builder /app/target/socializerai-*.jar app.jar
+COPY --from=builder /app/target/radai-*.jar app.jar
 
 # Set ownership
-RUN chown -R socializerai:socializerai /app
+RUN chown -R radai:radai /app
 
-USER socializerai
+USER radai
 
 # Expose port
 EXPOSE 8080
