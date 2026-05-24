@@ -1,0 +1,271 @@
+.character-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  min-height: 300px;
+}
+
+.character-container {
+  position: relative;
+  width: 220px;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease-in-out;
+  transform-origin: center;
+
+  &.waving {
+    animation: gentle-sway 0.6s ease-in-out;
+  }
+}
+
+.character-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.1));
+  transition: all 0.3s ease;
+
+  // Emotion-specific filters and effects
+  &.emotion-happy {
+    filter: drop-shadow(0 8px 12px rgba(76, 175, 80, 0.3)) 
+            brightness(1.1) 
+            saturate(1.2);
+    animation: bounce-subtle 0.4s ease-in-out 1;
+  }
+
+  &.emotion-sad-low {
+    filter: drop-shadow(0 8px 12px rgba(244, 67, 54, 0.2)) 
+            brightness(0.98) 
+            saturate(0.95);
+    animation: gentle-sadness 0.5s ease-in-out 1;
+  }
+
+  &.emotion-sad-high {
+    filter: drop-shadow(0 8px 12px rgba(244, 67, 54, 0.4)) 
+            brightness(0.92) 
+            saturate(0.85);
+    animation: deep-sadness 0.6s ease-in-out 1;
+  }
+
+  &.emotion-encouraging {
+    filter: drop-shadow(0 8px 12px rgba(33, 150, 243, 0.3)) 
+            brightness(1.12) 
+            saturate(1.1);
+    animation: gentle-lift 0.5s ease-in-out 1;
+  }
+
+  &.emotion-goodjob {
+    filter: drop-shadow(0 8px 12px rgba(255, 152, 0, 0.35)) 
+            brightness(1.15) 
+            saturate(1.3) 
+            hue-rotate(8deg);
+    animation: celebration 0.5s ease-in-out 1;
+  }
+
+  &.emotion-listening {
+    filter: drop-shadow(0 8px 12px rgba(156, 39, 176, 0.2)) 
+            brightness(1.03);
+    animation: attentive-tilt 0.6s ease-in-out infinite;
+  }
+
+  &.emotion-welcoming {
+    filter: drop-shadow(0 8px 12px rgba(103, 58, 183, 0.25)) 
+            brightness(1.08) 
+            saturate(1.15);
+    animation: welcoming-wave 0.5s ease-in-out 1;
+  }
+}
+
+// ============ ANIMATIONS ============
+
+@keyframes bounce-subtle {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.02); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes gentle-sadness {
+  0% { transform: translateY(0) rotateZ(0deg); }
+  50% { transform: translateY(3px) rotateZ(-0.5deg); }
+  100% { transform: translateY(0) rotateZ(0deg); }
+}
+
+@keyframes deep-sadness {
+  0% { transform: translateY(0) rotateZ(0deg) scale(1); }
+  50% { transform: translateY(6px) rotateZ(-1.5deg) scale(0.98); }
+  100% { transform: translateY(0) rotateZ(0deg) scale(1); }
+}
+
+@keyframes gentle-lift {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.04); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes celebration {
+  0% { transform: scale(1) translateY(0) rotate(0deg); }
+  25% { transform: scale(1.05) translateY(-8px) rotate(-2deg); }
+  50% { transform: scale(1.1) translateY(-12px) rotate(3deg); }
+  100% { transform: scale(1) translateY(0) rotate(0deg); }
+}
+
+@keyframes attentive-tilt {
+  0%, 100% { transform: rotateZ(-2deg); }
+  50% { transform: rotateZ(2deg); }
+}
+
+@keyframes welcoming-wave {
+  0% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.06) translateY(-6px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+@keyframes gentle-sway {
+  0%, 100% { transform: rotateZ(-3deg); }
+  50% { transform: rotateZ(3deg); }
+}
+
+// ============ SPARKLES ============
+
+.sparkle {
+  position: absolute;
+  font-size: 24px;
+  opacity: 0;
+  animation: sparkle-float 1.2s ease-out forwards;
+  pointer-events: none;
+
+  &.sparkle-1 {
+    top: 20px;
+    right: 30px;
+    animation-delay: 0s;
+  }
+
+  &.sparkle-2 {
+    top: 40px;
+    left: 20px;
+    animation-delay: 0.2s;
+  }
+
+  &.sparkle-3 {
+    bottom: 50px;
+    right: 20px;
+    animation-delay: 0.4s;
+  }
+}
+
+@keyframes sparkle-float {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, -30px) scale(0.5);
+  }
+}
+
+// ============ EMOTION INDICATOR ============
+
+.emotion-indicator {
+  position: absolute;
+  bottom: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  animation: fade-in-up 0.4s ease-out 0.3s forwards;
+  letter-spacing: 0.5px;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+// ============ THINKING INDICATOR ============
+
+.thinking-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 15px;
+  height: 8px;
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.3);
+    animation: typing-dots 1.4s infinite;
+
+    &:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+  }
+}
+
+@keyframes typing-dots {
+  0%, 60%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-10px);
+  }
+}
+
+// ============ RESPONSIVE ============
+
+@media (max-width: 768px) {
+  .character-container {
+    width: 180px;
+    height: 230px;
+  }
+
+  .sparkle {
+    font-size: 18px;
+  }
+
+  .emotion-indicator {
+    font-size: 11px;
+    padding: 4px 8px;
+    bottom: -30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .character-wrapper {
+    min-height: 240px;
+    padding: 15px;
+  }
+
+  .character-container {
+    width: 150px;
+    height: 190px;
+  }
+
+  .sparkle {
+    font-size: 16px;
+  }
+}

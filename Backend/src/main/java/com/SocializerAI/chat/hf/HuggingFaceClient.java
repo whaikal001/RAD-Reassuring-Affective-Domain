@@ -205,7 +205,7 @@ public class HuggingFaceClient {
         // Extract key details from current message for memory
         ctx.extractKeyDetails(userText);
         
-        // Build OpenAI-style messages array
+        // Build chat messages array
         List<Map<String, String>> messages = new ArrayList<>();
         
         // Build dynamic system prompt with conversation context
@@ -268,7 +268,7 @@ public class HuggingFaceClient {
         String url = "https://router.huggingface.co/v1/chat/completions";
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         
-        // Create OpenAI-compatible payload
+        // Create chat-completions payload
         Map<String, Object> payload = new HashMap<>();
         payload.put("model", chatModel);
         payload.put("messages", messages);
@@ -422,13 +422,13 @@ public class HuggingFaceClient {
     }
     
     /**
-     * Parse HuggingFace API response - OpenAI chat completions format
+    * Parse HuggingFace API response - chat completions format
      */
     private String parseHFResponse(String responseBody) {
         try {
             JsonNode root = mapper.readTree(responseBody);
             
-            // OpenAI chat completions format: {"choices": [{"message": {"content": "..."}}]}
+            // Chat completions format: {"choices": [{"message": {"content": "..."}}]}
             if (root.isObject() && root.has("choices")) {
                 JsonNode choices = root.get("choices");
                 if (choices.isArray() && choices.size() > 0) {

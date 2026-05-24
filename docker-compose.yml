@@ -47,7 +47,7 @@ services:
       
       # HuggingFace (optional)
       HF_API_TOKEN: ${HF_API_TOKEN:-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}
-      HF_CHAT_MODEL: ${HF_CHAT_MODEL:-openai/gpt-oss-120b:fastest}
+      HF_CHAT_MODEL: ${HF_CHAT_MODEL:-deepseek-ai/DeepSeek-V4-Pro}
       HF_CHAT_API_MODE: ${HF_CHAT_API_MODE:-chat}
       HF_EMOTION_MODEL: ${HF_EMOTION_MODEL:-j-hartmann/emotion-english-distilroberta-base}
       HF_SCREENING_MODEL: ${HF_SCREENING_MODEL:-facebook/bart-large-mnli}

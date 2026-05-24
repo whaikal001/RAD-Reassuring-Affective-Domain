@@ -3,8 +3,12 @@ package com.SocializerAI.controller;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.SocializerAI.repository.UserRepository;
+import com.SocializerAI.repository.UserActivityLogRepository;
 import com.SocializerAI.model.User;
+import com.SocializerAI.model.UserActivityLog;
+import com.SocializerAI.service.ActivityLoggerService;
 import org.springframework.http.ResponseEntity;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -12,9 +16,14 @@ import java.util.*;
 public class AdminController {
 
     private final UserRepository userRepository;
+    private final UserActivityLogRepository activityLogRepository;
+    private final ActivityLoggerService activityLoggerService;
 
-    public AdminController(UserRepository userRepository) {
+    public AdminController(UserRepository userRepository, UserActivityLogRepository activityLogRepository,
+                         ActivityLoggerService activityLoggerService) {
         this.userRepository = userRepository;
+        this.activityLogRepository = activityLogRepository;
+        this.activityLoggerService = activityLoggerService;
     }
 
     @GetMapping("/emotions")
@@ -93,6 +102,78 @@ public class AdminController {
         if (!userRepository.existsById(id)) return ResponseEntity.notFound().build();
         userRepository.deleteById(id);
         return ResponseEntity.ok().build();
+    }
+
+    // ===== New Analytics Endpoints =====
+
+    @GetMapping("/dashboard/stats")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> getDashboardStats() {
+        Map<String, Object> stats = new HashMap<>();
+        
+        // Total users
+        stats.put("totalUsers", userRepository.count());
+        
+        // Active users today
+        stats.put("activeTodayCount", activityLoggerService.getTodayUniqueUserCount());
+        
+        // Today activities
+        stats.put("totalActivitiesCount", activityLoggerService.getTodayActivityCount());
+        
+        // Average emotion score
+        Double avgEmotion = activityLoggerService.getAverageEmotionScore();
+        stats.put("averageEmotionScore", avgEmotion != null ? avgEmotion : 0.0);
+        
+        return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/dashboard/activity-trend")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Map<String, Object>>> getActivityTrend(@RequestParam(defaultValue = "30") int days) {
+        List<Map<String, Object>> trend = activityLoggerService.getActivityCountByDate(days);
+        return ResponseEntity.ok(trend);
+    }
+
+    @GetMapping("/dashboard/activity-types")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Map<String, Object>>> getActivityTypeDistribution() {
+        List<Map<String, Object>> distribution = activityLoggerService.getActivityCountByType();
+        return ResponseEntity.ok(distribution);
+    }
+
+    @GetMapping("/dashboard/emotions")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Map<String, Object>>> getEmotionDistribution() {
+        List<Map<String, Object>> emotions = activityLoggerService.getEmotionDistribution();
+        return ResponseEntity.ok(emotions);
+    }
+
+    @GetMapping("/dashboard/intensity")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Map<String, Object>>> getIntensityDistribution() {
+        List<Map<String, Object>> intensity = activityLoggerService.getIntensityDistribution();
+        return ResponseEntity.ok(intensity);
+    }
+
+    @GetMapping("/dashboard/countries")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Map<String, Object>>> getTopCountries() {
+        List<Map<String, Object>> countries = activityLoggerService.getTopCountries();
+        return ResponseEntity.ok(countries);
+    }
+
+    @GetMapping("/dashboard/recent-activity")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserActivityLog>> getRecentActivity(@RequestParam(defaultValue = "24") int hours) {
+        List<UserActivityLog> recent = activityLoggerService.getRecentActivity(hours);
+        return ResponseEntity.ok(recent);
+    }
+
+    @GetMapping("/dashboard/user-stats/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserActivityLog>> getUserStats(@PathVariable("userId") UUID userId) {
+        List<UserActivityLog> logs = activityLoggerService.getUserActivityLogs(userId);
+        return ResponseEntity.ok(logs);
     }
 }
 

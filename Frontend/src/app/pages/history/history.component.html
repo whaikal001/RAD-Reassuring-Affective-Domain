@@ -271,14 +271,14 @@
 
                     <!-- Emotion-Specific Suggestions -->
                     @if (getMostCommonEmotion()) {
-                      <div class="emotion-strategies mt-3 p-3 rounded" [ngSwitch]="getMostCommonEmotion()?.toLowerCase()">
+                      <div class="emotion-strategies mt-3 p-3 rounded" [ngSwitch]="getMostCommonEmotion().toLowerCase()">
                         <strong class="d-block mb-2">
                           <i class="bi me-1" 
-                            [class.bi-emoji-angry]="getMostCommonEmotion()?.toLowerCase() === 'anger'"
-                            [class.bi-emoji-frown]="getMostCommonEmotion()?.toLowerCase() === 'sadness'"
-                            [class.bi-emoji-smile]="getMostCommonEmotion()?.toLowerCase() === 'joy'"
-                            [class.bi-emoji-neutral]="getMostCommonEmotion()?.toLowerCase() === 'neutral'"
-                            [class.bi-dash-circle]="getMostCommonEmotion()?.toLowerCase() !== 'anger' && getMostCommonEmotion()?.toLowerCase() !== 'sadness' && getMostCommonEmotion()?.toLowerCase() !== 'joy' && getMostCommonEmotion()?.toLowerCase() !== 'neutral'"></i>
+                            [class.bi-emoji-angry]="getMostCommonEmotion().toLowerCase() === 'anger'"
+                            [class.bi-emoji-frown]="getMostCommonEmotion().toLowerCase() === 'sadness'"
+                            [class.bi-emoji-smile]="getMostCommonEmotion().toLowerCase() === 'joy'"
+                            [class.bi-emoji-neutral]="getMostCommonEmotion().toLowerCase() === 'neutral'"
+                            [class.bi-dash-circle]="getMostCommonEmotion().toLowerCase() !== 'anger' && getMostCommonEmotion().toLowerCase() !== 'sadness' && getMostCommonEmotion().toLowerCase() !== 'joy' && getMostCommonEmotion().toLowerCase() !== 'neutral'"></i>
                           Managing {{ getMostCommonEmotion() | titlecase }}
                         </strong>
 

@@ -1,0 +1,41 @@
+<div class="character-wrapper">
+  <div 
+    class="character-container"
+    [@emotionChange]="currentState()"
+  >
+    <!-- Main Character PNG - Uses dynamic path based on emotion + intensity -->
+    <img 
+      [src]="currentImagePath()" 
+      alt="Chat Character - {{ getEmotionLabel() }}"
+      class="character-image"
+      [class.emotion-happy]="currentState() === 'happy'"
+      [class.emotion-sad-low]="currentState() === 'sad-low'"
+      [class.emotion-sad-high]="currentState() === 'sad-high'"
+      [class.emotion-encouraging]="currentState() === 'encouraging'"
+      [class.emotion-goodjob]="currentState() === 'goodjob'"
+      [class.emotion-listening]="currentState() === 'listening'"
+      [class.emotion-welcoming]="currentState() === 'welcoming'"
+    />
+
+    <!-- Floating sparkles for celebrating moments -->
+    @if (currentState() === 'goodjob' || currentState() === 'encouraging') {
+      <div [@pulse]="isPulsing() ? 'pulse' : 'void'" class="sparkle sparkle-1">✨</div>
+      <div [@pulse]="isPulsing() ? 'pulse' : 'void'" class="sparkle sparkle-2">✨</div>
+      <div [@pulse]="isPulsing() ? 'pulse' : 'void'" class="sparkle sparkle-3">✨</div>
+    }
+
+    <!-- Speech bubble indicator -->
+    <div class="emotion-indicator">
+      {{ getEmotionLabel() }}
+    </div>
+  </div>
+
+  <!-- Typing indicator for when bot is thinking/neutral -->
+  @if (currentState() === 'listening' || currentState() === 'neutral') {
+    <div class="thinking-indicator">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+  }
+</div>

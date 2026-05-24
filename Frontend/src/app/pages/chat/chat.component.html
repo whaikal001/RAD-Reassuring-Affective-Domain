@@ -189,6 +189,18 @@
 
       <!-- Messages Area -->
       <div class="chat-messages" #messagesContainer role="log" aria-live="polite" [attr.aria-label]="'chat.aria.conversationMessages' | t">
+        
+        <!-- Animated Character - Shows during active chat -->
+        @if (chatService.messages().length > 0) {
+          <div class="character-section">
+            <app-animated-character 
+              [emotion]="(chatService.currentEmotion() ?? null) || (chatService.lastResponse()?.emotion ?? null)"
+              [intensity]="chatService.currentIntensity()"
+              [messageCount]="chatService.messages().length"
+            ></app-animated-character>
+          </div>
+        }
+
         @if (chatService.messages().length === 0 && !screeningCompleted()) {
           <div class="welcome-message text-center py-5">
             <div class="welcome-orb mb-4">

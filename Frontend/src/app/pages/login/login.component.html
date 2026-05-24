@@ -1,26 +1,30 @@
 
     <div class="auth-container auth-cosmic-bg">
-      <div class="row justify-content-center align-items-center min-vh-75">
-        <div class="col-md-5 col-lg-4">
-          <div class="card p-4">
-            <div class="text-center mb-4">
-              <i class="bi bi-chat-heart display-4 text-gradient"></i>
-              <h2 class="mt-3 text-gradient">{{ 'auth.welcomeBack' | t }}</h2>
-              <p class="text-secondary">{{ 'auth.signInJourney' | t }}</p>
+      <div class="row justify-content-center align-items-center min-vh-100 g-0">
+        <!-- Left Form Section -->
+        <div class="col-md-6 col-lg-5 d-flex align-items-center">
+          <div class="auth-form-wrapper w-100 px-4 px-md-5">
+            <div class="auth-header text-center mb-5">
+              <div class="brand-section mb-3">
+                <i class="bi bi-chat-heart fs-1 text-gradient"></i>
+              </div>
+              <h1 class="auth-title">{{ 'auth.welcomeBack' | t }}</h1>
+              <p class="auth-subtitle">{{ 'auth.signInJourney' | t }}</p>
             </div>
 
             @if (error()) {
-              <div class="alert alert-danger" role="alert">
+              <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-circle me-2"></i>{{ error() }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
               </div>
             }
 
-            <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
-              <div class="mb-3">
+            <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="auth-form">
+              <div class="form-group mb-4">
                 <label class="form-label">{{ 'auth.email' | t }}</label>
                 <input 
                   type="email" 
-                  class="form-control" 
+                  class="form-control form-control-lg" 
                   [(ngModel)]="email" 
                   name="email"
                   [placeholder]="'auth.enterEmail' | t"
@@ -29,11 +33,11 @@
                 >
               </div>
 
-              <div class="mb-4">
+              <div class="form-group mb-5">
                 <label class="form-label">{{ 'auth.password' | t }}</label>
                 <input 
                   type="password" 
-                  class="form-control" 
+                  class="form-control form-control-lg" 
                   [(ngModel)]="password" 
                   name="password"
                   [placeholder]="'auth.enterPassword' | t"
@@ -44,7 +48,7 @@
 
               <button 
                 type="submit" 
-                class="btn btn-primary w-100 mb-3"
+                class="btn btn-primary btn-lg w-100 mb-3 fw-bold"
                 [disabled]="loading() || !loginForm.valid"
               >
                 @if (loading()) {
@@ -53,129 +57,44 @@
                 {{ 'auth.signIn' | t }}
               </button>
 
-              <div class="text-center">
-                <button 
-                  type="button" 
-                  class="btn btn-outline-secondary w-100 mb-3"
-                  (click)="loginAnonymously()"
-                  [disabled]="loading()"
-                >
-                  <i class="bi bi-incognito me-2"></i>{{ 'auth.continueAnonymous' | t }}
-                </button>
-              </div>
+              <button 
+                type="button" 
+                class="btn btn-outline-primary btn-lg w-100 mb-5"
+                (click)="loginAnonymously()"
+                [disabled]="loading()"
+              >
+                <i class="bi bi-incognito me-2"></i>{{ 'auth.continueAnonymous' | t }}
+              </button>
             </form>
 
-            <hr class="my-4" style="border-color: var(--border-color);">
+            <div class="social-login">
+              <p class="text-center text-secondary mb-3">{{ 'auth.orContinueWith' | t }}</p>
+              <button class="btn btn-outline-light w-100 mb-3">
+                <i class="bi bi-google me-2"></i>Google
+              </button>
+            </div>
 
-            <p class="text-center text-secondary mb-0">
+            <p class="text-center text-secondary mt-4">
               {{ 'auth.noAccount' | t }} 
-              <a routerLink="/register" class="text-primary">{{ 'auth.signUp' | t }}</a>
+              <a routerLink="/register" class="text-primary fw-bold">{{ 'auth.signUp' | t }}</a>
             </p>
           </div>
         </div>
 
-        <div class="col-md-7 col-lg-6 d-none d-md-flex justify-content-center">
-          <div class="w-100 p-4">
-            <h3 class="mb-4">{{ 'home.aboutTitle' | t }}</h3>
-
-            <div class="row g-3">
-              <div class="col-12 col-md-6">
-                <div class="card h-100 p-3 shadow-sm">
-                  <div class="d-flex align-items-start gap-3">
-                    <div class="icon bg-soft rounded p-2">
-                      <i class="bi bi-emoji-smile fs-4 text-primary"></i>
-                    </div>
-                    <div>
-                      <h5 class="mb-1">{{ 'home.feature1.title' | t }}</h5>
-                      <p class="text-muted small mb-0">{{ 'home.feature1.desc' | t }}</p>
-                    </div>
-                  </div>
-                </div>
+        <!-- Right Visual Section -->
+        <div class="col-md-6 col-lg-7 d-none d-md-flex align-items-center justify-content-center auth-visual-section">
+          <div class="visual-content">
+            <div class="geometric-shape shape-1"></div>
+            <div class="geometric-shape shape-2"></div>
+            <div class="visual-text-overlay">
+              <div class="rada-logo-container mb-4">
+                <img src="assets/RADAiLogo.png" alt="RADAi Logo" class="rada-logo">
               </div>
-
-              <div class="col-12 col-md-6">
-                <div class="card h-100 p-3 shadow-sm">
-                  <div class="d-flex align-items-start gap-3">
-                    <div class="icon bg-soft rounded p-2">
-                      <i class="bi bi-check-circle fs-4 text-success"></i>
-                    </div>
-                    <div>
-                      <h5 class="mb-1">{{ 'home.feature2.title' | t }}</h5>
-                      <p class="text-muted small mb-0">{{ 'home.feature2.desc' | t }}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-12 col-md-6">
-                <div class="card h-100 p-3 shadow-sm">
-                  <div class="d-flex align-items-start gap-3">
-                    <div class="icon bg-soft rounded p-2">
-                      <i class="bi bi-chat-left-text fs-4 text-info"></i>
-                    </div>
-                    <div>
-                      <h5 class="mb-1">{{ 'home.feature3.title' | t }}</h5>
-                      <p class="text-muted small mb-0">{{ 'home.feature3.desc' | t }}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-12 col-md-6">
-                <div class="card h-100 p-3 shadow-sm">
-                  <div class="d-flex align-items-start gap-3">
-                    <div class="icon bg-soft rounded p-2">
-                      <i class="bi bi-shield-lock fs-4 text-warning"></i>
-                    </div>
-                    <div>
-                      <h5 class="mb-1">{{ 'home.feature4.title' | t }}</h5>
-                      <p class="text-muted small mb-0">{{ 'home.feature4.desc' | t }}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-4 p-3 rounded" style="border:1px solid var(--border-color);">
-              <small class="text-muted">{{ 'home.cta' | t }}</small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="row justify-content-center mt-4 d-none d-md-flex">
-        <div class="col-12">
-          <div class="how-section p-4">
-            <h3 class="mb-3">{{ 'how.title' | t }}</h3>
-            <p class="text-muted mb-4">{{ 'how.subtitle' | t }}</p>
-
-            <div class="row g-4">
-              <div class="col-12 col-md-4">
-                <div class="how-card p-4 h-100">
-                  <div class="how-icon mb-3">1</div>
-                  <h5 class="mb-2">{{ 'how.card1.title' | t }}</h5>
-                  <p class="small text-muted mb-0">{{ 'how.card1.desc' | t }}</p>
-                </div>
-              </div>
-
-              <div class="col-12 col-md-4">
-                <div class="how-card p-4 h-100">
-                  <div class="how-icon mb-3">2</div>
-                  <h5 class="mb-2">{{ 'how.card2.title' | t }}</h5>
-                  <p class="small text-muted mb-0">{{ 'how.card2.desc' | t }}</p>
-                </div>
-              </div>
-
-              <div class="col-12 col-md-4">
-                <div class="how-card p-4 h-100">
-                  <div class="how-icon mb-3">3</div>
-                  <h5 class="mb-2">{{ 'how.card3.title' | t }}</h5>
-                  <p class="small text-muted mb-0">{{ 'how.card3.desc' | t }}</p>
-                </div>
-              </div>
+              <h2 class="visual-title">Welcome Back</h2>
+              <p class="visual-description">Experience compassionate AI support for your mental wellness</p>
+              <p class="visual-subtitle">Join thousands of users on their journey to better mental health</p>
             </div>
           </div>
         </div>
       </div>
     </div>
-  

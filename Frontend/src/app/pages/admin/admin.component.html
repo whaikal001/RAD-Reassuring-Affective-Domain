@@ -1,51 +1,221 @@
-<div class="container py-4">
-  <div class="mb-3">
-    <button class="btn btn-outline-secondary btn-sm" (click)="goBack()" [title]="'common.back' | t">
-      <i class="bi bi-chevron-left me-1"></i>{{ 'common.back' | t }}
-    </button>
+<div class="admin-dashboard container-fluid py-4" style="background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%); min-height: 100vh; color: white;">
+  
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <button class="btn btn-outline-secondary btn-sm me-2" (click)="goBack()" [title]="'common.back' | t">
+        <i class="bi bi-chevron-left me-1"></i>{{ 'common.back' | t }}
+      </button>
+      <h2 class="d-inline ms-2">Admin Dashboard</h2>
+    </div>
   </div>
-  <h3>Admin Analytics</h3>
-  <p class="text-muted">Emotion intensity over time</p>
 
-  <div class="card p-3 mb-4 chart-wrap">
-    <canvas #chartCanvas></canvas>
-  </div>
-
-  <h4 class="mt-3">User Management</h4>
-  <p class="text-muted">List of users with moderation actions</p>
-
-  <div class="card p-3">
-    <div *ngIf="users?.length; else noUsers">
-      <div class="table-responsive">
-        <table class="table table-hover table-sm">
-          <thead>
-            <tr>
-              <th>Email / Username</th>
-              <th>Roles</th>
-              <th>Active</th>
-              <th style="width:200px">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let u of users">
-              <td>
-                <div class="fw-bold">{{ u.username }}</div>
-                <div class="text-muted small">{{ u.email }}</div>
-              </td>
-              <td><span class="badge bg-secondary">{{ u.roles || 'USER' }}</span></td>
-              <td>{{ u.isActive ? 'Yes' : 'No' }}</td>
-              <td>
-                <button class="btn btn-sm btn-warning me-2" *ngIf="u.isActive" (click)="banUser(u.id)">Ban</button>
-                <button class="btn btn-sm btn-success me-2" *ngIf="!u.isActive" (click)="unbanUser(u.id)">Unban</button>
-                <button class="btn btn-sm btn-danger" (click)="deleteUser(u.id)">Delete</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+  <!-- Key Stats Cards -->
+  <div class="row mb-4 g-3">
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #00d0ce, #0099cc);">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Total Users</div>
+          <div class="stat-value">{{ dashboardStats.totalUsers | number }}</div>
+        </div>
       </div>
     </div>
-    <ng-template #noUsers>
-      <div class="text-muted">No users found.</div>
-    </ng-template>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
+          <i class="bi bi-graph-up"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Active Today</div>
+          <div class="stat-value">{{ dashboardStats.activeTodayCount | number }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #fbbf24, #f97316);">
+          <i class="bi bi-activity"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Activities Today</div>
+          <div class="stat-value">{{ dashboardStats.totalActivitiesCount | number }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #34d399);">
+          <i class="bi bi-heart-fill"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Avg Emotion</div>
+          <div class="stat-value">{{ (dashboardStats.averageEmotionScore * 100).toFixed(0) }}%</div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- Charts Row 1 -->
+  <div class="row mb-4 g-3">
+    <!-- Activity Trend Chart -->
+    <div class="col-12 col-lg-8">
+      <div class="chart-card">
+        <h5 class="chart-title">Activity Trend (Last 30 Days)</h5>
+        <div class="chart-container" style="position: relative; height: 350px;">
+          <canvas #activityTrendChart></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Emotion Distribution -->
+    <div class="col-12 col-lg-4">
+      <div class="chart-card">
+        <h5 class="chart-title">Emotion Distribution</h5>
+        <div class="chart-container" style="position: relative; height: 350px;">
+          <canvas #emotionChart></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="row mb-4 g-3">
+    <!-- Activity Types -->
+    <div class="col-12 col-lg-4">
+      <div class="chart-card">
+        <h5 class="chart-title">Activity Types</h5>
+        <div class="chart-container" style="position: relative; height: 300px;">
+          <canvas #activityTypesChart></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Intensity Levels -->
+    <div class="col-12 col-lg-4">
+      <div class="chart-card">
+        <h5 class="chart-title">User Intensity Levels</h5>
+        <div class="chart-container" style="position: relative; height: 300px;">
+          <canvas #intensityChart></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Countries -->
+    <div class="col-12 col-lg-4">
+      <div class="chart-card">
+        <h5 class="chart-title">Top Countries</h5>
+        <div style="padding: 20px 0;">
+          <div *ngIf="topCountries.length > 0; else noCountries" class="countries-list">
+            <div *ngFor="let country of topCountries" class="country-item">
+              <span class="country-name">{{ country.country || 'Unknown' }}</span>
+              <span class="country-count badge bg-cyan">{{ country.count }}</span>
+            </div>
+          </div>
+          <ng-template #noCountries>
+            <div class="text-muted text-center">No data available</div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="chart-card">
+        <h5 class="chart-title">Recent User Activity (Last 24 Hours)</h5>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover activity-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Activity Type</th>
+                <th>Emotion</th>
+                <th>Intensity</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let activity of recentActivities">
+                <td><small>{{ formatDate(activity.timestamp) }}</small></td>
+                <td><span class="badge bg-info">{{ activity.activityType }}</span></td>
+                <td *ngIf="activity.primaryEmotion">{{ activity.primaryEmotion }}</td>
+                <td *ngIf="!activity.primaryEmotion">-</td>
+                <td>
+                  <span *ngIf="activity.intensityLevel" class="badge" 
+                        [ngClass]="{
+                          'bg-success': activity.intensityLevel === 'LOW',
+                          'bg-warning': activity.intensityLevel === 'MEDIUM',
+                          'bg-danger': activity.intensityLevel === 'HIGH'
+                        }">
+                    {{ activity.intensityLevel }}
+                  </span>
+                  <span *ngIf="!activity.intensityLevel">-</span>
+                </td>
+                <td><small>{{ activity.description }}</small></td>
+              </tr>
+            </tbody>
+          </table>
+          <div *ngIf="recentActivities.length === 0" class="text-muted text-center py-3">
+            No recent activities
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Management Section -->
+  <div class="row">
+    <div class="col-12">
+      <div class="chart-card">
+        <h4 class="chart-title">User Management</h4>
+        <p class="text-muted small">List of users with moderation actions</p>
+
+        <div *ngIf="users?.length; else noUsers">
+          <div class="table-responsive">
+            <table class="table table-hover table-sm">
+              <thead>
+                <tr>
+                  <th>Email / Username</th>
+                  <th>Roles</th>
+                  <th>Status</th>
+                  <th style="width:200px">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let u of users">
+                  <td>
+                    <div class="fw-bold">{{ u.username }}</div>
+                    <div class="text-muted small">{{ u.email }}</div>
+                  </td>
+                  <td><span class="badge bg-secondary">{{ u.roles || 'USER' }}</span></td>
+                  <td>
+                    <span class="badge" [ngClass]="u.isActive ? 'bg-success' : 'bg-danger'">
+                      {{ u.isActive ? 'Active' : 'Banned' }}
+                    </span>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-warning me-2" *ngIf="u.isActive" (click)="banUser(u.id)">Ban</button>
+                    <button class="btn btn-sm btn-success me-2" *ngIf="!u.isActive" (click)="unbanUser(u.id)">Unban</button>
+                    <button class="btn btn-sm btn-danger" (click)="deleteUser(u.id)">Delete</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <ng-template #noUsers>
+          <div class="text-muted">No users found.</div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
 </div>
+

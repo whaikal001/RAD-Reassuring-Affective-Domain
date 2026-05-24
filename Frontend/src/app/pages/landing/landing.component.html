@@ -257,6 +257,185 @@
     </div>
   </section>
 
+  <!-- FAQ Section -->
+  <section class="faq-section py-5" style="background: rgba(0, 208, 206, 0.05); border-top: 1px solid var(--border-color);">
+    <div class="container-xl">
+      <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold mb-3">{{ 'home.faqTitle' | t }}</h2>
+        <p class="text-secondary fs-5">{{ 'home.faqSubtitle' | t }}</p>
+      </div>
+
+      <div class="row">
+        <div class="col-lg-8 mx-auto">
+          <div class="accordion" id="faqAccordion">
+            <div class="accordion-item border mb-3 rounded-3" style="border-color: var(--border-color) !important;">
+              <h2 class="accordion-header">
+                <button 
+                  class="accordion-button collapsed text-light fw-bold" 
+                  type="button" 
+                  data-bs-toggle="collapse" 
+                  data-bs-target="#faq1"
+                  style="background: transparent;"
+                >
+                  {{ 'home.faq1.question' | t }}
+                </button>
+              </h2>
+              <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body text-secondary">
+                  {{ 'home.faq1.answer' | t }}
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item border mb-3 rounded-3" style="border-color: var(--border-color) !important;">
+              <h2 class="accordion-header">
+                <button 
+                  class="accordion-button collapsed text-light fw-bold" 
+                  type="button" 
+                  data-bs-toggle="collapse" 
+                  data-bs-target="#faq2"
+                  style="background: transparent;"
+                >
+                  {{ 'home.faq2.question' | t }}
+                </button>
+              </h2>
+              <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body text-secondary">
+                  {{ 'home.faq2.answer' | t }}
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item border mb-3 rounded-3" style="border-color: var(--border-color) !important;">
+              <h2 class="accordion-header">
+                <button 
+                  class="accordion-button collapsed text-light fw-bold" 
+                  type="button" 
+                  data-bs-toggle="collapse" 
+                  data-bs-target="#faq3"
+                  style="background: transparent;"
+                >
+                  {{ 'home.faq3.question' | t }}
+                </button>
+              </h2>
+              <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body text-secondary">
+                  {{ 'home.faq3.answer' | t }}
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item border rounded-3" style="border-color: var(--border-color) !important;">
+              <h2 class="accordion-header">
+                <button 
+                  class="accordion-button collapsed text-light fw-bold" 
+                  type="button" 
+                  data-bs-toggle="collapse" 
+                  data-bs-target="#faq4"
+                  style="background: transparent;"
+                >
+                  {{ 'home.faq4.question' | t }}
+                </button>
+              </h2>
+              <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body text-secondary">
+                  {{ 'home.faq4.answer' | t }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Community Section -->
+  <section class="community-section py-5">
+    <div class="container-xl">
+      <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold mb-3">{{ 'home.communityTitle' | t }}</h2>
+        <p class="text-secondary fs-5">{{ 'home.communitySubtitle' | t }}</p>
+      </div>
+
+      <div class="row align-items-center">
+        <div class="col-lg-6">
+          <div class="community-content">
+            <h4 class="fw-bold mb-3 text-gradient">{{ 'home.communityHeading' | t }}</h4>
+            <p class="text-secondary mb-4">{{ 'home.communityDesc' | t }}</p>
+            
+            <div class="community-features mb-4">
+              <div class="community-feature mb-3 d-flex gap-3">
+                <i class="bi bi-check-circle text-primary fs-5 flex-shrink-0 mt-1"></i>
+                <div>
+                  <h6 class="fw-bold mb-1">{{ 'home.communityFeature1' | t }}</h6>
+                  <p class="text-secondary small mb-0">{{ 'home.communityFeature1Desc' | t }}</p>
+                </div>
+              </div>
+              <div class="community-feature mb-3 d-flex gap-3">
+                <i class="bi bi-check-circle text-primary fs-5 flex-shrink-0 mt-1"></i>
+                <div>
+                  <h6 class="fw-bold mb-1">{{ 'home.communityFeature2' | t }}</h6>
+                  <p class="text-secondary small mb-0">{{ 'home.communityFeature2Desc' | t }}</p>
+                </div>
+              </div>
+              <div class="community-feature d-flex gap-3">
+                <i class="bi bi-check-circle text-primary fs-5 flex-shrink-0 mt-1"></i>
+                <div>
+                  <h6 class="fw-bold mb-1">{{ 'home.communityFeature3' | t }}</h6>
+                  <p class="text-secondary small mb-0">{{ 'home.communityFeature3Desc' | t }}</p>
+                </div>
+              </div>
+            </div>
+
+            <form class="newsletter-form">
+              <div class="input-group mb-3">
+                <input 
+                  type="email" 
+                  class="form-control bg-transparent text-light border" 
+                  placeholder="{{ 'home.emailPlaceholder' | t }}"
+                  style="border-color: var(--border-color) !important;"
+                >
+                <button class="btn btn-primary" type="submit">
+                  {{ 'home.subscribe' | t }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="community-stats">
+            <div class="row g-4 text-center">
+              <div class="col-sm-6">
+                <div class="community-stat-card p-4 rounded-3" style="border: 1px solid var(--border-color);">
+                  <h3 class="text-gradient fw-bold mb-2">50K+</h3>
+                  <p class="text-secondary small">{{ 'home.communityMembers' | t }}</p>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="community-stat-card p-4 rounded-3" style="border: 1px solid var(--border-color);">
+                  <h3 class="text-gradient fw-bold mb-2">24/7</h3>
+                  <p class="text-secondary small">{{ 'home.communitySupport' | t }}</p>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="community-stat-card p-4 rounded-3" style="border: 1px solid var(--border-color);">
+                  <h3 class="text-gradient fw-bold mb-2">100%</h3>
+                  <p class="text-secondary small">{{ 'home.communityPrivacy' | t }}</p>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="community-stat-card p-4 rounded-3" style="border: 1px solid var(--border-color);">
+                  <h3 class="text-gradient fw-bold mb-2">99%</h3>
+                  <p class="text-secondary small">{{ 'home.communityUptime' | t }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Footer -->
   <footer class="footer-section py-5 border-top" style="border-color: var(--border-color) !important;">
     <div class="container-xl">
@@ -266,31 +445,9 @@
           <p class="text-secondary small">{{ 'home.footerDesc' | t }}</p>
         </div>
         <div class="col-md-3">
-          <h6 class="fw-bold mb-3">{{ 'footer.product' | t }}</h6>
-          <ul class="list-unstyled small">
-            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.features' | t }}</a></li>
-            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.pricing' | t }}</a></li>
-            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.security' | t }}</a></li>
-          </ul>
-        </div>
-        <div class="col-md-3">
-          <h6 class="fw-bold mb-3">{{ 'footer.company' | t }}</h6>
-          <ul class="list-unstyled small">
-            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.about' | t }}</a></li>
-            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.blog' | t }}</a></li>
-            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.careers' | t }}</a></li>
-          </ul>
-        </div>
-        <div class="col-md-3">
-          <h6 class="fw-bold mb-3">{{ 'footer.legal' | t }}</h6>
-          <ul class="list-unstyled small">
-            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.privacy' | t }}</a></li>
-            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.terms' | t }}</a></li>
-            <li><a href="#" class="text-secondary text-decoration-none">{{ 'footer.contact' | t }}</a></li>
-          </ul>
+          <h6 class="fw-bold mb-3">SocializerAI</h6>
         </div>
       </div>
-
       <hr style="border-color: var(--border-color) !important;">
       
       <div class="row align-items-center">

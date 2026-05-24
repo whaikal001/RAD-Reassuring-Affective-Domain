@@ -255,6 +255,8 @@
       border-radius: 0.6rem;
       padding: 0.9rem 2rem;
       font-size: 1rem;
+      position: relative;
+      overflow: hidden;
 
       &:hover {
         transform: translateY(-3px);
@@ -264,15 +266,26 @@
       &.btn-primary {
         background: linear-gradient(135deg, var(--primary-color), #00d0ce);
         border: none;
+        color: white;
+        box-shadow: 0 10px 25px rgba(0, 123, 255, 0.3);
+        
+        &:hover {
+          box-shadow: 0 15px 40px rgba(0, 123, 255, 0.4),
+                      0 0 20px rgba(0, 208, 206, 0.3);
+        }
       }
 
       &.btn-outline-primary {
         border: 2px solid var(--primary-color);
         background: transparent;
         color: var(--primary-color);
+        transition: all 0.3s ease;
 
         &:hover {
           background: rgba(var(--primary-rgb), 0.1);
+          box-shadow: 0 10px 25px rgba(0, 123, 255, 0.2),
+                      inset 0 0 15px rgba(0, 208, 206, 0.1);
+          border-color: #00d0ce;
         }
       }
     }
@@ -310,15 +323,28 @@
       max-width: 450px;
       height: auto;
       border-radius: 1.5rem;
-      box-shadow: 0 25px 70px rgba(0, 123, 255, 0.2);
+      box-shadow: 0 25px 70px rgba(0, 123, 255, 0.2),
+                  0 0 30px rgba(0, 208, 206, 0.4),
+                  inset 0 0 30px rgba(0, 208, 206, 0.15);
       animation: float 3.5s ease-in-out infinite;
       object-fit: contain;
-      border: 2px solid rgba(0, 208, 206, 0.25);
+      border: 2px solid rgba(0, 208, 206, 0.4);
+      position: relative;
+      z-index: 2;
+      transition: all 0.3s ease;
+
+      &:hover {
+        box-shadow: 0 25px 70px rgba(0, 123, 255, 0.3),
+                    0 0 50px rgba(0, 208, 206, 0.6),
+                    inset 0 0 40px rgba(0, 208, 206, 0.2);
+        border-color: rgba(0, 208, 206, 0.6);
+      }
 
       @media (max-width: 768px) {
         max-width: 100%;
         border-radius: 1rem;
-        box-shadow: 0 15px 40px rgba(0, 123, 255, 0.15);
+        box-shadow: 0 15px 40px rgba(0, 123, 255, 0.15),
+                    0 0 20px rgba(0, 208, 206, 0.3);
       }
     }
 
@@ -326,25 +352,41 @@
       position: absolute;
       bottom: 60px;
       right: -120px;
-      background: rgba(var(--card-rgb), 0.95);
-      border: 1px solid rgba(0, 208, 206, 0.3);
-      backdrop-filter: blur(10px);
-      padding: 1.5rem;
-      border-radius: 1rem;
+      background: rgba(var(--card-rgb), 0.85);
+      border: 2px solid rgba(0, 208, 206, 0.5);
+      backdrop-filter: blur(15px);
+      padding: 1.8rem;
+      border-radius: 1.2rem;
       max-width: 300px;
-      animation: slideInUp 0.8s ease-out 0.5s both;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+      animation: slideInUp 0.8s ease-out 0.5s both, cardGlow 2s ease-in-out infinite 0.5s;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
+                  0 0 30px rgba(0, 208, 206, 0.3),
+                  inset 0 0 20px rgba(0, 208, 206, 0.1);
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: rgba(0, 208, 206, 0.7);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4),
+                    0 0 50px rgba(0, 208, 206, 0.5),
+                    inset 0 0 30px rgba(0, 208, 206, 0.15);
+        transform: translateY(-5px);
+      }
 
       h3 {
         font-size: 1.1rem;
         line-height: 1.4;
+        font-weight: 600;
       }
 
       .badge {
         font-size: 0.75rem;
-        font-weight: 600;
-        padding: 0.4rem 0.8rem;
+        font-weight: 700;
+        padding: 0.5rem 1rem;
         margin-bottom: 1rem;
+        background: linear-gradient(135deg, rgba(0, 123, 255, 0.8), rgba(0, 208, 206, 0.8));
+        border: 1px solid rgba(0, 208, 206, 0.4);
+        border-radius: 0.6rem;
+        display: inline-block;
       }
 
       .stats {
@@ -362,6 +404,10 @@
           font-size: 1.8rem;
           font-weight: 700;
           margin-bottom: 0.3rem;
+          background: linear-gradient(135deg, var(--primary-color), #00d0ce);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
         .text-secondary {
@@ -651,6 +697,21 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes cardGlow {
+  0%, 100% {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
+                0 0 30px rgba(0, 208, 206, 0.3),
+                inset 0 0 20px rgba(0, 208, 206, 0.1);
+    border-color: rgba(0, 208, 206, 0.5);
+  }
+  50% {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35),
+                0 0 40px rgba(0, 208, 206, 0.5),
+                inset 0 0 30px rgba(0, 208, 206, 0.15);
+    border-color: rgba(0, 208, 206, 0.65);
   }
 }
 

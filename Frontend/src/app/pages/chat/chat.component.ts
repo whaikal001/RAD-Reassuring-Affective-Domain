@@ -9,11 +9,12 @@ import { UiFeedbackService } from '../../services/ui-feedback.service';
 import { ScreeningService } from '../../services/screening.service';
 import { TemplatesService, TemplateItem } from '../../services/templates.service';
 import { TranslatePipe } from '../../pipes/t.pipe';
+import { AnimatedCharacterComponent } from '../../components/animated-character/animated-character.component';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe, AnimatedCharacterComponent],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss'
 })
@@ -302,9 +303,21 @@ export class ChatComponent implements AfterViewChecked, OnInit {
       this.dassAnswers = [];
       this.dassCompleted = false;
 
-      // Show first question as natural bot message (this triggers chat scroll)
-      this.chatService.addLocalBotMessage(this.dassCurrent.prompt, 'neutral', 3);
+      // Show bot greeting message first
+      const greetingMessage = this.authService.isAnonymous() 
+        ? "Hi there! 👋 I'm SocializerAI, your mental wellness companion. Before we start our chat, I'd like to understand how you're feeling today. I'll ask you a few quick questions to get a better sense of your emotional state. Ready?"
+        : "Welcome back! 😊 Before we continue, let me check in with how you're feeling today. I'll ask you a few quick questions. Ready?";
+      
+      this.chatService.addLocalBotMessage(greetingMessage, 'joy', 1);
       this.shouldScroll = true;
+
+      // After a brief pause, show the first DASS question
+      setTimeout(() => {
+        if (this.dassCurrent) {
+          this.chatService.addLocalBotMessage(this.dassCurrent.prompt, 'neutral', 3);
+          this.shouldScroll = true;
+        }
+      }, 2000);
     }
   }
 
