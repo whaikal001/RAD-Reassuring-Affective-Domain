@@ -327,7 +327,7 @@ Maybe you could reach out to them, even just with a simple message?
 
 ```properties
 # HuggingFace Configuration for Human-Like Responses
-hf.api.token=YOUR_API_KEY_HERE
+hf.api.token=${HF_API_TOKEN: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}
 hf.chat.model=Qwen/Qwen2.5-7B-Instruct
 hf.emotion.model=j-hartmann/emotion-english-distilroberta-base
 hf.screening.model=facebook/bart-large-mnli

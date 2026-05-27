@@ -41,6 +41,25 @@ public class HuggingFaceClient {
 
     private final RestTemplate rest = new RestTemplate();
     private final ObjectMapper mapper = new ObjectMapper();
+
+    // Helper accessors that fall back to environment variables when @Value injection isn't present
+    private String getHfToken() {
+        if (hfToken != null && !hfToken.isBlank()) return hfToken;
+        String env = System.getenv("HF_API_TOKEN");
+        return env != null ? env : hfToken;
+    }
+
+    private String getChatModel() {
+        if (chatModel != null && !chatModel.isBlank()) return chatModel;
+        String env = System.getenv("HF_CHAT_MODEL");
+        return env != null ? env : chatModel;
+    }
+
+    private String getChatApiMode() {
+        if (chatApiMode != null && !chatApiMode.isBlank()) return chatApiMode;
+        String env = System.getenv("HF_CHAT_API_MODE");
+        return env != null ? env : (chatApiMode == null ? "chat" : chatApiMode);
+    }
     
     // Conversation memory with enhanced context tracking
     private final Map<String, ConversationContext> conversationMemory = new ConcurrentHashMap<>();
@@ -152,8 +171,8 @@ public class HuggingFaceClient {
 
     @PostConstruct
     private void logModelConfig() {
-        String tokenState = (hfToken != null && !hfToken.isBlank()) ? "present" : "missing";
-        logger.info("HF models active - chat: {} (mode: {}), emotion: {}, screening: {}, safety: {}, tts: {}, token: {}", chatModel, chatApiMode, emotionModel, screeningModel, safetyModel, ttsModel == null ? "" : ttsModel, tokenState);
+        String tokenState = (getHfToken() != null && !getHfToken().isBlank()) ? "present" : "missing";
+        logger.info("HF models active - chat: {} (mode: {}), emotion: {}, screening: {}, safety: {}, tts: {}, token: {}", getChatModel(), getChatApiMode(), emotionModel, screeningModel, safetyModel, ttsModel == null ? "" : ttsModel, tokenState);
     }
 
     public String generateReply(String userText) throws Exception {
@@ -195,7 +214,7 @@ public class HuggingFaceClient {
     
     private String callHuggingFaceAPI(String userText, String userId) throws Exception {
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(hfToken);
+        headers.setBearerAuth(getHfToken());
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("User-Agent", "RadAI/1.0");
         
@@ -210,10 +229,11 @@ public class HuggingFaceClient {
         
         // Build dynamic system prompt with conversation context
         StringBuilder systemPrompt = new StringBuilder();
-        systemPrompt.append("You are a compassionate mental health support chatbot like Woebot. ");
-        systemPrompt.append("Be empathetic, warm, and conversational. Listen actively and validate feelings. ");
-        systemPrompt.append("Ask thoughtful follow-up questions to understand the user better. ");
-        systemPrompt.append("Offer gentle coping strategies when appropriate. Keep responses concise but caring. ");
+        systemPrompt.append("You are a compassionate mental health support chatbot. ");
+        systemPrompt.append("Be empathetic, warm, and conversational, but do not sound templated or scripted. ");
+        systemPrompt.append("Avoid stock openers like 'I'm glad you're reaching out' or 'What's been on your mind today?'. ");
+        systemPrompt.append("Reply to the user's exact message with one specific acknowledgment and one relevant next step. ");
+        systemPrompt.append("Keep responses concise, natural, and human. ");
         
         // Add personalized context if available
         String contextSummary = ctx.getContextSummary();
@@ -256,7 +276,7 @@ public class HuggingFaceClient {
         currentMsg.put("content", userText);
         messages.add(currentMsg);
 
-        String mode = chatApiMode == null ? "chat" : chatApiMode.trim().toLowerCase();
+        String mode = getChatApiMode() == null ? "chat" : getChatApiMode().trim().toLowerCase();
         if ("inference".equals(mode)) {
             return callInferenceEndpoint(userText, ctx, headers);
         }
@@ -270,12 +290,12 @@ public class HuggingFaceClient {
         
         // Create chat-completions payload
         Map<String, Object> payload = new HashMap<>();
-        payload.put("model", chatModel);
+        payload.put("model", getChatModel());
         payload.put("messages", messages);
         payload.put("max_tokens", 250);
         payload.put("temperature", 0.7);
         
-        logger.info("Calling HuggingFace Router API - URL: {}, Model: {}, User Message: '{}'", url, chatModel, userText);
+        logger.info("Calling HuggingFace Router API - URL: {}, Model: {}, User Message: '{}'", url, getChatModel(), userText);
         
         try {
             ResponseEntity<String> res = rest.postForEntity(url, new HttpEntity<>(payload, headers), String.class);
@@ -409,8 +429,10 @@ public class HuggingFaceClient {
     private String buildInferencePrompt(String userText, ConversationContext ctx) {
         StringBuilder prompt = new StringBuilder();
         prompt.append("You are a compassionate mental health support assistant. ");
-        prompt.append("Be empathetic, validating, safe, and practical. ");
-        prompt.append("Keep answers concise (3-6 sentences) and include one helpful next step.\n\n");
+        prompt.append("Be empathetic, validating, safe, and practical, but not templated or scripted. ");
+        prompt.append("Avoid generic greetings and canned openers. ");
+        prompt.append("Respond directly to the user's exact concern with one specific acknowledgment and one helpful next step. ");
+        prompt.append("Keep answers concise (3-5 sentences) and natural.\n\n");
 
         if (ctx != null && !ctx.getContextSummary().isBlank()) {
             prompt.append("Context: ").append(ctx.getContextSummary()).append("\n");
@@ -499,6 +521,9 @@ public class HuggingFaceClient {
         
         // Remove common prefixes
         text = text.replaceAll("^(AI|Bot|Assistant|Human|User):\\s*", "");
+
+        // Remove common canned openers when the model falls back to a template-like start
+        text = text.replaceAll("(?i)^(good (morning|afternoon|evening|night)[!.,\\s]*|i'?m glad you('?re| are) reaching out[!.,\\s]*|what('?s| is) been on your mind today[?.,\\s]*|thanks for sharing[!.,\\s]*)", "");
 
         // Remove bracketed meta-tags like [APPROACH: ...], [TOOL_OUTPUT], etc.
         text = text.replaceAll("\\[.*?\\]", " ");
@@ -693,7 +718,7 @@ public class HuggingFaceClient {
         // Using new router endpoint
         String url = "https://router.huggingface.co/hf-inference/models/" + emotionModel;
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(hfToken);
+        headers.setBearerAuth(getHfToken());
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("User-Agent", "RadAI/1.0");
         
@@ -733,7 +758,7 @@ public class HuggingFaceClient {
     public Map<String,Object> classifySafety(String text) throws Exception {
         String url = "https://router.huggingface.co/hf-inference/models/" + safetyModel;
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(hfToken);
+        headers.setBearerAuth(getHfToken());
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("User-Agent", "RadAI/1.0");
 

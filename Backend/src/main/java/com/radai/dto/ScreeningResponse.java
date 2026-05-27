@@ -8,6 +8,8 @@ public class ScreeningResponse {
     private String band;
     private String message;
     private List<String> resources;
+    private String emotion;        // NEW: Primary detected emotion
+    private Integer intensity;     // NEW: Emotion intensity (1-10)
 
     public String getAction() {
         return action;
@@ -47,6 +49,22 @@ public class ScreeningResponse {
 
     public void setResources(List<String> resources) {
         this.resources = resources;
+    }
+
+    public String getEmotion() {
+        return emotion;
+    }
+
+    public void setEmotion(String emotion) {
+        this.emotion = emotion;
+    }
+
+    public Integer getIntensity() {
+        return intensity;
+    }
+
+    public void setIntensity(Integer intensity) {
+        this.intensity = intensity;
     }
 }
 

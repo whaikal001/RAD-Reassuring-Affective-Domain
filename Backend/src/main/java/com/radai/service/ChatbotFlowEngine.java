@@ -80,12 +80,28 @@ public class ChatbotFlowEngine {
             String assessment = generateAssessment(context);
             response.withAssessment(assessment);
 
-            // Step 6: Generate main content
-            String mainContent = templateService.generateMainContent(context, userMessage, approach);
+            // Step 6: Generate main content (AI-first)
+            String mainContent = null;
+            try {
+                HuggingFaceResponseEnhancer aiEnhancer = new HuggingFaceResponseEnhancer(new com.radai.chat.hf.HuggingFaceClient());
+                mainContent = aiEnhancer.generateHumanLikeResponse(userMessage, context, approach, language);
+            } catch (Exception ex) {
+                logger.warn("AI enhancer not available or failed: {} - falling back to templates", ex.getMessage());
+                mainContent = templateService.generateMainContent(context, userMessage, approach);
+            }
             response.withMainContent(mainContent);
 
-            // Step 7: Generate strategies
-            String strategies = templateService.generateStrategies(context);
+            // Step 7: Generate strategies (AI-first)
+            String strategies = null;
+            try {
+                HuggingFaceResponseEnhancer aiEnhancer2 = new HuggingFaceResponseEnhancer(new com.radai.chat.hf.HuggingFaceClient());
+                // Use a short instruction to generate strategies based on context
+                String strategyPrompt = "Provide 2-3 concise, practical strategies for the user's situation based on recent context: " + (context.getLastUserMessage() == null ? userMessage : context.getLastUserMessage());
+                strategies = aiEnhancer2.generateHumanLikeResponse(strategyPrompt, context, ApproachType.SYMPATHY, language);
+            } catch (Exception ex) {
+                logger.warn("AI strategies generation failed: {} - using template", ex.getMessage());
+                strategies = templateService.generateStrategies(context);
+            }
             response.withStrategies(strategies);
 
             // Step 8: Execute loop logic
@@ -95,22 +111,49 @@ public class ChatbotFlowEngine {
             logger.info("Loop decision: {} - {}", decision.getAction(), decision.getReason());
 
             // Step 9: Build final response with follow-up or closure
-            if (decision.getAction() == LoopManager.LoopAction.EXIT_LOOP) {
-                String closure = templateService.generateSessionClosure(context, decision.getReason());
-                response.withFollowUp(closure);
-                response.withSessionEnd(true, decision.getReason());
-            } else if (decision.getAction() == LoopManager.LoopAction.SWITCH_APPROACH) {
-                String switchMessage = templateService.generateApproachSwitchMessage(context.getCurrentApproach());
-                response.withFollowUp(switchMessage + "\n\n" + templateService.generateFollowUp(context));
-                response.withLoopContinuation(true);
-            } else if (decision.getAction() == LoopManager.LoopAction.ESCALATE_PATHWAY) {
-                String pathwaySwitch = templateService.generatePathwaySwitchMessage();
-                response.withFollowUp(pathwaySwitch + "\n\n" + templateService.generateFollowUp(context));
-                response.withLoopContinuation(true);
-            } else {
-                response.withFollowUp(templateService.generateFollowUp(context));
-                response.withLoopContinuation(decision.getAction() == LoopManager.LoopAction.CONTINUE_LOOP);
+            // Build follow-up or closure using AI if possible
+            String followUpText = null;
+            try {
+                HuggingFaceResponseEnhancer ai = new HuggingFaceResponseEnhancer(new com.radai.chat.hf.HuggingFaceClient());
+                switch (decision.getAction()) {
+                    case EXIT_LOOP:
+                        followUpText = ai.generateHumanLikeResponse("Provide a concise session closure: reason=" + decision.getReason(), context, ApproachType.SYMPATHY, language);
+                        response.withSessionEnd(true, decision.getReason());
+                        break;
+                    case SWITCH_APPROACH:
+                        followUpText = ai.generateHumanLikeResponse("Switch approach message for approach=" + context.getCurrentApproach() + ". Then ask one short follow-up question.", context, ApproachType.SYMPATHY, language);
+                        response.withLoopContinuation(true);
+                        break;
+                    case ESCALATE_PATHWAY:
+                        followUpText = ai.generateHumanLikeResponse("Pathway escalation message and one action step to escalate care.", context, ApproachType.SYMPATHY, language);
+                        response.withLoopContinuation(true);
+                        break;
+                    default:
+                        followUpText = ai.generateHumanLikeResponse("Write one brief follow-up question to continue the conversation.", context, ApproachType.EMPATHY, language);
+                        response.withLoopContinuation(decision.getAction() == LoopManager.LoopAction.CONTINUE_LOOP);
+                        break;
+                }
+            } catch (Exception ex) {
+                logger.warn("AI follow-up generation failed: {} - using templates", ex.getMessage());
+                // fallback to template behavior
+                if (decision.getAction() == LoopManager.LoopAction.EXIT_LOOP) {
+                    followUpText = templateService.generateSessionClosure(context, decision.getReason());
+                    response.withSessionEnd(true, decision.getReason());
+                } else if (decision.getAction() == LoopManager.LoopAction.SWITCH_APPROACH) {
+                    String switchMessage = templateService.generateApproachSwitchMessage(context.getCurrentApproach());
+                    followUpText = switchMessage + "\n\n" + templateService.generateFollowUp(context);
+                    response.withLoopContinuation(true);
+                } else if (decision.getAction() == LoopManager.LoopAction.ESCALATE_PATHWAY) {
+                    String pathwaySwitch = templateService.generatePathwaySwitchMessage();
+                    followUpText = pathwaySwitch + "\n\n" + templateService.generateFollowUp(context);
+                    response.withLoopContinuation(true);
+                } else {
+                    followUpText = templateService.generateFollowUp(context);
+                    response.withLoopContinuation(decision.getAction() == LoopManager.LoopAction.CONTINUE_LOOP);
+                }
             }
+
+            response.withFollowUp(followUpText);
 
             // Step 10: Add response metadata
             response.withPathway(context.getCurrentPathway());

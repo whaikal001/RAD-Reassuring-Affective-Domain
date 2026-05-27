@@ -1,8 +1,9 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { LanguageService } from '../../services/language.service';
+import { SidebarService } from '../../services/sidebar.service';
 import { TranslatePipe } from '../../pipes/t.pipe';
 
 @Component({
@@ -11,19 +12,19 @@ import { TranslatePipe } from '../../pipes/t.pipe';
   imports: [CommonModule, RouterModule, TranslatePipe],
   template: `
     @if (!isLandingPage()) {
-      <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-        <div class="container">
+      <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container-fluid px-3">
+          <button class="navbar-menu-btn" type="button" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+            <i class="bi bi-list"></i>
+          </button>
+
           <a class="navbar-brand d-flex align-items-center gap-2" routerLink="/">
             <img class="brand-logo" src="/assets/Gemini_Generated_Image_ym28zxym28zxym28-removebg-preview.png" alt="RadAI" width="56" height="56" />
             <span class="fw-bold">RadAI</span>
           </a>
           
-          <button class="navbar-toggler" type="button" (click)="toggleSidebar()">
-            <i class="bi" [class]="sidebarOpen() ? 'bi-x-lg' : 'bi-list'"></i>
-          </button>
-          
-          <div class="navbar-collapse" [class.show]="sidebarOpen()">
-            <ul class="navbar-nav ms-auto">
+          <div class="navbar-collapse ms-auto">
+            <ul class="navbar-nav">
               @if (authService.isAuthenticated()) {
                 <li class="nav-item">
                   <button class="btn btn-outline-light btn-sm" (click)="logout()">
@@ -48,121 +49,41 @@ import { TranslatePipe } from '../../pipes/t.pipe';
   `,
   styles: [`
     .navbar {
-      padding: 0.9rem 0;
+      padding: 0.75rem 0;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      backdrop-filter: blur(10px);
+    }
+
+    .navbar-menu-btn {
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      transition: all 0.25s ease;
+      display: none;
+
+      &:hover {
+        background: var(--nav-hover-bg);
+        color: var(--primary-color);
+      }
+
+      @media (max-width: 768px) {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
     }
 
     .navbar-brand {
       display: inline-flex;
       align-items: center;
       gap: 0.75rem;
-    }
-
-    .brand-mark {
-      width: 2.4rem;
-      height: 2.4rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 0.85rem;
-      background: linear-gradient(145deg, rgba(111, 124, 255, 0.24), rgba(53, 214, 193, 0.22));
-      border: 1px solid rgba(165, 178, 224, 0.18);
-      color: #f7f9ff;
-      -webkit-text-fill-color: initial;
-      box-shadow: 0 10px 24px rgba(25, 38, 89, 0.22);
-    }
-    
-    .nav-link {
-      color: var(--text-secondary) !important;
-      transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease;
-      border-radius: 999px;
-      padding: 0.55rem 0.95rem !important;
-      border: 1px solid transparent;
-      
-      &:hover, &.active {
-        color: var(--text-primary) !important;
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(165, 178, 224, 0.12);
-      }
-    }
-
-    .session-pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.45rem 0.85rem;
-      border-radius: 999px;
-      background: rgba(24, 199, 143, 0.14);
-      border: 1px solid rgba(24, 199, 143, 0.28);
-      color: #baf8df;
-      font-size: 0.85rem;
-      white-space: nowrap;
-    }
-
-    .session-pill.anonymous {
-      background: rgba(245, 158, 11, 0.14);
-      border-color: rgba(245, 158, 11, 0.4);
-      color: #fcd34d;
-    }
-
-    @media (max-width: 991px) {
-      .navbar-collapse {
-        margin-top: 1rem;
-        padding: 1rem;
-        border-radius: 1.25rem;
-        background: rgba(13, 17, 29, 0.88);
-        border: 1px solid rgba(165, 178, 224, 0.1);
-        max-height: 0;
-        overflow: hidden;
-        opacity: 0;
-        transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
-      }
-
-      .navbar-collapse.show {
-        max-height: 600px;
-        opacity: 1;
-        padding: 1rem;
-      }
-
-      .navbar-toggler {
-        border: none;
-        color: var(--text-secondary);
-        font-size: 1.25rem;
-        transition: color 0.2s ease;
-
-        &:focus {
-          box-shadow: none;
-          color: var(--text-primary);
-        }
-
-        &:hover {
-          color: var(--text-primary);
-        }
-      }
-
-      .nav-link {
-        padding: 0.7rem 0.9rem !important;
-        font-size: 0.98rem;
-      }
-
-      .btn {
-        min-height: 44px;
-      }
-
-      .session-pill {
-        margin: 0.35rem 0 0.6rem;
-      }
-    }
-
-    @media (max-width: 576px) {
-      .navbar-brand {
-        gap: 0.55rem;
-        font-size: 1.18rem;
-      }
-
-      .brand-mark {
-        width: 2.1rem;
-        height: 2.1rem;
-      }
-      .brand-logo { width: 40px; height: 40px; }
+      color: var(--text-primary);
+      text-decoration: none;
     }
 
     .brand-logo {
@@ -173,36 +94,71 @@ import { TranslatePipe } from '../../pipes/t.pipe';
       object-fit: cover;
       box-shadow: 0 8px 24px rgba(31, 44, 115, 0.18);
     }
+    
+    .navbar-collapse {
+      display: flex !important;
+    }
+
+    .navbar-nav {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .nav-link {
+      color: var(--text-secondary) !important;
+      transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+      border-radius: 999px;
+      padding: 0.55rem 0.95rem !important;
+      border: 1px solid transparent;
+      
+      &:hover, &.active {
+        color: var(--text-primary) !important;
+        background: var(--nav-hover-bg);
+        border-color: var(--border-color);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 0.6rem 0;
+      }
+
+      .navbar-brand {
+        gap: 0.55rem;
+        font-size: 1.1rem;
+      }
+
+      .brand-logo { 
+        width: 40px; 
+        height: 40px; 
+      }
+
+      .nav-link {
+        padding: 0.6rem 0.8rem !important;
+        font-size: 0.9rem;
+      }
+    }
   `]
 })
 export class NavbarComponent implements OnInit {
-  sidebarOpen = signal(false);
-
-  constructor(public authService: AuthService, public languageService: LanguageService, public router: Router) {}
+  authService = inject(AuthService);
+  languageService = inject(LanguageService);
+  sidebarService = inject(SidebarService);
+  router = inject(Router);
 
   ngOnInit(): void {
-    // Load sidebar state from localStorage, default to false (hidden)
-    const saved = localStorage.getItem('sidebarOpen');
-    this.sidebarOpen.set(saved ? JSON.parse(saved) : false);
-
-    // Close sidebar on route change
-    this.router.events.subscribe(() => {
-      if (this.sidebarOpen()) {
-        this.sidebarOpen.set(false);
-      }
-    });
+    // Load theme from localStorage on init
+    const savedTheme = localStorage.getItem('radai-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
   }
 
   toggleSidebar(): void {
-    this.sidebarOpen.set(!this.sidebarOpen());
-    // Save to localStorage
-    localStorage.setItem('sidebarOpen', JSON.stringify(this.sidebarOpen()));
+    this.sidebarService.toggle();
   }
 
   logout(): void {
     // Reset sidebar on logout
-    this.sidebarOpen.set(false);
-    localStorage.removeItem('sidebarOpen');
+    this.sidebarService.close();
     this.authService.logout();
   }
 

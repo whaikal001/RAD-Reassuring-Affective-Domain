@@ -201,7 +201,7 @@ public class FlowWithAIService {
             
             // Step 3: Get AI response for main content. Force AI usage with retries so templates are not used.
             String aiResponse = null;
-            String responseMode = "template-fallback";
+            String responseMode = "ai-primary";
             if (useAI) {
                 aiResponse = aiEnhancer.generateHumanLikeResponse(userMessage, context, approach, language);
                 if (aiResponse == null || aiResponse.isBlank()) {
@@ -227,9 +227,11 @@ public class FlowWithAIService {
                 }
                 if (aiResponse != null && !aiResponse.isBlank()) {
                     responseMode = "ai-primary";
+                } else {
+                    // keep ai-primary but mark that retries failed; will attempt final forced prompt below
+                    responseMode = "ai-failed-retries";
                 }
             }
-
             if (aiResponse != null && !aiResponse.isEmpty()) {
                 String refined = refineResponseQuality(aiResponse, detectedEmotion, intensityScore, language);
                 response.withMainContent(applySafetyPostCheck(refined, risk, language));
@@ -250,19 +252,11 @@ public class FlowWithAIService {
                     state.lastSuccessfulMode = "ai-primary";
                     responseMode = "ai-primary";
                 } else {
-                    // Fallback to template if AI truly fails after retries
-                    String templateResponse = templateService.generateMainContent(context, userMessage, approach, language);
-                    if (templateResponse != null && !templateResponse.isBlank()) {
-                        response.withMainContent(applySafetyPostCheck(templateResponse, risk, language));
-                        responseMode = "template-fallback";
-                        state.lastSuccessfulMode = "template-fallback";
-                        logger.warn("AI failed after retries, using template response for user {}", userId);
-                    } else {
-                        response.withMainContent(FALLBACK_RESPONSE);
-                        responseMode = "static-fallback";
-                        state.lastSuccessfulMode = "static-fallback";
-                        logger.warn("Template fallback failed, using static safe response for user {}", userId);
-                    }
+                    // If AI fails completely, use static safe fallback
+                    response.withMainContent(FALLBACK_RESPONSE);
+                    responseMode = "static-fallback";
+                    state.lastSuccessfulMode = "static-fallback";
+                    logger.warn("AI failed after retries, using static safe response for user {}", userId);
                 }
             }
             
@@ -577,9 +571,18 @@ public class FlowWithAIService {
                 .append(goals.get(goals.size() - 1)).append("\n");
         }
 
-        String templateStrategies = templateService.generateStrategies(context, language);
-        if (templateStrategies != null && !templateStrategies.isBlank()) {
-            strategies.append("\n").append(templateStrategies.trim());
+        // Replace template-based strategies with AI-generated suggestions for consistency
+        try {
+            String aiStrategiesPrompt = "Provide 3 concise, practical steps tailored to the user's current situation. "
+                + "Keep each step short and actionable. Context: emotion=" + context.getCurrentEmotion()
+                + ", stressor=" + (context.getDominantStressor() == null ? "none" : context.getDominantStressor())
+                + ".";
+            String aiStrategies = aiEnhancer.generateHumanLikeResponse(aiStrategiesPrompt, null, ApproachType.EMPATHY, language);
+            if (aiStrategies != null && !aiStrategies.isBlank()) {
+                strategies.append("\n").append(aiStrategies.trim());
+            }
+        } catch (Exception e) {
+            logger.warn("AI strategies generation failed, keeping existing strategies: {}", e.getMessage());
         }
 
         return strategies.toString().trim();
@@ -608,6 +611,25 @@ public class FlowWithAIService {
         List<String> goals = getGoals(userId);
         boolean isMalay = language != null && language.toLowerCase().startsWith("ms");
 
+        // Prefer AI-generated, context-aware follow-up questions
+        try {
+            StringBuilder followPrompt = new StringBuilder();
+            followPrompt.append("Write one concise, empathetic follow-up question tailored to the user's context. ");
+            followPrompt.append("Keep it natural and avoid canned phrasing. Context: emotion=").append(emotion)
+                        .append(", cycle=").append(cycle).append(", personalization=").append(state.name()).append(".");
+            if (!goals.isEmpty() && cycle % 4 == 0) {
+                followPrompt.append(" The user has a goal: ").append(goals.get(goals.size() - 1)).append('.');
+            }
+
+            String aiFollow = aiEnhancer.generateHumanLikeResponse(followPrompt.toString(), null, ApproachType.EMPATHY, language);
+            if (aiFollow != null && !aiFollow.isBlank()) {
+                return aiFollow.trim();
+            }
+        } catch (Exception e) {
+            logger.warn("AI follow-up generation failed, falling back to existing logic: {}", e.getMessage());
+        }
+
+        // Fallback to previous logic if AI fails
         if (!goals.isEmpty() && cycle % 4 == 0) {
             return isMalay
                 ? "Bagaimana perkembangan kecil anda terhadap matlamat ini: " + goals.get(goals.size() - 1) + "?"

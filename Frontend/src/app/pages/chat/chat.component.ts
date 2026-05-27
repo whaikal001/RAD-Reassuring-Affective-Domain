@@ -8,13 +8,16 @@ import { AuthService } from '../../services/auth.service';
 import { UiFeedbackService } from '../../services/ui-feedback.service';
 import { ScreeningService } from '../../services/screening.service';
 import { TemplatesService, TemplateItem } from '../../services/templates.service';
+import { CharacterService } from '../../services/character.service';
+import { R3fCharacterBridgeService } from '../../services/r3f-character-bridge.service';
 import { TranslatePipe } from '../../pipes/t.pipe';
 import { AnimatedCharacterComponent } from '../../components/animated-character/animated-character.component';
+import { R3fCharacterPanelComponent } from '../../components/r3f-character-panel/r3f-character-panel.component';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe, AnimatedCharacterComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe, AnimatedCharacterComponent, R3fCharacterPanelComponent],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss'
 })
@@ -46,6 +49,8 @@ export class ChatComponent implements AfterViewChecked, OnInit {
   screeningMessage = signal<string | null>(localStorage.getItem('screening_message'));
   screeningResources = signal<string[] | null>(null);
   currentIntensity = signal<number | null>(null);
+  characterEmotion = signal<string | null>(null);      // NEW: Current character emotion
+  characterIntensity = signal<number>(5);              // NEW: Current character intensity (default 5)
   // Signals to manage crossfade between character images
   currentCharacter = signal<string>(this.characterImage());
   // Control visibility to trigger fade-in when character changes
@@ -70,6 +75,8 @@ export class ChatComponent implements AfterViewChecked, OnInit {
     public chatService: ChatService,
     public authService: AuthService,
     public ttsService: TtsService,
+    private characterService: CharacterService,
+    private r3fBridge: R3fCharacterBridgeService,
     private uiFeedback: UiFeedbackService,
     private screeningService: ScreeningService,
     private templatesService: TemplatesService
@@ -178,6 +185,9 @@ export class ChatComponent implements AfterViewChecked, OnInit {
         this.showGreetingAndStartScreening();
       }
     }
+
+    // NEW: Load saved emotion/intensity from screening
+    this.loadSavedEmotionAndIntensity();
 
     // Keep the static character image in sync with emotion/intensity changes
     effect(() => {
@@ -302,6 +312,16 @@ export class ChatComponent implements AfterViewChecked, OnInit {
         this.screeningMessage.set(res.message || null);
         this.screeningResources.set(res.resources || null);
 
+        // NEW: Store emotion and intensity from screening
+        if (res.emotion) {
+          this.characterEmotion.set(res.emotion);
+          localStorage.setItem('screening_emotion', res.emotion);
+        }
+        if (res.intensity) {
+          this.characterIntensity.set(res.intensity);
+          localStorage.setItem('screening_intensity', res.intensity.toString());
+        }
+
         if (res.action === 'intervention') {
           this.uiFeedback.error('Safety', res.message || 'High stress detected.');
         } else if (res.action === 'prevention') {
@@ -342,6 +362,29 @@ export class ChatComponent implements AfterViewChecked, OnInit {
       },
       error: () => {} // Silently fail
     });
+  }
+
+  /**
+   * NEW: Load saved emotion and intensity from screening results
+   * This restores the character animation state from localStorage
+   */
+  private loadSavedEmotionAndIntensity(): void {
+    try {
+      const savedEmotion = localStorage.getItem('screening_emotion');
+      const savedIntensity = localStorage.getItem('screening_intensity');
+      
+      if (savedEmotion) {
+        this.characterEmotion.set(savedEmotion);
+      }
+      if (savedIntensity) {
+        const intensity = parseInt(savedIntensity, 10);
+        if (!isNaN(intensity)) {
+          this.characterIntensity.set(intensity);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load saved emotion/intensity', e);
+    }
   }
 
   /**
@@ -857,6 +900,9 @@ export class ChatComponent implements AfterViewChecked, OnInit {
     this.sendError.set(null);
     this.lastSentUserMessage.set(message);
     
+    // Notify character that user sent a message
+    this.r3fBridge.sendMessage({ type: 'USER_MESSAGE', data: { text: message } });
+    
     // Use screening intensity if just completed, otherwise infer from message
     let messageIntensity = this.inferIntensityFromMessage(message);
     const screeningIntensity = this.currentIntensity();
@@ -869,8 +915,11 @@ export class ChatComponent implements AfterViewChecked, OnInit {
 
     this.chatService.sendMessage(message, messageIntensity, this.useAI(), appendUserMessage)
       .subscribe({
-        next: () => {
+        next: (response) => {
           this.autoSpeakLatestBotMessage();
+          this.characterService.getFullCharacterResponse(response, this.language()).subscribe({
+            error: err => console.warn('Character enrichment failed:', err)
+          });
           this.shouldScroll = true;
         },
         error: err => {

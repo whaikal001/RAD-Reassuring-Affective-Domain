@@ -152,7 +152,7 @@ Response:
 Make sure your `application.properties` has:
 
 ```properties
-hf.api.token=YOUR_HUGGINGFACE_API_KEY
+hf.api.token=${HF_API_TOKEN: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}
 hf.chat.model=Qwen/Qwen2.5-7B-Instruct
 hf.emotion.model=j-hartmann/emotion-english-distilroberta-base
 hf.screening.model=facebook/bart-large-mnli

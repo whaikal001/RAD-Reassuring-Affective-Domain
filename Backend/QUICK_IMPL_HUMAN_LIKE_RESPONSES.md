@@ -62,7 +62,7 @@ In `Backend/src/main/resources/application.properties`:
 
 ```properties
 # ===== HuggingFace Configuration =====
-hf.api.token=YOUR_HUGGINGFACE_API_KEY_HERE
+hf.api.token=${HF_API_TOKEN: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}
 hf.chat.model=Qwen/Qwen2.5-7B-Instruct
 hf.emotion.model=j-hartmann/emotion-english-distilroberta-base
 hf.screening.model=facebook/bart-large-mnli
@@ -438,7 +438,7 @@ export HUGGINGFACE_API_TOKEN="hf_xxxxxxxxxxxxxxxxxxxx"
 
 Then in application.properties:
 ```properties
-hf.api.token=${HUGGINGFACE_API_TOKEN}
+hf.api.token=${HF_API_TOKEN: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}
 ```
 
 ✅ Add rate limiting to prevent API abuse:

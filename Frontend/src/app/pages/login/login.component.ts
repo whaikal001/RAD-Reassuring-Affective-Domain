@@ -27,13 +27,8 @@ export class LoginComponent {
     private router: Router,
     private route: ActivatedRoute
   ) {
-    // Get return URL from query params
+    // Get return URL from query params, or use default based on role
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/chat';
-    
-    // Redirect if already logged in
-    if (this.authService.isAuthenticated()) {
-      this.router.navigate([this.returnUrl]);
-    }
   }
 
   onSubmit(): void {
@@ -46,8 +41,8 @@ export class LoginComponent {
       .subscribe({
         next: () => {
           this.chatService.resetSession().subscribe({
-            next: () => this.router.navigate([this.returnUrl]),
-            error: () => this.router.navigate([this.returnUrl])
+            next: () => this.redirectBasedOnRole(),
+            error: () => this.redirectBasedOnRole()
           });
         },
         error: (err) => {
@@ -64,12 +59,27 @@ export class LoginComponent {
     this.authService.loginAnonymously()
       .subscribe({
         next: () => {
-          this.router.navigate([this.returnUrl]);
+          this.router.navigate(['/chat']);
         },
         error: (err) => {
           this.loading.set(false);
           this.error.set('Unable to start anonymous session. Please try again.');
         }
       });
+  }
+
+  private redirectBasedOnRole(): void {
+    // Check if return URL was explicitly provided
+    if (this.route.snapshot.queryParams['returnUrl']) {
+      this.router.navigate([this.returnUrl]);
+      return;
+    }
+
+    // Otherwise, determine destination based on user role
+    if (this.authService.hasRole('admin')) {
+      this.router.navigate(['/admin']);
+    } else {
+      this.router.navigate(['/chat']);
+    }
   }
 }

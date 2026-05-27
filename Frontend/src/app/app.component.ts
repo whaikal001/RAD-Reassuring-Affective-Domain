@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { trigger, transition, style, animate, query, group } from '@angular/animations';
+import { CommonModule } from '@angular/common';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { UiFeedbackService } from './services/ui-feedback.service';
 import { TranslatePipe } from './pipes/t.pipe';
@@ -8,7 +9,7 @@ import { TranslatePipe } from './pipes/t.pipe';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, TranslatePipe],
+  imports: [RouterOutlet, CommonModule, NavbarComponent, TranslatePipe],
   template: `
     <app-navbar></app-navbar>
 
@@ -67,6 +68,7 @@ import { TranslatePipe } from './pipes/t.pipe';
 
     @media (max-width: 768px) {
       main {
+        margin-left: 0;
         padding: 0.55rem !important;
       }
     }
@@ -144,8 +146,7 @@ import { TranslatePipe } from './pipes/t.pipe';
 })
 export class AppComponent {
   title = 'RadAI';
-
-  constructor(public uiFeedback: UiFeedbackService) {}
+  uiFeedback = inject(UiFeedbackService);
 
   prepareRoute(outlet: RouterOutlet) {
     return outlet && outlet.activatedRouteData && outlet.activatedRouteData['animation'];

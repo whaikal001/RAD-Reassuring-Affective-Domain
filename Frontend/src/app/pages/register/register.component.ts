@@ -29,10 +29,7 @@ export class RegisterComponent {
     private router: Router,
     public languageService: LanguageService
   ) {
-    // Redirect if already logged in
-    if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/chat']);
-    }
+    // Don't redirect - allow users to stay on register/landing pages
   }
 
   onSubmit(): void {
@@ -52,12 +49,12 @@ export class RegisterComponent {
         this.chatService.resetSession().subscribe({
           next: () => {
             setTimeout(() => {
-              this.router.navigate(['/chat']);
+              this.redirectBasedOnRole();
             }, 1500);
           },
           error: () => {
             setTimeout(() => {
-              this.router.navigate(['/chat']);
+              this.redirectBasedOnRole();
             }, 1500);
           }
         });
@@ -67,5 +64,14 @@ export class RegisterComponent {
         this.error.set(err.error?.message || 'Registration failed. Please try again.');
       }
     });
+  }
+
+  private redirectBasedOnRole(): void {
+    // Determine destination based on user role
+    if (this.authService.hasRole('admin')) {
+      this.router.navigate(['/admin']);
+    } else {
+      this.router.navigate(['/chat']);
+    }
   }
 }

@@ -1,4 +1,16 @@
 
+    :host, .dashboard-container {
+      background: transparent;
+      color: var(--text-primary);
+    }
+
+    /* Glass defaults for page */
+    :host .card, .dashboard-container .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+    }
+
     .dashboard-container {
       max-width: 1200px;
       margin: 0 auto;
@@ -27,9 +39,10 @@
     }
 
     .panel {
-      background: linear-gradient(165deg, rgba(22, 28, 46, 0.8), rgba(14, 18, 31, 0.9));
-      border: 1px solid rgba(165, 178, 224, 0.18);
+      background: linear-gradient(165deg, rgba(8, 12, 28, 0.68), rgba(13, 19, 48, 0.86));
+      border: 1px solid rgba(219, 232, 255, 0.16);
       box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(18px);
     }
 
     .status-grid {
@@ -44,7 +57,7 @@
       gap: 0.35rem;
       padding: 1rem;
       border-radius: 14px;
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border-color);
     }
 
@@ -91,7 +104,7 @@
     }
 
     .progress {
-      background: var(--darker-bg);
+      background: rgba(7, 11, 29, 0.72);
       border-radius: 4px;
     }
 

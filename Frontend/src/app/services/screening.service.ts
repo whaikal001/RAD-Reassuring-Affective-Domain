@@ -9,6 +9,8 @@ export interface ScreeningResponse {
   band: string;
   message?: string;
   resources?: string[];
+  emotion?: string;      // NEW: Detected emotion
+  intensity?: number;    // NEW: Emotion intensity (1-10)
 }
 
 @Injectable({ providedIn: 'root' })

@@ -1,4 +1,15 @@
 
+    :host, .page-shell {
+      background: transparent;
+      color: var(--text-primary);
+    }
+
+    :host .card, .page-shell .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+    }
+
     .page-shell {
       max-width: 1200px;
       margin: 0 auto;

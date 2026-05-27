@@ -71,12 +71,18 @@ public class PreLLMScreeningController {
                 message = "No elevated stress detected for the Stress subscale.";
         }
 
+        // Calculate emotion and intensity based on DASS-21 score and band
+        String emotion = detectEmotionFromBand(band, score);
+        Integer intensity = calculateIntensityFromScore(score);
+
         ScreeningResponse resp = new ScreeningResponse();
         resp.setAction(action);
         resp.setScore(score);
         resp.setBand(band);
         resp.setMessage(message);
         resp.setResources(resources);
+        resp.setEmotion(emotion);      // NEW: Set detected emotion
+        resp.setIntensity(intensity);  // NEW: Set intensity level
 
         // Persist a screening event into session history so anonymous flows are recorded
         try {
@@ -105,6 +111,36 @@ public class PreLLMScreeningController {
         }
 
         return resp;
+    }
+
+    /**
+     * Detect primary emotion based on DASS-21 screening results
+     * DASS-21 measures Stress, Anxiety, and Depression (3 subscales of 7 items each)
+     */
+    private String detectEmotionFromBand(String band, int score) {
+        switch (band) {
+            case "Extremely severe":
+            case "Severe":
+                return "STRESSED";  // High stress → nervous/stressed state
+            case "Moderate":
+                return "ANXIOUS";   // Moderate stress → anxious state
+            case "Mild":
+                return "UNDERSTANDING";  // Mild stress → receptive/understanding state
+            default:
+                return "NEUTRAL";   // Normal → neutral/stable state
+        }
+    }
+
+    /**
+     * Calculate emotional intensity (1-10 scale) based on DASS-21 score
+     * DASS-21 raw score ranges: 0-63 (21 items × 3 severity levels)
+     * Maps to 1-10 intensity scale for character animation
+     */
+    private Integer calculateIntensityFromScore(int score) {
+        // Normalize score to 1-10 range
+        // 0 = 1, 63 = 10, linear mapping
+        int intensity = (score * 9 / 63) + 1;
+        return Math.max(1, Math.min(10, intensity));  // Clamp to 1-10 range
     }
 }
 

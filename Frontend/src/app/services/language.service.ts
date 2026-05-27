@@ -307,6 +307,15 @@ const TRANSLATIONS: Record<AppLanguage, Dictionary> = {
     'chat.aria.conversationMessages': 'Conversation messages',
     'chat.retry': 'Retry',
     'chat.aria.typeMessage': 'Type your message',
+    'sidebar.main': 'Main',
+    'sidebar.chat': 'Chat',
+    'sidebar.history': 'History',
+    'sidebar.dashboard': 'Dashboard',
+    'sidebar.reports': 'Reports',
+    'sidebar.system': 'System',
+    'sidebar.profile': 'Profile',
+    'sidebar.settings': 'Settings',
+    'sidebar.admin': 'Admin Panel',
   },
   ms: {
       'history.snapshot.sessionsLoaded': 'Sesi Dimuatkan',
@@ -597,6 +606,15 @@ const TRANSLATIONS: Record<AppLanguage, Dictionary> = {
     'chat.aria.conversationMessages': 'Mesej perbualan',
     'chat.retry': 'Cuba semula',
     'chat.aria.typeMessage': 'Taip mesej anda',
+    'sidebar.main': 'Utama',
+    'sidebar.chat': 'Sembang',
+    'sidebar.history': 'Sejarah',
+    'sidebar.dashboard': 'Papan Pemuka',
+    'sidebar.reports': 'Laporan',
+    'sidebar.system': 'Sistem',
+    'sidebar.profile': 'Profil',
+    'sidebar.settings': 'Tetapan',
+    'sidebar.admin': 'Panel Admin',
   }
 };
 

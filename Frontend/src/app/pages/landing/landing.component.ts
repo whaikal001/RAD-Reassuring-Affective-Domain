@@ -30,10 +30,8 @@ export class LandingComponent implements AfterViewInit {
     private router: Router,
     public languageService: LanguageService
   ) {
-    // Redirect if already logged in
-    if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/chat']);
-    }
+    // Don't redirect - allow all users to view landing page
+    // Users will decide when to login
   }
 
   ngAfterViewInit(): void {

@@ -49,14 +49,47 @@ public class HuggingFaceResponseEnhancer {
             
             logger.info("Generating BlenderBot response for user message: {} (language: {}, approach: {})", userMessage, language, approach);
 
-            // For Malay, prepend language instruction to help AI respond appropriately
-            String approachPrefix = approach == ApproachType.SYMPATHY ? "[APPROACH: SYMPATHY] " : "[APPROACH: EMPATHY] ";
-            String langPrefix = isMalay ? "[Respond in Malay/Bahasa Malaysia] " : "";
-            String promptMessage = approachPrefix + langPrefix + userMessage;
+            StringBuilder promptMessage = new StringBuilder();
+            promptMessage.append("Write one fresh, natural reply to the user's message. ");
+            promptMessage.append("Do not use a stock template, generic greeting, or canned opener. ");
+            promptMessage.append("Respond to the user's exact situation, sound human, and keep it to 3-5 sentences. ");
+            promptMessage.append("Avoid repeating the user verbatim. ");
+            promptMessage.append("End with one gentle, relevant question only if it feels natural.\n");
+            promptMessage.append("Approach: ").append(approach == ApproachType.SYMPATHY ? "sympathy" : "empathy").append("\n");
+            promptMessage.append("Language: ").append(isMalay ? "Malay/Bahasa Malaysia" : "English").append("\n");
+
+            if (context != null) {
+                StringBuilder contextSummary = new StringBuilder();
+                if (context.getCurrentEmotion() != null && !context.getCurrentEmotion().isBlank()) {
+                    contextSummary.append("emotion=").append(context.getCurrentEmotion());
+                }
+                if (context.getDominantStressor() != null && !context.getDominantStressor().isBlank()) {
+                    if (!contextSummary.isEmpty()) {
+                        contextSummary.append(", ");
+                    }
+                    contextSummary.append("stressor=").append(context.getDominantStressor());
+                }
+                if (!context.getRecentUserMessages().isEmpty()) {
+                    if (!contextSummary.isEmpty()) {
+                        contextSummary.append(", ");
+                    }
+                    contextSummary.append("recent=").append(String.join(" | ", context.getRecentUserMessages()));
+                }
+                if (!contextSummary.isEmpty()) {
+                    promptMessage.append("Context: ").append(contextSummary).append("\n");
+                }
+            }
+
+            if (isMalay) {
+                promptMessage.append("Write the reply in Malay/Bahasa Malaysia.\n");
+            }
+
+            promptMessage.append("User message: ").append(userMessage).append("\n");
+            promptMessage.append("Reply:");
 
             logger.debug("HF promptMessage (preview): {}", promptMessage.length() > 200 ? promptMessage.substring(0, 200) + "..." : promptMessage);
 
-            String aiResponse = huggingFaceClient.generateReply(promptMessage, context.getUserId().toString());
+            String aiResponse = huggingFaceClient.generateReply(promptMessage.toString(), context.getUserId().toString());
 
             if (aiResponse != null && !aiResponse.isEmpty()) {
                 logger.info("Generated BlenderBot draft response of length: {}", aiResponse.length());

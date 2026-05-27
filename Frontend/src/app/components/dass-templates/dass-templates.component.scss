@@ -21,49 +21,53 @@
 }
 
 .dass-templates .input-group {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
+  background: rgba(7, 11, 29, 0.45);
+  border: 1px solid rgba(219, 232, 255, 0.14);
+  border-radius: 14px;
   padding: 2px;
+  backdrop-filter: blur(12px);
 }
 
 .dass-templates .form-control {
   background: transparent;
   border: none;
-  color: #fff;
+  color: #f4f7ff;
   font-size: 1rem;
 }
 
 .dass-templates .form-control::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(195, 205, 230, 0.7);
 }
 
 .dass-templates .form-control:focus {
   background: transparent;
   border: none;
-  color: #fff;
+  color: #f4f7ff;
   box-shadow: none;
   outline: none;
 }
 
 .dass-templates .btn-primary {
-  background: #7c3aed;
+  background: linear-gradient(135deg, rgba(219, 232, 255, 0.22), rgba(110, 231, 255, 0.16));
   border: none;
   color: #fff;
-  font-weight: 500;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(4, 7, 19, 0.2);
 }
 
 .dass-templates .btn-primary:hover:not(:disabled) {
-  background: #6d28d9;
+  background: linear-gradient(135deg, rgba(219, 232, 255, 0.28), rgba(110, 231, 255, 0.2));
 }
 
 .dass-templates .btn-primary:disabled {
-  background: #5b21b6;
+  background: rgba(7, 11, 29, 0.5);
   opacity: 0.6;
 }
 
 .dass-templates .form-select { 
   min-width: 160px; 
-  background: transparent;
-  color: #fff;
+  background: rgba(7, 11, 29, 0.45);
+  color: #f4f7ff;
+  border: 1px solid rgba(219, 232, 255, 0.14);
+  border-radius: 14px;
 }

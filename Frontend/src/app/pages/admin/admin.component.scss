@@ -1,7 +1,11 @@
 /* Admin Dashboard Styling */
 
+:host, .admin-dashboard {
+  background: transparent;
+  color: var(--text-primary);
+}
+
 .admin-dashboard {
-  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
   min-height: 100vh;
 
   h2 {

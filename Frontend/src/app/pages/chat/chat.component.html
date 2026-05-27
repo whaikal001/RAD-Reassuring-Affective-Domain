@@ -189,22 +189,15 @@
 
       <!-- Messages Area with Character on Right -->
       <div class="chat-content-wrapper">
-        <!-- Character Panel - 30% (Sticky Right) -->
+        <!-- Character Panel - 25% (Right) - NEW: Use R3F 3D Character -->
         <div class="character-panel">
-            <div class="character-display" #characterDisplayRef>
-            @if (chatService.messages().length > 0) {
-              <!-- Single image only: shows current character and uses fade transition -->
-              <img [src]="currentCharacter()" [class.hidden]="!imageVisible()" class="rad-character-img current" alt="RadAI" />
-            } @else {
-              <div class="character-welcome">
-                <img class="brand-logo welcome-logo" src="/assets/characters/RadNeutral.png" alt="RadAI" />
-              </div>
-            }
+          <div class="character-display" #characterDisplayRef>
+            <!-- NEW: Use R3FCharacterPanelComponent for full 3D animated character -->
+            <app-r3f-character-panel></app-r3f-character-panel>
           </div>
-          <div class="character-label">{{ chatService.currentEmotion() || 'Neutral' }}</div>
         </div>
 
-        <!-- Chat Messages Panel - 70% (Left) -->
+        <!-- Chat Messages Panel - 75% (Left) -->
         <div class="chat-messages" #messagesContainer role="log" aria-live="polite" [attr.aria-label]="'chat.aria.conversationMessages' | t">
 
         @if (chatService.messages().length === 0 && !screeningCompleted()) {
