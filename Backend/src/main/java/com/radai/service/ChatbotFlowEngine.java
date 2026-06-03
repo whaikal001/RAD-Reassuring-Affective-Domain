@@ -33,6 +33,8 @@ public class ChatbotFlowEngine {
     private final LoopManager loopManager;
     private final String language; // en, ms, etc.
     private final com.radai.service.config.AppConfig appConfig;
+    private final com.radai.service.empathy.ApproachSwitchPolicy approachPolicy =
+        new com.radai.service.empathy.ApproachSwitchPolicy();
 
     // Session management
     private final Map<UUID, MonitoringContext> sessionContexts = new ConcurrentHashMap<>();
@@ -51,11 +53,25 @@ public class ChatbotFlowEngine {
      * This is the main entry point for the chatbot interaction
      */
     public FlowResponse processUserMessage(UUID userId, String conversationId, String userMessage, int intensityScore) {
+        return processUserMessage(userId, conversationId, userMessage, intensityScore, null);
+    }
+
+    /**
+     * Process a user message, supplying the DASS screening band as the stable baseline for the
+     * empathy&lt;-&gt;sympathy switch. {@code dassBand} may be null when screening is unknown.
+     */
+    public FlowResponse processUserMessage(UUID userId, String conversationId, String userMessage,
+                                           int intensityScore, String dassBand) {
         try {
             logger.info("Processing message for user {} in conversation {}", userId, conversationId);
 
             // Get or create monitoring context
             MonitoringContext context = getOrCreateContext(userId, conversationId);
+
+            // Capture the screening band once as the session baseline for approach switching.
+            if (dassBand != null && !dassBand.isBlank() && context.getStressBand() == null) {
+                context.setStressBand(dassBand);
+            }
 
             // Step 1: If first message in conversation, send greeting
             FlowResponse response = new FlowResponse(conversationId);
@@ -190,75 +206,29 @@ public class ChatbotFlowEngine {
     }
 
     /**
-     * Determine appropriate approach based on context
-     * 
-     * EMPATHY → SYMPATHY only when:
-     * - User receives empathy-based advice but CAN'T follow it
-     * - User shows struggle/inability to implement suggestions
-     * - User needs step-by-step guidance instead
-     * 
-     * Stays EMPATHY when:
-     * - First cycle (always empathy first)
-     * - User is following advice well
-     * - User is improving with current approach
+     * Determine the approach (EMPATHY vs SYMPATHY) for this turn from the stress/intensity signal.
+     *
+     * <p>Delegates to {@link com.radai.service.empathy.ApproachSwitchPolicy}: HIGH stress/intensity
+     * &rarr; SYMPATHY (practical, step-in guidance), LOW &rarr; EMPATHY (gentle presence), with
+     * hysteresis so the mode does not flip-flop. The session always opens in EMPATHY, and any
+     * detected crisis forces SYMPATHY (highest support).
      */
     private ApproachType determineApproach(MonitoringContext context) {
-        // Log context snapshot to aid debugging approach selection
-        logger.debug("DetermineApproach - cycleCount={}, currentApproach={}, intensity={}, intensityLevel={}, approachSwitchHistory={}, messagesWithoutImprovement={}, userStruggling={}",
-            context.getCycleCount(), context.getCurrentApproach(), context.getCurrentIntensityScore(), context.getCurrentIntensityLevel(), context.getApproachSwitchHistory(), context.getMessagesWithoutImprovement());
+        // cycleCount is still 0 on the first user turn (LoopManager increments it later this cycle).
+        boolean firstTurn = context.getCycleCount() == 0;
+        boolean crisis = context.isCrisisDetected() || context.isSuicidalIdeationDetected();
 
-        // Start with EMPATHY by default (first cycle)
-        if (context.getCycleCount() == 1) {
-            logger.debug("determineApproach -> choosing EMPATHY (first cycle - always start with empathy)");
-            return ApproachType.EMPATHY;
+        com.radai.service.empathy.ApproachSwitchPolicy.Decision decision = approachPolicy.decide(
+            context.getCurrentApproach(), firstTurn, crisis,
+            context.getStressBand(), context.getCurrentIntensityScore());
+
+        if (decision.switched()) {
+            logger.info("Approach switch {} -> {} | {}",
+                context.getCurrentApproach(), decision.approach(), decision.reason());
+        } else {
+            logger.debug("Approach kept {} | {}", decision.approach(), decision.reason());
         }
-
-        // Stay with EMPATHY until we detect user can't follow the advice
-        ApproachType currentApproach = context.getCurrentApproach();
-        
-        // Check if user is struggling to follow empathy-based advice
-        if (currentApproach == ApproachType.EMPATHY && userIsStruggling(context)) {
-            logger.info("User struggling with empathy-based advice -> SWITCH to SYMPATHY mode for practical guidance");
-            return ApproachType.SYMPATHY;
-        }
-
-        // If already in SYMPATHY and user is improving, stay in SYMPATHY
-        if (currentApproach == ApproachType.SYMPATHY && context.isUserImproving()) {
-            logger.debug("User improving with sympathy approach - continue SYMPATHY");
-            return ApproachType.SYMPATHY;
-        }
-
-        // If user is improving well with EMPATHY, keep it
-        if (currentApproach == ApproachType.EMPATHY && context.isUserImproving()) {
-            logger.debug("User improving with empathy approach - continue EMPATHY");
-            return ApproachType.EMPATHY;
-        }
-
-        // Default: keep current approach
-        logger.debug("determineApproach -> keeping current approach: {}", currentApproach);
-        return currentApproach;
-    }
-
-    /**
-     * Detect if user is struggling to follow empathy-based guidance
-     * Signs: "can't do it", "too hard", "don't know how", "still overwhelmed", repeated failures
-     */
-    private boolean userIsStruggling(MonitoringContext context) {
-        // Check messages without improvement - if 2+ empathy responses haven't helped
-        if (context.getMessagesWithoutImprovement() >= 2) {
-            String userLastMessage = context.getLastUserMessage();
-            if (userLastMessage != null) {
-                String lower = userLastMessage.toLowerCase();
-                
-                // Signs of struggling with advice
-                if (lower.matches(".*(can't|cannot|can't do|don't know how|too hard|difficult|impossible|still feel|not working|doesn't help|struggling|confused|don't understand).*")) {
-                    logger.info("User showing struggle signals: can't follow empathy advice");
-                    return true;
-                }
-            }
-            return true; // If 2+ messages without improvement, likely struggling
-        }
-        return false;
+        return decision.approach();
     }
 
     /**

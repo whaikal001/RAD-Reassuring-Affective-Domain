@@ -2,7 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin, of, switchMap } from 'rxjs';
+import { forkJoin, Observable, of, switchMap } from 'rxjs';
 import { ProfileService } from '../../services/profile.service';
 import { UserPreferences, UserProfile } from '../../models';
 import { ChatService } from '../../services/chat.service';
@@ -139,7 +139,9 @@ export class ProfileComponent implements OnInit {
       dataCollectionConsent: this.preferencesForm.dataCollectionConsent
     };
 
-    const account$ = hasAccountChanges ? this.profileService.updateAccount(accountPayload) : of(null);
+    const account$: Observable<UserProfile | null> = hasAccountChanges
+      ? this.profileService.updateAccount(accountPayload)
+      : of(null);
 
     // Apply the account change (username / password) FIRST, then the profile + preferences.
     // updateCurrentUser does a read-modify-write of the whole user record, so if it ran in

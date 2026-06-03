@@ -70,7 +70,8 @@ public class ChatbotFlowEnhancedController {
                 userUUID,
                 convId,
                 request.userMessage(),
-                request.intensityScore()
+                request.intensityScore(),
+                request.dassBand()
             );
             
             ChatbotFlowResponseDTO dto = convertToDTO(flowResponse);
@@ -125,7 +126,8 @@ public class ChatbotFlowEnhancedController {
                 convId,
                 request.userMessage(),
                 request.intensityScore(),
-                language
+                language,
+                request.dassBand()
             );
             
             // Auto-track emotion in database

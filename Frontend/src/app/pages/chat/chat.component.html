@@ -98,11 +98,10 @@
         </div>
       }
 
-      <!-- Messages Area with Character on Right -->
+      <!-- Messages Area (75%, Left) + Facial Character Panel (25%, Right) -->
       <div class="chat-content-wrapper">
-        <!-- Right character panel removed as requested -->
 
-        <!-- Chat Messages Panel - 70% (Left) -->
+        <!-- Chat Messages Panel - 75% (Left) -->
         <div class="chat-messages" #messagesContainer role="log" aria-live="polite" [attr.aria-label]="'chat.aria.conversationMessages' | t">
 
         @if (chatService.messages().length === 0 && !screeningCompleted()) {
@@ -289,6 +288,21 @@
           </div>
         }
       </div>
+
+        <!-- Facial Character Panel - 25% (Right) -->
+        <div class="character-panel">
+          <div class="character-display" #characterDisplayRef>
+            @if (chatService.messages().length > 0) {
+              <!-- Single image: current character, fades on emotion change -->
+              <img [src]="currentCharacter()" [class.hidden]="!imageVisible()" class="rad-character-img current" alt="RadAI" />
+            } @else {
+              <div class="character-welcome">
+                <img class="brand-logo welcome-logo" src="/assets/characters/RadNeutral.png" alt="RadAI" />
+              </div>
+            }
+          </div>
+          <div class="character-label">{{ chatService.currentEmotion() || 'Neutral' }}</div>
+        </div>
     </div>
 
       <!-- Input Area -->

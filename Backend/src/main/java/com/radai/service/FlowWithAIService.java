@@ -5,7 +5,6 @@ import com.radai.model.FlowResponse;
 import com.radai.model.MonitoringContext;
 import com.radai.enums.PathwayType;
 import com.radai.enums.ApproachType;
-import com.radai.enums.IntensityLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.time.Duration;
@@ -39,6 +38,8 @@ public class FlowWithAIService {
     private final MonitoringAndScreeningService screeningService;
     private final ResponseTemplateService templateService;
     private final boolean useAI;
+    private final com.radai.service.empathy.ApproachSwitchPolicy approachPolicy =
+        new com.radai.service.empathy.ApproachSwitchPolicy();
     
     // Track conversation state per user
     private final Map<UUID, ConversationState> conversationStates = new ConcurrentHashMap<>();
@@ -152,6 +153,14 @@ public class FlowWithAIService {
      * Process message with integrated Flow System + AI (with language support)
      */
     public FlowResponse processWithAI(UUID userId, String conversationId, String userMessage, int intensityScore, String language) {
+        return processWithAI(userId, conversationId, userMessage, intensityScore, language, null);
+    }
+
+    /**
+     * Process message with integrated Flow System + AI, supplying the DASS screening band as the
+     * stable baseline for the empathy&lt;-&gt;sympathy switch. {@code dassBand} may be null.
+     */
+    public FlowResponse processWithAI(UUID userId, String conversationId, String userMessage, int intensityScore, String language, String dassBand) {
         Instant started = Instant.now();
         try {
             logger.info("Processing message with integrated Flow+AI for user {}", userId);
@@ -161,18 +170,23 @@ public class FlowWithAIService {
             state.messageCount++;
             trackMemory(state, userMessage);
             captureGoal(userId, userMessage);
-            
+
             // Get or create monitoring context
             MonitoringContext context = flowEngine.getContext(userId);
             if (context == null) {
                 context = new MonitoringContext(userId, conversationId);
             }
-            
+
+            // Capture the screening band once as the session baseline for approach switching.
+            if (dassBand != null && !dassBand.isBlank() && context.getStressBand() == null) {
+                context.setStressBand(dassBand);
+            }
+
             // Step 1: Emotional screening
             screeningService.assessEmotionalState(context, userMessage, intensityScore);
             String detectedEmotion = context.getCurrentEmotion();
             PathwayType pathway = screeningService.determinePathway(context);
-            ApproachType approach = determineApproach(context);
+            ApproachType approach = determineApproach(context, state.messageCount <= 1);
             
             state.detectedEmotion = detectedEmotion;
             state.lastIntensity = intensityScore;
@@ -330,16 +344,26 @@ public class FlowWithAIService {
     }
     
     /**
-     * Determine approach based on context (Empathy vs Sympathy)
+     * Determine approach (EMPATHY vs SYMPATHY) for this turn from the stress/intensity signal.
+     *
+     * <p>Shares {@link com.radai.service.empathy.ApproachSwitchPolicy} with the flow engine:
+     * HIGH stress/intensity &rarr; SYMPATHY, LOW &rarr; EMPATHY, with hysteresis. The session opens
+     * in EMPATHY and any detected crisis forces SYMPATHY.
      */
-    private ApproachType determineApproach(MonitoringContext context) {
-        if (context.isCrisisDetected() || context.isSuicidalIdeationDetected()) {
-            return ApproachType.SYMPATHY; // Higher support level
+    private ApproachType determineApproach(MonitoringContext context, boolean firstTurn) {
+        boolean crisis = context.isCrisisDetected() || context.isSuicidalIdeationDetected();
+
+        com.radai.service.empathy.ApproachSwitchPolicy.Decision decision = approachPolicy.decide(
+            context.getCurrentApproach(), firstTurn, crisis,
+            context.getStressBand(), context.getCurrentIntensityScore());
+
+        if (decision.switched()) {
+            logger.info("Approach switch {} -> {} | {}",
+                context.getCurrentApproach(), decision.approach(), decision.reason());
+        } else {
+            logger.debug("Approach kept {} | {}", decision.approach(), decision.reason());
         }
-        if (context.getCurrentIntensityLevel() == IntensityLevel.HIGH) {
-            return ApproachType.SYMPATHY;
-        }
-        return ApproachType.EMPATHY; // Default
+        return decision.approach();
     }
     
     /**

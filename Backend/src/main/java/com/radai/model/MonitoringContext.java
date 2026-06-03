@@ -21,6 +21,10 @@ public class MonitoringContext {
     private int currentIntensityScore;
     private IntensityLevel currentIntensityLevel;
     private String dominantStressor;
+
+    // DASS screening band captured at session start (Normal/Mild/Moderate/Severe/Extremely severe).
+    // Acts as the stable baseline in the empathy<->sympathy switch signal; null until screening is known.
+    private String stressBand;
     
     // Pathway and approach tracking
     private PathwayType currentPathway;
@@ -84,6 +88,9 @@ public class MonitoringContext {
 
     public String getDominantStressor() { return dominantStressor; }
     public void setDominantStressor(String stressor) { this.dominantStressor = stressor; }
+
+    public String getStressBand() { return stressBand; }
+    public void setStressBand(String stressBand) { this.stressBand = stressBand; }
 
     public PathwayType getCurrentPathway() { return currentPathway; }
     public void setCurrentPathway(PathwayType pathway) {

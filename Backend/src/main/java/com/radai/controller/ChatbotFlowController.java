@@ -42,7 +42,8 @@ public class ChatbotFlowController {
                 userUUID,
                 convId,
                 request.userMessage(),
-                request.intensityScore()
+                request.intensityScore(),
+                request.dassBand()
             );
             
             // Convert to DTO
