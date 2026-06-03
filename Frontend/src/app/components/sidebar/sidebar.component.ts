@@ -39,7 +39,7 @@ import { TranslatePipe } from '../../pipes/t.pipe';
       </div>
 
       <nav class="sidebar-nav">
-        <div class="nav-section">
+        <div class="nav-section" *ngIf="!isAdmin()">
           <h3 class="nav-section-title">{{ 'sidebar.main' | t }}</h3>
 
           <ng-container *ngIf="authService.isAuthenticated()">
@@ -68,17 +68,12 @@ import { TranslatePipe } from '../../pipes/t.pipe';
         <div class="nav-section">
           <h3 class="nav-section-title">{{ 'sidebar.system' | t }}</h3>
 
-          <a routerLink="/profile" routerLinkActive="active" (click)="sidebarService.close()" class="nav-item">
+          <a *ngIf="!isAdmin()" routerLink="/profile" routerLinkActive="active" (click)="sidebarService.close()" class="nav-item">
             <i class="bi bi-person-circle"></i>
             <span class="nav-label">{{ 'sidebar.profile' | t }}</span>
           </a>
 
-          <button (click)="toggleTheme()" class="nav-item nav-button" [title]="isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
-            <i class="bi" [class]="isDarkMode() ? 'bi-sun' : 'bi-moon-stars'"></i>
-            <span class="nav-label">{{ isDarkMode() ? 'Light' : 'Dark' }}</span>
-          </button>
-
-          <a routerLink="/profile" fragment="settings" routerLinkActive="active" (click)="sidebarService.close()" class="nav-item">
+          <a *ngIf="!isAdmin()" routerLink="/profile" fragment="settings" routerLinkActive="active" (click)="sidebarService.close()" class="nav-item">
             <i class="bi bi-gear"></i>
             <span class="nav-label">{{ 'sidebar.settings' | t }}</span>
           </a>
@@ -314,7 +309,6 @@ import { TranslatePipe } from '../../pipes/t.pipe';
   `]
 })
 export class SidebarComponent implements OnInit, OnDestroy {
-  isDarkMode = signal(localStorage.getItem('radai-theme') === 'dark');
   userAvatar = signal<string | null>(null);
 
   authService = inject(AuthService);
@@ -323,18 +317,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   router = inject(Router);
 
   ngOnInit() {
-    // Load theme preference from profile
-    this.profileService.getOrCreatePreferences().subscribe({
-      next: (preferences) => {
-        this.isDarkMode.set(preferences.theme === 'dark');
-        this.applyTheme(preferences.theme);
-      },
-      error: () => {
-        // Fallback to dark theme if preference fetch fails
-        this.isDarkMode.set(true);
-        this.applyTheme('dark');
-      }
-    });
+    // Theme is owned by ThemeService (toggle lives in the navbar); nothing to do here.
 
     // Close sidebar on route change
     this.router.events.subscribe(() => {
@@ -360,21 +343,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     // Cleanup
   }
 
-  toggleTheme() {
-    const newTheme = this.isDarkMode() ? 'light' : 'dark';
-    this.isDarkMode.set(!this.isDarkMode());
-    this.applyTheme(newTheme);
-    
-    // Save preference
-    this.profileService.updatePreferences({ theme: newTheme }).subscribe();
-  }
-
-  applyTheme(theme: string) {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('radai-theme', theme);
-  }
-
   isAdmin(): boolean {
-    return this.authService.hasRole('admin');
+    return this.authService.hasRole('ADMIN');
   }
 }

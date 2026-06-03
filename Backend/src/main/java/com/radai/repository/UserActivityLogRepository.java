@@ -47,5 +47,8 @@ public interface UserActivityLogRepository extends JpaRepository<UserActivityLog
     
     @Query(value = "SELECT COUNT(DISTINCT user_id) FROM user_activity_logs WHERE timestamp >= :since", nativeQuery = true)
     long countUniqueUsersAfter(@Param("since") LocalDateTime since);
+
+    @Query(value = "SELECT DATE(timestamp) as date, COUNT(DISTINCT user_id) as count FROM user_activity_logs WHERE timestamp >= :since GROUP BY DATE(timestamp) ORDER BY date DESC", nativeQuery = true)
+    List<Map<String, Object>> countUniqueUsersByDate(@Param("since") LocalDateTime since);
 }
 

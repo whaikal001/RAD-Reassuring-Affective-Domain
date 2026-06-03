@@ -14,6 +14,7 @@ import { TranslatePipe } from '../../pipes/t.pipe';
   styleUrls: ['./admin.component.scss'],
 })
 export class AdminComponent implements OnInit, AfterViewInit {
+  @ViewChild('activeUsersChart', { static: false }) activeUsersChart!: ElementRef<HTMLCanvasElement>;
   @ViewChild('activityTrendChart', { static: false }) activityTrendChart!: ElementRef<HTMLCanvasElement>;
   @ViewChild('emotionChart', { static: false }) emotionChart!: ElementRef<HTMLCanvasElement>;
   @ViewChild('intensityChart', { static: false }) intensityChart!: ElementRef<HTMLCanvasElement>;
@@ -59,11 +60,67 @@ export class AdminComponent implements OnInit, AfterViewInit {
   }
 
   private renderCharts(): void {
+    this.renderActiveUsersChart();
     this.renderActivityTrendChart();
     this.renderEmotionChart();
     this.renderIntensityChart();
     this.renderActivityTypesChart();
     this.fetchTopCountries();
+  }
+
+  /** "Total users using the app" — distinct active users per day over the last 30 days. */
+  private renderActiveUsersChart(): void {
+    this.http.get<any[]>(`${environment.apiUrl}/admin/dashboard/active-users-trend?days=30`).subscribe({
+      next: (data) => {
+        const ctx = this.activeUsersChart?.nativeElement;
+        if (!ctx) return;
+
+        if (this.charts.has('activeUsers')) {
+          this.charts.get('activeUsers').destroy();
+        }
+
+        const dates = data.map(d => d.date).reverse();
+        const counts = data.map(d => d.count).reverse();
+
+        const chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: dates,
+            datasets: [{
+              label: 'Active Users (Daily)',
+              data: counts,
+              borderColor: '#2a9d8f',
+              backgroundColor: 'rgba(42, 157, 143, 0.16)',
+              borderWidth: 2.5,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 2,
+              pointHoverRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, labels: { color: 'rgba(61, 71, 107, 0.85)' } }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { color: 'rgba(61, 71, 107, 0.85)', precision: 0 },
+                grid: { color: 'rgba(42, 157, 143, 0.12)' }
+              },
+              x: {
+                ticks: { color: 'rgba(61, 71, 107, 0.85)' },
+                grid: { color: 'rgba(42, 157, 143, 0.12)' }
+              }
+            }
+          }
+        });
+        this.charts.set('activeUsers', chart);
+      },
+      error: (err) => console.error('Failed to load active users trend:', err)
+    });
   }
 
   private renderActivityTrendChart(): void {

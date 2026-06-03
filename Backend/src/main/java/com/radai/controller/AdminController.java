@@ -134,6 +134,14 @@ public class AdminController {
         return ResponseEntity.ok(trend);
     }
 
+    /** Daily active users (distinct users per day) — the "total users using the app" trend. */
+    @GetMapping("/dashboard/active-users-trend")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Map<String, Object>>> getActiveUsersTrend(@RequestParam(defaultValue = "30") int days) {
+        List<Map<String, Object>> trend = activityLoggerService.getDailyActiveUsers(days);
+        return ResponseEntity.ok(trend);
+    }
+
     @GetMapping("/dashboard/activity-types")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Map<String, Object>>> getActivityTypeDistribution() {

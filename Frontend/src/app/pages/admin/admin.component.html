@@ -3,10 +3,7 @@
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div class="admin-header-titles">
-      <button class="btn btn-outline-secondary btn-sm me-2" (click)="goBack()" [title]="'common.back' | t">
-        <i class="bi bi-chevron-left me-1"></i>{{ 'common.back' | t }}
-      </button>
-      <h2 class="d-inline ms-2">Admin Dashboard</h2>
+      <h2 class="d-inline">Admin Dashboard</h2>
       <span class="admin-badge ms-2"><i class="bi bi-shield-lock me-1"></i>Control Panel</span>
     </div>
   </div>
@@ -57,6 +54,18 @@
         <div class="stat-content">
           <div class="stat-label">Avg Emotion</div>
           <div class="stat-value">{{ (dashboardStats.averageEmotionScore * 100).toFixed(0) }}%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Users Using the App -->
+  <div class="row mb-4 g-3">
+    <div class="col-12">
+      <div class="chart-card">
+        <h5 class="chart-title">Total Users Using the App &middot; Daily Active Users (Last 30 Days)</h5>
+        <div class="chart-container" style="position: relative; height: 320px;">
+          <canvas #activeUsersChart></canvas>
         </div>
       </div>
     </div>

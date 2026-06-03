@@ -69,17 +69,18 @@ export class LoginComponent {
   }
 
   private redirectBasedOnRole(): void {
-    // Check if return URL was explicitly provided
+    // Admins only have the admin dashboard — send them there regardless of returnUrl.
+    if (this.authService.hasRole('ADMIN')) {
+      this.router.navigate(['/admin']);
+      return;
+    }
+
+    // Non-admins: honour an explicit return URL, otherwise go to chat.
     if (this.route.snapshot.queryParams['returnUrl']) {
       this.router.navigate([this.returnUrl]);
       return;
     }
 
-    // Otherwise, determine destination based on user role
-    if (this.authService.hasRole('admin')) {
-      this.router.navigate(['/admin']);
-    } else {
-      this.router.navigate(['/chat']);
-    }
+    this.router.navigate(['/chat']);
   }
 }

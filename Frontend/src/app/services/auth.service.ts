@@ -125,8 +125,10 @@ export class AuthService {
       const payload = JSON.parse(atob(token.split('.')[1]));
       const roles = payload.roles || payload.role || null;
       if (!roles) return false;
-      const arr = typeof roles === 'string' ? roles.split(',').map((r: string) => r.trim()) : roles;
-      return arr.includes(role) || arr.includes('ROLE_' + role);
+      const arr = (typeof roles === 'string' ? roles.split(',').map((r: string) => r.trim()) : roles)
+        .map((r: string) => String(r).toUpperCase());
+      const target = role.toUpperCase();
+      return arr.includes(target) || arr.includes('ROLE_' + target);
     } catch {
       return false;
     }

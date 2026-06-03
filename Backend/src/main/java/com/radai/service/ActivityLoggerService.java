@@ -136,6 +136,14 @@ public class ActivityLoggerService {
         LocalDateTime since = LocalDateTime.now().minusDays(daysAgo);
         return activityLogRepository.countByDate(since);
     }
+
+    /**
+     * Get the number of distinct users active per day (daily active users).
+     */
+    public List<Map<String, Object>> getDailyActiveUsers(int daysAgo) {
+        LocalDateTime since = LocalDateTime.now().minusDays(daysAgo);
+        return activityLogRepository.countUniqueUsersByDate(since);
+    }
     
     /**
      * Get emotion distribution

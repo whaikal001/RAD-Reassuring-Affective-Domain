@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { LanguageService } from '../../services/language.service';
 import { SidebarService } from '../../services/sidebar.service';
+import { ThemeService } from '../../services/theme.service';
 import { TranslatePipe } from '../../pipes/t.pipe';
 
 @Component({
@@ -25,8 +26,19 @@ import { TranslatePipe } from '../../pipes/t.pipe';
           
           <div class="navbar-collapse ms-auto">
             <ul class="navbar-nav">
+              <li class="nav-item">
+                <button
+                  class="theme-toggle-btn"
+                  type="button"
+                  (click)="themeService.toggle()"
+                  [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+                  [title]="themeService.isDark() ? 'Light mode' : 'Dark mode'"
+                >
+                  <i class="bi" [class.bi-sun-fill]="themeService.isDark()" [class.bi-moon-stars-fill]="!themeService.isDark()"></i>
+                </button>
+              </li>
               @if (authService.isAuthenticated()) {
-                @if (authService.isRegistered()) {
+                @if (authService.isRegistered() && !authService.hasRole('ADMIN')) {
                   <li class="nav-item">
                     <a class="profile-chip" routerLink="/profile" title="Profile">
                       @if (authService.avatarUrl()) {
@@ -143,7 +155,34 @@ import { TranslatePipe } from '../../pipes/t.pipe';
 
     .navbar-nav {
       display: flex;
+      align-items: center;
       gap: 0.5rem;
+    }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      background: var(--nav-hover-bg, transparent);
+      color: var(--text-secondary);
+      font-size: 1.15rem;
+      cursor: pointer;
+      transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+
+      &:hover {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        transform: translateY(-1px);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+      }
     }
 
     .nav-link {
@@ -186,12 +225,13 @@ export class NavbarComponent implements OnInit {
   authService = inject(AuthService);
   languageService = inject(LanguageService);
   sidebarService = inject(SidebarService);
+  themeService = inject(ThemeService);
   router = inject(Router);
 
   ngOnInit(): void {
-    // Load theme from localStorage on init (light by default)
-    const savedTheme = localStorage.getItem('radai-theme') === 'dark' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
+    // ThemeService already applied the locally-stored theme on construction.
+    // For registered users, pull their saved preference so it follows them across devices.
+    this.themeService.syncFromProfile();
   }
 
   navInitials(): string {

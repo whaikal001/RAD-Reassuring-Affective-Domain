@@ -9,6 +9,7 @@ import { SidebarService } from './services/sidebar.service';
 import { AuthService } from './services/auth.service';
 import { TtsService } from './services/tts.service';
 import { ChatService } from './services/chat.service';
+import { ThemeService } from './services/theme.service';
 import { TranslatePipe } from './pipes/t.pipe';
 
 @Component({
@@ -32,12 +33,6 @@ import { TranslatePipe } from './pipes/t.pipe';
             </button>
           </div>
           <div class="anonymous-preferences mt-3 p-3">
-            <div class="mb-3">
-              <label class="form-label small mb-1">Theme</label>
-              <div>
-                <button class="btn btn-sm btn-outline-secondary" (click)="toggleTheme()">Toggle Dark / Light</button>
-              </div>
-            </div>
             <div class="mb-3">
               <label class="form-label small mb-1">Text-to-speech</label>
               <div>
@@ -303,14 +298,9 @@ export class AppComponent {
   ttsService = inject(TtsService);
   chatService = inject(ChatService);
   sidebarService = inject(SidebarService);
-
-  constructor() {
-    // Apply the saved theme as early as possible so every page renders in the right mode.
-    try {
-      const theme = localStorage.getItem('radai-theme') === 'dark' ? 'dark' : 'light';
-      document.documentElement.setAttribute('data-theme', theme);
-    } catch (e) {}
-  }
+  // Injecting ThemeService here constructs it at app startup, which applies the saved theme
+  // as early as possible so every page renders in the right mode.
+  private themeService = inject(ThemeService);
 
   shouldShowSidebar(): boolean {
     const path = this.router.url.split(/[?#]/)[0] || '';
@@ -319,19 +309,6 @@ export class AppComponent {
 
   prepareRoute(outlet: RouterOutlet) {
     return outlet && outlet.activatedRouteData && outlet.activatedRouteData['animation'];
-  }
-
-  toggleTheme(): void {
-    try {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      const next = isDark ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      try { localStorage.setItem('radai-theme', next); } catch (e) {}
-      this.uiFeedback.success('Theme', next === 'dark' ? 'Dark mode' : 'Light mode');
-    } catch (e) {
-      console.warn('Unable to toggle theme', e);
-      this.uiFeedback.error('Theme', 'Unable to change theme.');
-    }
   }
 
   onAutoTtsChanged(event: Event): void {

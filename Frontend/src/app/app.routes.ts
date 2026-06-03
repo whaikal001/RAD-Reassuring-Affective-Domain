@@ -29,7 +29,7 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
-    canActivate: [registeredGuard],
+    canActivate: [registeredGuard, noAdminGuard],
     data: { animation: 'DashboardPage' }
   },
   {
@@ -41,25 +41,25 @@ export const routes: Routes = [
   {
     path: 'history',
     loadComponent: () => import('./pages/history/history.component').then(m => m.HistoryComponent),
-    canActivate: [registeredGuard],
+    canActivate: [registeredGuard, noAdminGuard],
     data: { animation: 'HistoryPage' }
   },
   {
     path: 'session/:id',
     loadComponent: () => import('./pages/session-detail/session-detail.component').then(m => m.SessionDetailComponent),
-    canActivate: [registeredGuard],
+    canActivate: [registeredGuard, noAdminGuard],
     data: { animation: 'SessionDetailPage' }
   },
   {
     path: 'reports',
     loadComponent: () => import('./pages/reports/reports.component').then(m => m.ReportsComponent),
-    canActivate: [registeredGuard],
+    canActivate: [registeredGuard, noAdminGuard],
     data: { animation: 'ReportsPage' }
   },
   {
     path: 'profile',
     loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
-    canActivate: [registeredGuard],
+    canActivate: [registeredGuard, noAdminGuard],
     data: { animation: 'ProfilePage' }
   },
   {
