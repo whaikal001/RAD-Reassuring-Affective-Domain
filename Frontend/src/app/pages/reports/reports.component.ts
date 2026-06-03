@@ -204,27 +204,6 @@ export class ReportsComponent implements OnInit {
     }));
   }
 
-  getIntensityTrendPoints(): string {
-    const summary = this.getParsedSummary();
-    const trend = (summary?.intensityTrend || []).filter(point => Number.isFinite(point.intensity));
-
-    if (trend.length < 2) {
-      return '';
-    }
-
-    return trend
-      .map((point, index) => {
-        const x = (index / (trend.length - 1)) * 100;
-        const clamped = Math.max(1, Math.min(10, Number(point.intensity) || 1));
-        const y = 36 - ((clamped - 1) / 9) * 34;
-        return `${x.toFixed(2)},${y.toFixed(2)}`;
-      })
-      .join(' ');
-  }
-
-  hasTrendData(): boolean {
-    return !!this.getIntensityTrendPoints();
-  }
 
   getSummaryHighlights(): Array<{ label: string; value: string }> {
     const summary = this.getParsedSummary();

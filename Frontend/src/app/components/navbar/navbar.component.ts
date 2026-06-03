@@ -26,6 +26,17 @@ import { TranslatePipe } from '../../pipes/t.pipe';
           <div class="navbar-collapse ms-auto">
             <ul class="navbar-nav">
               @if (authService.isAuthenticated()) {
+                @if (authService.isRegistered()) {
+                  <li class="nav-item">
+                    <a class="profile-chip" routerLink="/profile" title="Profile">
+                      @if (authService.avatarUrl()) {
+                        <img [src]="authService.avatarUrl()" alt="Profile" />
+                      } @else {
+                        <span class="profile-initials">{{ navInitials() }}</span>
+                      }
+                    </a>
+                  </li>
+                }
                 <li class="nav-item">
                   <button class="btn btn-outline-light btn-sm" (click)="logout()">
                     <i class="bi bi-box-arrow-right me-1"></i>{{ 'nav.logout' | t }}
@@ -52,7 +63,38 @@ import { TranslatePipe } from '../../pipes/t.pipe';
       padding: 0.75rem 0;
       background: var(--card-bg);
       border-bottom: 1px solid var(--border-color);
-      backdrop-filter: blur(10px);
+    }
+
+    .profile-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      text-decoration: none;
+      background: linear-gradient(135deg, var(--mint-500), var(--mint-600));
+      border: 2px solid #ffffff;
+      box-shadow: 0 4px 14px rgba(27, 122, 110, 0.28);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+      &:hover {
+        transform: translateY(-1px) scale(1.05);
+        box-shadow: 0 6px 18px rgba(27, 122, 110, 0.36);
+      }
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .profile-initials {
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 0.95rem;
+      }
     }
 
     .navbar-menu-btn {
@@ -147,9 +189,18 @@ export class NavbarComponent implements OnInit {
   router = inject(Router);
 
   ngOnInit(): void {
-    // Load theme from localStorage on init
-    const savedTheme = localStorage.getItem('radai-theme') || 'dark';
+    // Load theme from localStorage on init (light by default)
+    const savedTheme = localStorage.getItem('radai-theme') === 'dark' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
+  }
+
+  navInitials(): string {
+    const name = (this.authService.getDisplayName() || '').trim();
+    if (!name) {
+      return 'U';
+    }
+    const parts = name.split(/\s+/);
+    return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || 'U';
   }
 
   toggleSidebar(): void {

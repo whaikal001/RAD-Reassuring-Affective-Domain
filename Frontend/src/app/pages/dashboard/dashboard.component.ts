@@ -54,6 +54,26 @@ export class DashboardComponent implements OnInit {
     return 'bg-secondary';
   });
 
+  /** Average-intensity gauge for the header ring (real metric, 0–10). */
+  intensityPercent = computed(() => {
+    const v = this.dashboardData()?.averageIntensity ?? 0;
+    return Math.max(0, Math.min(100, (v / 10) * 100));
+  });
+
+  intensityZoneColor = computed(() => {
+    const v = this.dashboardData()?.averageIntensity ?? 0;
+    if (v >= 7) return '#ef5d6c';   // high — needs attention
+    if (v >= 4) return '#f5a623';   // moderate
+    return '#2fd199';               // calm
+  });
+
+  intensityZoneLabel = computed(() => {
+    const v = this.dashboardData()?.averageIntensity ?? 0;
+    if (v >= 7) return 'High';
+    if (v >= 4) return 'Moderate';
+    return 'Calm';
+  });
+
   recentSessionSeries = computed(() => {
     const sessions = this.dashboardData()?.recentSessions ?? [];
     return [...sessions]
@@ -117,24 +137,55 @@ export class DashboardComponent implements OnInit {
     return found?.color || '#6366f1';
   }
 
-  buildTrendPoints(): string {
+  /** Normalised points across a 0..100 x / 0..36 y viewBox, with soft top/bottom padding. */
+  private trendPoints(): { x: number; y: number }[] {
     const series = this.recentSessionSeries();
-
-    if (!series.length) {
-      return '';
+    if (series.length < 2) {
+      return [];
     }
 
     const max = Math.max(...series.map(item => item.value), 1);
-    const stepX = 100 / Math.max(series.length - 1, 1);
+    const stepX = 100 / (series.length - 1);
 
-    return series
-      .map((item, index) => {
-        const x = stepX * index;
-        const normalized = item.value / max;
-        const y = 32 - normalized * 28;
-        return `${x.toFixed(2)},${y.toFixed(2)}`;
-      })
-      .join(' ');
+    return series.map((item, index) => ({
+      x: stepX * index,
+      // y in [6, 32]: leaves headroom at the top and a baseline gap at the bottom
+      y: 32 - (item.value / max) * 26
+    }));
+  }
+
+  /** Smooth curve through the points (Catmull-Rom converted to cubic beziers). */
+  buildTrendPath(): string {
+    const pts = this.trendPoints();
+    if (pts.length < 2) {
+      return '';
+    }
+
+    let d = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] ?? pts[i];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2] ?? p2;
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+      d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+    }
+    return d;
+  }
+
+  /** Same curve, closed to the baseline so it can be filled with a soft gradient. */
+  buildTrendArea(): string {
+    const path = this.buildTrendPath();
+    if (!path) {
+      return '';
+    }
+    const pts = this.trendPoints();
+    const last = pts[pts.length - 1];
+    const first = pts[0];
+    return `${path} L ${last.x.toFixed(2)} 36 L ${first.x.toFixed(2)} 36 Z`;
   }
 
   private formatShortDate(dateValue: string | null): string {

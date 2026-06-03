@@ -1,99 +1,139 @@
-/* Admin Dashboard Styling */
+/* Admin Dashboard — distinct "Control Panel" identity (slate / indigo).
+   Scoped to this component (:host) so it never bleeds into the
+   registered-user dashboard, which keeps the warm-mint theme. */
 
-:host, .admin-dashboard {
+:host {
+  /* cool control-panel palette */
+  --admin-500: #5566c4;
+  --admin-600: #3f4ea8;
+  --admin-700: #2e3a7e;
+  --admin-accent: #8b97e6;
+  --admin-border: rgba(85, 102, 196, 0.18);
+  --admin-tint: rgba(85, 102, 196, 0.08);
+
+  display: block;
+}
+
+:host,
+.admin-dashboard {
   background: transparent;
   color: var(--text-primary);
 }
 
 .admin-dashboard {
   min-height: 100vh;
+  /* a subtle cool wash sets the admin area apart at a glance */
+  background:
+    radial-gradient(ellipse 760px 440px at 10% -8%, rgba(85, 102, 196, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 680px 400px at 102% -2%, rgba(85, 102, 196, 0.08) 0%, transparent 55%);
+  border-radius: 18px;
 
   h2 {
-    color: white;
-    font-weight: 700;
-    background: linear-gradient(135deg, #00d0ce, #0099cc);
+    color: var(--text-primary);
+    font-weight: 800;
+    background: linear-gradient(135deg, #2e3a7e, #5566c4 55%, #8b97e6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .btn-outline-secondary {
-    border-color: rgba(255, 255, 255, 0.3);
-    color: rgba(255, 255, 255, 0.8);
+    border-color: var(--admin-border);
+    color: var(--text-secondary);
 
     &:hover {
-      border-color: rgba(0, 208, 206, 0.6);
-      color: #00d0ce;
+      border-color: rgba(85, 102, 196, 0.5);
+      color: var(--admin-600);
     }
   }
 }
 
-/* Stat Cards */
+/* "Control Panel" identity badge */
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: linear-gradient(135deg, #5566c4, #3f4ea8);
+  padding: 0.32rem 0.7rem;
+  border-radius: 999px;
+  box-shadow: 0 6px 16px rgba(46, 58, 126, 0.28);
+}
+
+.admin-header-titles {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
 .stat-card {
   display: flex;
   align-items: center;
   gap: 1.5rem;
   padding: 1.5rem;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 208, 206, 0.1) 100%);
-  border: 1px solid rgba(0, 208, 206, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, #f2f3fb 100%);
+  border: 1px solid var(--admin-border);
   border-radius: 1rem;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
+  transition: transform 0.3s var(--ease-soft), box-shadow 0.3s var(--ease-soft), border-color 0.3s ease;
 
   &:hover {
-    border-color: rgba(0, 208, 206, 0.6);
+    border-color: rgba(85, 102, 196, 0.45) !important;
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 208, 206, 0.2);
+    box-shadow: 0 14px 34px rgba(46, 58, 126, 0.18) !important;
   }
 
   .stat-icon {
     width: 60px;
     height: 60px;
-    border-radius: 12px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.8rem;
-    color: white;
+    color: #ffffff;
     flex-shrink: 0;
+    box-shadow: 0 8px 20px rgba(46, 58, 126, 0.22);
   }
 
   .stat-content {
     .stat-label {
       font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.6);
+      color: var(--text-secondary);
       margin-bottom: 0.3rem;
-      font-weight: 500;
+      font-weight: 600;
     }
 
     .stat-value {
       font-size: 2rem;
-      font-weight: 700;
-      color: white;
+      font-weight: 800;
+      color: var(--text-primary);
     }
   }
 }
 
-/* Chart Cards */
 .chart-card {
-  background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(39, 18, 50, 0.95) 100%);
-  border: 1px solid rgba(0, 208, 206, 0.2);
+  background: linear-gradient(135deg, #ffffff 0%, #f4f5fc 100%);
+  border: 1px solid var(--admin-border);
   border-radius: 1rem;
   padding: 1.5rem;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
+  transition: transform 0.3s var(--ease-soft), box-shadow 0.3s var(--ease-soft), border-color 0.3s ease;
 
   &:hover {
-    border-color: rgba(0, 208, 206, 0.4);
-    box-shadow: 0 10px 30px rgba(0, 208, 206, 0.1);
+    border-color: rgba(85, 102, 196, 0.4);
+    box-shadow: 0 12px 30px rgba(46, 58, 126, 0.12);
   }
 
   .chart-title {
-    color: white;
-    font-weight: 600;
+    color: var(--text-primary);
+    font-weight: 700;
     margin-bottom: 1rem;
     font-size: 1.1rem;
-    border-bottom: 2px solid rgba(0, 208, 206, 0.3);
+    border-bottom: 2px solid rgba(85, 102, 196, 0.26);
     padding-bottom: 0.8rem;
   }
 
@@ -107,18 +147,17 @@
   }
 }
 
-/* Activity Table */
 .activity-table {
-  color: rgba(255, 255, 255, 0.85);
-  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-color: rgba(85, 102, 196, 0.12);
 
   thead {
-    background: rgba(0, 208, 206, 0.1);
-    border-bottom: 2px solid rgba(0, 208, 206, 0.3);
+    background: rgba(85, 102, 196, 0.1);
+    border-bottom: 2px solid rgba(85, 102, 196, 0.24);
 
     th {
-      color: #00d0ce;
-      font-weight: 600;
+      color: var(--text-primary);
+      font-weight: 700;
       text-transform: uppercase;
       font-size: 0.85rem;
       padding: 1rem;
@@ -127,11 +166,11 @@
 
   tbody {
     tr {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(85, 102, 196, 0.08);
       transition: all 0.2s ease;
 
       &:hover {
-        background: rgba(0, 208, 206, 0.05);
+        background: rgba(85, 102, 196, 0.06);
       }
 
       td {
@@ -145,14 +184,13 @@
         }
 
         small {
-          color: rgba(255, 255, 255, 0.6);
+          color: var(--text-secondary);
         }
       }
     }
   }
 }
 
-/* Countries List */
 .countries-list {
   display: flex;
   flex-direction: column;
@@ -163,39 +201,37 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.8rem;
-    background: rgba(0, 208, 206, 0.05);
-    border-radius: 0.5rem;
-    border-left: 3px solid #00d0ce;
+    background: rgba(85, 102, 196, 0.05);
+    border-radius: 0.6rem;
+    border-left: 3px solid var(--admin-500);
     transition: all 0.2s ease;
 
     &:hover {
-      background: rgba(0, 208, 206, 0.1);
+      background: rgba(85, 102, 196, 0.1);
       transform: translateX(5px);
     }
 
     .country-name {
-      color: rgba(255, 255, 255, 0.85);
-      font-weight: 500;
+      color: var(--text-primary);
+      font-weight: 600;
     }
 
     .country-count {
-      background: linear-gradient(135deg, #00d0ce, #0099cc) !important;
-      color: white !important;
-      font-weight: 600;
+      background: linear-gradient(135deg, #5566c4, #3f4ea8) !important;
+      color: #ffffff !important;
+      font-weight: 700;
     }
   }
 }
 
-/* Badge Colors */
 .bg-cyan {
-  background: linear-gradient(135deg, #00d0ce, #0099cc) !important;
+  background: linear-gradient(135deg, #5566c4, #3f4ea8) !important;
 }
 
-/* User Management Table */
 .table {
   tbody tr {
     &:hover {
-      background: rgba(0, 208, 206, 0.05);
+      background: rgba(85, 102, 196, 0.06);
     }
   }
 
@@ -211,27 +247,25 @@
   }
 }
 
-/* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.6);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #00d0ce, #0099cc);
+  background: linear-gradient(135deg, #5566c4, #3f4ea8);
   border-radius: 10px;
 
   &:hover {
-    background: linear-gradient(135deg, #00d0ce, #0077aa);
+    background: linear-gradient(135deg, #6470c9, #4854a8);
   }
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .stat-card {
     flex-direction: column;
@@ -249,24 +283,14 @@
   .activity-table {
     font-size: 0.85rem;
 
-    th, td {
+    th,
+    td {
       padding: 0.5rem !important;
     }
   }
 }
 
-/* Animation */
 @keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.stat-card, .chart-card {
-  animation: slideInUp 0.5s ease-out;
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
 }

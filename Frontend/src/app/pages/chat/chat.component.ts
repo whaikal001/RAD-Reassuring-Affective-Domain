@@ -12,12 +12,11 @@ import { CharacterService } from '../../services/character.service';
 import { R3fCharacterBridgeService } from '../../services/r3f-character-bridge.service';
 import { TranslatePipe } from '../../pipes/t.pipe';
 import { AnimatedCharacterComponent } from '../../components/animated-character/animated-character.component';
-import { R3fCharacterPanelComponent } from '../../components/r3f-character-panel/r3f-character-panel.component';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe, AnimatedCharacterComponent, R3fCharacterPanelComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe, AnimatedCharacterComponent],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss'
 })
@@ -830,6 +829,17 @@ export class ChatComponent implements AfterViewChecked, OnInit {
 
   toggleSidebar(): void {
     this.sidebarCollapsed.update(v => !v);
+  }
+
+  toggleTheme(): void {
+    try {
+      const isDark = document.documentElement.classList.toggle('dark');
+      try { localStorage.setItem('preferredTheme', isDark ? 'dark' : 'light'); } catch(e) {}
+      this.uiFeedback.success('Theme', isDark ? 'Dark mode' : 'Light mode');
+    } catch (e) {
+      console.warn('Unable to toggle theme', e);
+      this.uiFeedback.error('Theme', 'Unable to change theme.');
+    }
   }
 
   toggleMobileSidebar(): void {

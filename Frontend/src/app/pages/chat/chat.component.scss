@@ -386,6 +386,16 @@
   transform: scale(0.995);
 }
 
+/* Right-side simplified icon */
+.right-character-icon {
+  display: block;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  margin: 2.5rem auto 0 auto;
+  pointer-events: none;
+}
+
 app-animated-character {
   position: relative;
   z-index: 2;
@@ -416,6 +426,8 @@ app-animated-character {
   max-width: 560px;
   margin: 0 auto;
   padding-top: 2rem !important;
+  /* The greeting settles in warmly when the conversation opens */
+  animation: slide-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .character-section {
@@ -436,13 +448,19 @@ app-animated-character {
 .welcome-orb {
   width: 96px;
   height: 96px;
-  border-radius: 18px;
+  border-radius: 50%;
   margin: 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  /* box-shadow: 0 20px 42px rgba(63, 79, 200, 0.28); */
+  /* RadAI greets you with a calm, living presence — a soft halo + gentle float */
+  background: radial-gradient(circle, rgba(42, 157, 143, 0.16) 0%, rgba(238, 155, 111, 0.1) 55%, transparent 75%);
+  animation: welcome-orb-float 5.5s ease-in-out infinite;
+}
+
+@keyframes welcome-orb-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-8px) scale(1.04); }
 }
 
 .welcome-orb i {
@@ -1413,13 +1431,14 @@ app-animated-character {
 .dass-btn-value {
   font-weight: 700;
   font-size: 1.1rem;
-  color: rgba(220, 235, 255, 1);
+  color: inherit;
 }
 
 .dass-btn-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: rgba(200, 215, 255, 0.8);
+  color: inherit;
+  opacity: 0.85;
   text-align: center;
   line-height: 1.2;
 }
@@ -1457,3 +1476,4 @@ app-animated-character {
   color: rgba(255, 179, 191, 0.95);
   border: 1px solid rgba(239, 93, 108, 0.3);
 }
+

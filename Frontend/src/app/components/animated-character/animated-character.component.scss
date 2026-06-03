@@ -12,10 +12,10 @@
   max-width: 540px;
   height: 440px;
   border-radius: 18px;
-  background: rgba(7, 11, 29, 0.62);
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid var(--card-border);
-  box-shadow: 0 12px 40px rgba(4, 7, 19, 0.5), 0 0 24px rgba(110, 231, 255, 0.08);
-  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 40px rgba(11, 30, 27, 0.06), 0 0 24px rgba(95, 231, 191, 0.08);
+  backdrop-filter: blur(8px);
   overflow: hidden;
 }
 
@@ -23,7 +23,7 @@
   position: absolute;
   bottom: 14px;
   right: 14px;
-  background: rgba(7, 11, 29, 0.34);
+  background: rgba(255, 255, 255, 0.82);
   color: var(--text-primary);
   padding: 0.6rem 1rem;
   border-radius: 12px;
@@ -36,6 +36,25 @@
   justify-content: center;
   padding: 20px;
   min-height: 300px;
+  /* The whole figure is always gently alive — a soft, slow float */
+  animation: char-idle-float 6.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: transform;
+}
+
+@keyframes char-idle-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-9px); }
+}
+
+@keyframes char-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.025); }
+}
+
+/* Soft living aura that breathes behind the character */
+@keyframes char-aura {
+  0%, 100% { opacity: 0.35; transform: translate(-50%, -50%) scale(0.92); }
+  50%      { opacity: 0.6;  transform: translate(-50%, -50%) scale(1.06); }
 }
 
 .character-container {
@@ -48,6 +67,22 @@
   transition: all 0.3s ease-in-out;
   transform-origin: center;
 
+  &::before {
+    content: '';
+    position: absolute;
+    top: 58%;
+    left: 50%;
+    width: 76%;
+    height: 62%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(42, 157, 143, 0.22) 0%, rgba(238, 155, 111, 0.12) 45%, transparent 72%);
+    filter: blur(14px);
+    z-index: -1;
+    transform: translate(-50%, -50%);
+    animation: char-aura 5.4s ease-in-out infinite;
+    pointer-events: none;
+  }
+
   &.waving {
     animation: gentle-sway 0.6s ease-in-out;
   }
@@ -59,6 +94,8 @@
   object-fit: contain;
   filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.12));
   transition: all 0.3s ease;
+  /* Idle/neutral breath — emotion classes below override this with their reactions */
+  animation: char-breathe 5s ease-in-out infinite;
 
   // Emotion-specific filters and effects
   &.emotion-happy {
@@ -205,8 +242,8 @@
   bottom: -35px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.75);
-  color: white;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text-primary);
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 12px;
@@ -241,7 +278,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: rgba(42, 122, 112, 0.28);
     animation: typing-dots 1.4s infinite;
 
     &:nth-child(2) {

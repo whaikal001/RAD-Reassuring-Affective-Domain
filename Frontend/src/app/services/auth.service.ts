@@ -17,17 +17,20 @@ export class AuthService {
   private readonly USER_ID_KEY = 'radai_user_id';
   private readonly AUTH_MODE_KEY = 'radai_auth_mode';
   private readonly DISPLAY_NAME_KEY = 'radai_display_name';
+  private readonly AVATAR_KEY = 'radai_avatar_url';
 
   private _isAuthenticated = signal<boolean>(false);
   private _userId = signal<string | null>(null);
   private _authMode = signal<AuthMode | null>(null);
   private _displayName = signal<string | null>(null);
+  private _avatarUrl = signal<string | null>(null);
 
   isAuthenticated = computed(() => this._isAuthenticated());
   userId = computed(() => this._userId());
   isAnonymous = computed(() => this._authMode() === 'anonymous');
   isRegistered = computed(() => this._authMode() === 'registered');
   displayName = this._displayName.asReadonly();
+  avatarUrl = this._avatarUrl.asReadonly();
 
   constructor(
     private http: HttpClient,
@@ -39,6 +42,7 @@ export class AuthService {
     this._userId.set(this.getStoredUserId());
     this._authMode.set(this.getStoredAuthMode());
     this._displayName.set(this.getStoredDisplayName());
+    this._avatarUrl.set(localStorage.getItem(this.AVATAR_KEY));
 
     if (this._isAuthenticated() && this._userId()) {
       this.syncUserState().subscribe();
@@ -94,6 +98,7 @@ export class AuthService {
     this._userId.set(null);
     this._authMode.set(null);
     this._displayName.set(null);
+    this._avatarUrl.set(null);
     this.router.navigate(['/login']);
   }
 
@@ -129,6 +134,20 @@ export class AuthService {
 
   refreshUserState(): Observable<void> {
     return this.syncUserState();
+  }
+
+  /** Persist the user's profile photo client-side (data URLs are too large for the
+      user record's avatar column) and update the reactive avatar used across the UI. */
+  setAvatar(url: string | null): void {
+    const value = url?.trim() || null;
+    this._avatarUrl.set(value);
+    try {
+      if (value) {
+        localStorage.setItem(this.AVATAR_KEY, value);
+      } else {
+        localStorage.removeItem(this.AVATAR_KEY);
+      }
+    } catch (e) { /* storage unavailable / quota */ }
   }
 
   private handleAuthSuccess(response: JwtResponse, authMode: AuthMode): void {
@@ -183,6 +202,7 @@ export class AuthService {
     localStorage.removeItem(this.USER_ID_KEY);
     localStorage.removeItem(this.AUTH_MODE_KEY);
     localStorage.removeItem(this.DISPLAY_NAME_KEY);
+    localStorage.removeItem(this.AVATAR_KEY);
   }
 
   private syncUserState(): Observable<void> {
@@ -206,6 +226,14 @@ export class AuthService {
         if (resolvedDisplayName) {
           localStorage.setItem(this.DISPLAY_NAME_KEY, resolvedDisplayName);
           this._displayName.set(resolvedDisplayName);
+        }
+
+        // Adopt the backend avatar only if it has one; otherwise keep the locally
+        // stored photo (avatars are persisted client-side, not in the user record).
+        const backendAvatar = user.avatarUrl?.trim();
+        if (backendAvatar) {
+          this._avatarUrl.set(backendAvatar);
+          try { localStorage.setItem(this.AVATAR_KEY, backendAvatar); } catch { /* quota */ }
         }
 
         if (authMode === 'anonymous') {

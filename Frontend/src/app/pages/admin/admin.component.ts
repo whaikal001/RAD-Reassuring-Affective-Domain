@@ -87,11 +87,13 @@ export class AdminComponent implements OnInit, AfterViewInit {
             datasets: [{
               label: 'Daily Activities',
               data: counts,
-              borderColor: '#00d0ce',
-              backgroundColor: 'rgba(0, 208, 206, 0.1)',
-              borderWidth: 2,
+              borderColor: '#5566c4',
+              backgroundColor: 'rgba(85, 102, 196, 0.14)',
+              borderWidth: 2.5,
               fill: true,
-              tension: 0.4
+              tension: 0.45,
+              pointRadius: 0,
+              pointHoverRadius: 6
             }]
           },
           options: {
@@ -100,18 +102,18 @@ export class AdminComponent implements OnInit, AfterViewInit {
             plugins: {
               legend: {
                 display: true,
-                labels: { color: 'rgba(255,255,255,0.8)' }
+                labels: { color: 'rgba(61, 71, 107, 0.85)' }
               }
             },
             scales: {
               y: {
                 beginAtZero: true,
-                ticks: { color: 'rgba(255,255,255,0.8)' },
-                grid: { color: 'rgba(255,255,255,0.1)' }
+                ticks: { color: 'rgba(61, 71, 107, 0.85)' },
+                grid: { color: 'rgba(85, 102, 196, 0.12)' }
               },
               x: {
-                ticks: { color: 'rgba(255,255,255,0.8)' },
-                grid: { color: 'rgba(255,255,255,0.1)' }
+                ticks: { color: 'rgba(61, 71, 107, 0.85)' },
+                grid: { color: 'rgba(85, 102, 196, 0.12)' }
               }
             }
           }
@@ -142,7 +144,7 @@ export class AdminComponent implements OnInit, AfterViewInit {
             datasets: [{
               data: counts,
               backgroundColor: colors.slice(0, emotions.length),
-              borderColor: '#1a1a2e',
+              borderColor: '#ffffff',
               borderWidth: 2
             }]
           },
@@ -152,7 +154,7 @@ export class AdminComponent implements OnInit, AfterViewInit {
             plugins: {
               legend: {
                 display: true,
-                labels: { color: 'rgba(255,255,255,0.8)' }
+                labels: { color: 'rgba(61, 71, 107, 0.85)' }
               }
             }
           }
@@ -194,18 +196,18 @@ export class AdminComponent implements OnInit, AfterViewInit {
             plugins: {
               legend: {
                 display: true,
-                labels: { color: 'rgba(255,255,255,0.8)' }
+                labels: { color: 'rgba(61, 71, 107, 0.85)' }
               }
             },
             scales: {
               y: {
                 beginAtZero: true,
-                ticks: { color: 'rgba(255,255,255,0.8)' },
-                grid: { color: 'rgba(255,255,255,0.1)' }
+                ticks: { color: 'rgba(61, 71, 107, 0.85)' },
+                grid: { color: 'rgba(85, 102, 196, 0.12)' }
               },
               x: {
-                ticks: { color: 'rgba(255,255,255,0.8)' },
-                grid: { color: 'rgba(255,255,255,0.1)' }
+                ticks: { color: 'rgba(61, 71, 107, 0.85)' },
+                grid: { color: 'rgba(85, 102, 196, 0.12)' }
               }
             }
           }
@@ -237,7 +239,7 @@ export class AdminComponent implements OnInit, AfterViewInit {
               backgroundColor: [
                 '#00d0ce', '#007bff', '#a78bfa', '#fbbf24', '#10b981', '#ef4444'
               ],
-              borderColor: '#1a1a2e',
+              borderColor: '#ffffff',
               borderWidth: 2
             }]
           },
@@ -247,7 +249,7 @@ export class AdminComponent implements OnInit, AfterViewInit {
             plugins: {
               legend: {
                 display: true,
-                labels: { color: 'rgba(255,255,255,0.8)' }
+                labels: { color: 'rgba(61, 71, 107, 0.85)' }
               }
             }
           }

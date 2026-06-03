@@ -32,96 +32,7 @@
 
   <div class="mobile-sidebar-backdrop" [class.visible]="mobileSidebarOpen()" (click)="closeMobileSidebar()"></div>
 
-  <aside class="emotion-sidebar" [class.collapsed]="sidebarCollapsed()" [class.mobile-open]="mobileSidebarOpen()">
-    <!-- Sidebar Branding Section -->
-    @if (!sidebarCollapsed()) {
-      <div class="sidebar-branding">
-        <div class="branding-logo">
-          <div class="logo-circle">
-            <i class="bi bi-heart-fill"></i>
-          </div>
-          <div class="logo-text">
-            <h4 class="app-name mb-0">RadAI</h4>
-            <small class="text-muted">Your Mental Wellness Companion</small>
-          </div>
-        </div>
-      </div>
-    }
-    
-    <div class="sidebar-header">
-      <h5 class="mb-0">
-        <i class="bi bi-list me-2"></i>
-        <span *ngIf="!sidebarCollapsed()">{{ 'chat.more' | t }}</span>
-      </h5>
-      <button class="btn btn-sm btn-link" (click)="toggleSidebar()" [title]="sidebarCollapsed() ? ('chat.openSidebar' | t) : ('chat.closeSidebar' | t)">
-        <i class="bi" [class.bi-chevron-left]="!sidebarCollapsed()" [class.bi-chevron-right]="sidebarCollapsed()" aria-hidden="true"></i>
-        <span class="visually-hidden">Toggle sidebar</span>
-      </button>
-    </div>
-
-    @if (!sidebarCollapsed()) {
-      <!-- Navigation Menu for Registered Users -->
-      <nav class="sidebar-nav mt-4">
-        <ul class="nav flex-column">
-          @if (!authService.isAnonymous()) {
-            @if (!authService.hasRole('ADMIN')) {
-              <li class="nav-item">
-                <a class="nav-link" routerLink="/chat" routerLinkActive="active">
-                  <i class="bi bi-chat-dots me-2"></i>{{ 'nav.chat' | t }}
-                </a>
-              </li>
-            }
-            @if (authService.hasRole('ADMIN')) {
-              <li class="nav-item">
-                <a class="nav-link" routerLink="/admin" routerLinkActive="active">
-                  <i class="bi bi-graph-up me-2"></i>Admin
-                </a>
-              </li>
-            }
-            <li class="nav-item">
-              <a class="nav-link" routerLink="/history" routerLinkActive="active">
-                <i class="bi bi-clock-history me-2"></i>{{ 'nav.recentChat' | t }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" routerLink="/reports" routerLinkActive="active">
-                <i class="bi bi-file-earmark-text me-2"></i>{{ 'nav.report' | t }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" routerLink="/profile" routerLinkActive="active">
-                <i class="bi bi-person-gear me-2"></i>{{ 'nav.profile' | t }}
-              </a>
-            </li>
-          }
-        </ul>
-      </nav>
-
-      <!-- User Preferences for Anonymous Users -->
-      @if (authService.isAnonymous()) {
-        <div class="anonymous-preferences mt-4 p-3">
-          <h6 class="mb-3"><i class="bi bi-gear me-1"></i>{{ 'profile.preferences' | t }}</h6>
-
-          <div class="mb-3">
-            <label class="form-label small mb-1">{{ 'profile.language' | t }}</label>
-            <div class="btn-group w-100">
-              <button class="btn btn-sm" [class.btn-primary]="language() === 'en'" [class.btn-outline-secondary]="language() !== 'en'" (click)="setLanguage('en')">{{ 'common.english' | t }}</button>
-              <button class="btn btn-sm" [class.btn-primary]="language() === 'ms'" [class.btn-outline-secondary]="language() !== 'ms'" (click)="setLanguage('ms')">{{ 'common.malay' | t }}</button>
-            </div>
-          </div>
-
-          <div class="setting-switch">
-            <div>
-              <strong class="small">{{ 'profile.ttsAuto' | t }}</strong>
-              <div class="text-secondary small">{{ 'profile.ttsAutoDesc' | t }}</div>
-            </div>
-            <input type="checkbox" [checked]="ttsService.isAutoSpeakEnabled()" (change)="onAutoTtsChanged($event)">
-          </div>
-        </div>
-      }
-
-    }
-  </aside>
+  <!-- Left anonymous sidebar moved to AppComponent; removed duplicate here -->
 
   <!-- Main Chat Area -->
   <main class="chat-main">
@@ -189,15 +100,9 @@
 
       <!-- Messages Area with Character on Right -->
       <div class="chat-content-wrapper">
-        <!-- Character Panel - 25% (Right) - NEW: Use R3F 3D Character -->
-        <div class="character-panel">
-          <div class="character-display" #characterDisplayRef>
-            <!-- NEW: Use R3FCharacterPanelComponent for full 3D animated character -->
-            <app-r3f-character-panel></app-r3f-character-panel>
-          </div>
-        </div>
+        <!-- Right character panel removed as requested -->
 
-        <!-- Chat Messages Panel - 75% (Left) -->
+        <!-- Chat Messages Panel - 70% (Left) -->
         <div class="chat-messages" #messagesContainer role="log" aria-live="polite" [attr.aria-label]="'chat.aria.conversationMessages' | t">
 
         @if (chatService.messages().length === 0 && !screeningCompleted()) {

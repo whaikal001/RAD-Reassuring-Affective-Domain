@@ -5,9 +5,9 @@
     }
 
     :host .card, .page-shell .card {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.92);
       border: 1px solid var(--card-border);
-      backdrop-filter: blur(16px);
+      backdrop-filter: blur(8px);
     }
 
     .page-shell {
@@ -37,16 +37,16 @@
       padding: 1rem 1.1rem;
       border-radius: 16px;
       border: 1px solid var(--border-color);
-      background: rgba(24, 24, 37, 0.55);
+      background: rgba(255, 255, 255, 0.9);
     }
 
     .message-bubble.user {
-      border-color: rgba(99, 102, 241, 0.45);
-      background: rgba(99, 102, 241, 0.14);
+      border-color: rgba(95, 231, 191, 0.28);
+      background: rgba(95, 231, 191, 0.10);
     }
 
     .message-bubble.bot {
-      border-color: rgba(6, 182, 212, 0.35);
+      border-color: rgba(95, 231, 191, 0.20);
     }
 
     .content {
@@ -55,7 +55,7 @@
     }
 
     .emotion-badge {
-      color: #fff;
+      color: var(--text-primary);
       text-transform: capitalize;
     }
   

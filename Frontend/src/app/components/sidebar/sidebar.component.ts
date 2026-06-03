@@ -11,17 +11,43 @@ import { TranslatePipe } from '../../pipes/t.pipe';
   standalone: true,
   imports: [CommonModule, RouterModule, TranslatePipe],
   template: `
-    <aside class="sidebar" [class.show]="sidebarService.isSidebarOpen()">
+    <aside class="sidebar" [class.show]="sidebarService.isSidebarOpen()" [class.collapsed]="sidebarService.collapsed()">
+      <button class="sidebar-collapse-btn" type="button" (click)="sidebarService.toggleCollapsed()" aria-label="Collapse sidebar" title="Collapse">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <!-- Branding (use user avatar for registered users, heart for anonymous) -->
+      <div class="sidebar-branding">
+        <div class="branding-logo">
+          <div class="logo-circle">
+            <ng-container *ngIf="authService.isAuthenticated(); else guestBranding">
+              <ng-container *ngIf="userAvatar() as avatar; else fallbackAvatar">
+                <img [src]="avatar" alt="User avatar" class="brand-logo" />
+              </ng-container>
+              <ng-template #fallbackAvatar>
+                <i class="bi bi-person-circle"></i>
+              </ng-template>
+            </ng-container>
+            <ng-template #guestBranding>
+              <i class="bi bi-heart-fill"></i>
+            </ng-template>
+          </div>
+          <div class="logo-text">
+            <h4 class="app-name mb-0">RadAI</h4>
+            <small class="text-muted">Your Mental Wellness Companion</small>
+          </div>
+        </div>
+      </div>
+
       <nav class="sidebar-nav">
         <div class="nav-section">
           <h3 class="nav-section-title">{{ 'sidebar.main' | t }}</h3>
-          
-          @if (authService.isAuthenticated()) {
+
+          <ng-container *ngIf="authService.isAuthenticated()">
             <a routerLink="/chat" routerLinkActive="active" (click)="sidebarService.close()" class="nav-item">
               <i class="bi bi-chat-left-dots"></i>
               <span class="nav-label">{{ 'sidebar.chat' | t }}</span>
             </a>
-            
+
             <a routerLink="/history" routerLinkActive="active" (click)="sidebarService.close()" class="nav-item">
               <i class="bi bi-clock-history"></i>
               <span class="nav-label">{{ 'sidebar.history' | t }}</span>
@@ -36,7 +62,7 @@ import { TranslatePipe } from '../../pipes/t.pipe';
               <i class="bi bi-file-earmark-text"></i>
               <span class="nav-label">{{ 'sidebar.reports' | t }}</span>
             </a>
-          }
+          </ng-container>
         </div>
 
         <div class="nav-section">
@@ -57,12 +83,12 @@ import { TranslatePipe } from '../../pipes/t.pipe';
             <span class="nav-label">{{ 'sidebar.settings' | t }}</span>
           </a>
 
-          @if (isAdmin()) {
+          <ng-container *ngIf="isAdmin()">
             <a routerLink="/admin" routerLinkActive="active" (click)="sidebarService.close()" class="nav-item admin-item">
               <i class="bi bi-shield-lock"></i>
               <span class="nav-label">{{ 'sidebar.admin' | t }}</span>
             </a>
-          }
+          </ng-container>
         </div>
       </nav>
 
@@ -80,8 +106,8 @@ import { TranslatePipe } from '../../pipes/t.pipe';
       top: 0;
       width: 280px;
       height: 100vh;
-      background: var(--sidebar-bg);
-      border-right: 1px solid var(--border-color);
+      background: linear-gradient(180deg, rgba(244, 252, 249, 0.98) 0%, rgba(230, 245, 240, 0.98) 100%);
+      border-right: 1px solid rgba(42, 157, 143, 0.10);
       overflow-y: auto;
       z-index: 1040;
       transition: transform 0.3s ease;
@@ -92,10 +118,46 @@ import { TranslatePipe } from '../../pipes/t.pipe';
       @media (max-width: 768px) {
         width: 100%;
         transform: translateX(-100%);
-        
+
         &.show {
           transform: translateX(0);
         }
+      }
+
+      /* Desktop collapse — slide out so the page reclaims full width */
+      @media (min-width: 769px) {
+        transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+
+        &.collapsed {
+          transform: translateX(-100%);
+        }
+      }
+    }
+
+    .sidebar-collapse-btn {
+      position: absolute;
+      top: 0.85rem;
+      right: 0.7rem;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid rgba(42, 157, 143, 0.18);
+      background: rgba(255, 255, 255, 0.7);
+      color: #1b7a6e;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+      z-index: 2;
+
+      &:hover {
+        background: rgba(208, 240, 232, 0.85);
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 768px) {
+        display: none;
       }
     }
 
@@ -117,7 +179,7 @@ import { TranslatePipe } from '../../pipes/t.pipe';
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--text-secondary);
+      color: #7dc4a8;
       padding: 0 0.75rem;
       margin: 0;
       opacity: 0.7;
@@ -127,13 +189,13 @@ import { TranslatePipe } from '../../pipes/t.pipe';
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      padding: 0.75rem 0.75rem;
-      border-radius: 0.75rem;
+      padding: 0.78rem 0.9rem;
+      border-radius: 999px;
       color: var(--text-secondary);
       text-decoration: none;
       border: 1px solid transparent;
       transition: all 0.25s ease;
-      background: none;
+      background: transparent;
       border: none;
       cursor: pointer;
       font-family: inherit;
@@ -142,18 +204,18 @@ import { TranslatePipe } from '../../pipes/t.pipe';
 
       &:hover {
         color: var(--text-primary);
-        background: var(--nav-hover-bg);
-        border-color: var(--border-color);
+        background: rgba(208, 240, 232, 0.55);
+        border-color: rgba(42, 157, 143, 0.14);
       }
 
       &.active {
-        color: var(--primary-color);
-        background: var(--nav-active-bg);
-        border-color: var(--primary-color);
-        font-weight: 600;
+        color: #1b7a6e;
+        background: rgba(208, 240, 232, 0.95);
+        border-color: rgba(42, 157, 143, 0.22);
+        font-weight: 700;
 
         i {
-          color: var(--primary-color);
+          color: #2a9d8f;
         }
       }
 
@@ -161,13 +223,13 @@ import { TranslatePipe } from '../../pipes/t.pipe';
         font-size: 1.25rem;
         min-width: 1.5rem;
         text-align: center;
-        color: var(--text-secondary);
+        color: #2a9d8f;
         transition: color 0.25s ease;
       }
     }
 
     .nav-button {
-      padding: 0.75rem;
+      padding: 0.78rem 0.9rem;
       cursor: pointer;
     }
 
@@ -177,15 +239,15 @@ import { TranslatePipe } from '../../pipes/t.pipe';
     }
 
     .admin-item {
-      border-color: var(--danger-color);
-      color: var(--danger-color);
+      border-color: rgba(42, 157, 143, 0.20);
+      color: #1b7a6e;
 
       &:hover {
-        background: rgba(239, 93, 108, 0.1);
+        background: rgba(208, 240, 232, 0.8);
       }
 
       &.active {
-        background: rgba(239, 93, 108, 0.15);
+        background: rgba(208, 240, 232, 1);
       }
     }
 
@@ -193,7 +255,7 @@ import { TranslatePipe } from '../../pipes/t.pipe';
       display: none;
       background: none;
       border: none;
-      color: var(--text-primary);
+      color: #1b7a6e;
       font-size: 1.5rem;
       cursor: pointer;
       position: absolute;
@@ -217,7 +279,7 @@ import { TranslatePipe } from '../../pipes/t.pipe';
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(42, 157, 143, 0.18);
       z-index: 1035;
 
       @media (max-width: 768px) {
@@ -242,17 +304,18 @@ import { TranslatePipe } from '../../pipes/t.pipe';
     }
 
     ::-webkit-scrollbar-thumb {
-      background: var(--border-color);
+      background: rgba(42, 157, 143, 0.22);
       border-radius: 3px;
 
       &:hover {
-        background: var(--text-secondary);
+        background: rgba(42, 157, 143, 0.38);
       }
     }
   `]
 })
 export class SidebarComponent implements OnInit, OnDestroy {
-  isDarkMode = signal(true);
+  isDarkMode = signal(localStorage.getItem('radai-theme') === 'dark');
+  userAvatar = signal<string | null>(null);
 
   authService = inject(AuthService);
   profileService = inject(ProfileService);
@@ -277,6 +340,20 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.router.events.subscribe(() => {
       this.sidebarService.close();
     });
+
+    // Load current user avatar for registered users (photo is stored client-side,
+    // so fall back to the auth service's cached avatar).
+    if (this.authService.isAuthenticated()) {
+      this.userAvatar.set(this.authService.avatarUrl());
+      this.profileService.getCurrentUser().subscribe({
+        next: (u) => {
+          this.userAvatar.set(u?.avatarUrl || this.authService.avatarUrl());
+        },
+        error: () => {
+          this.userAvatar.set(this.authService.avatarUrl());
+        }
+      });
+    }
   }
 
   ngOnDestroy() {

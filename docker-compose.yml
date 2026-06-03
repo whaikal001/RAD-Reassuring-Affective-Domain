@@ -16,9 +16,8 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-radai} -d radai"]
       interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - radai-net
 
@@ -47,15 +46,13 @@ services:
       APP_JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
       
       # HuggingFace (optional)
-      HF_API_TOKEN: ${HF_API_TOKEN:-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}
-      HF_CHAT_MODEL: ${HF_CHAT_MODEL:-meta-llama/Llama-3.1-8B-Instruct}
+      HF_API_TOKEN: ${HF_API_TOKEN:-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}
+      HF_CHAT_MODEL: ${HF_CHAT_MODEL:-deepseek-ai/DeepSeek-V4-Pro}
       HF_CHAT_API_MODE: ${HF_CHAT_API_MODE:-chat}
       HF_EMOTION_MODEL: ${HF_EMOTION_MODEL:-j-hartmann/emotion-english-distilroberta-base}
       HF_SCREENING_MODEL: ${HF_SCREENING_MODEL:-facebook/bart-large-mnli}
       HF_SAFETY_MODEL: ${HF_SAFETY_MODEL:-unitary/toxic-bert}
       HF_TTS_MODEL: ${HF_TTS_MODEL:-facebook/fastspeech2-en-ljspeech}
-      HF_TTS_MODEL_EN: ${HF_TTS_MODEL_EN:-facebook/fastspeech2-en-ljspeech}
-      HF_TTS_MODEL_MS: ${HF_TTS_MODEL_MS:-mesolitica/malay-VITS-multispeaker}
       
       # Server
       SERVER_PORT: 8080
@@ -76,50 +73,6 @@ services:
       - backend
     ports:
       - "3000:80"
-    networks:
-      - radai-net
-
-  # R3F Character Backend (Node.js + HuggingFace Inference)
-  character-backend:
-    build:
-      context: ./Characters/r3f-virtual-girlfriend-backend-main
-      dockerfile: Dockerfile
-    container_name: radai-character-backend
-    restart: unless-stopped
-    ports:
-      - "3001:3000"
-    environment:
-      # HuggingFace API
-      HUGGINGFACE_API_KEY: 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
-      
-      # Chat & Voice
-      HF_CHAT_MODEL: ${HF_CHAT_MODEL:-meta-llama/Llama-3.1-8B-Instruct}
-      HF_TTS_MODEL_EN: ${HF_TTS_MODEL_EN:-facebook/fastspeech2-en-ljspeech}
-      HF_TTS_MODEL_MS: ${HF_TTS_MODEL_MS:-microsoft/speecht5_tts}
-      
-      # Emotion Detection & Screening (for daily progress tracking)
-      HF_EMOTION_MODEL: ${HF_EMOTION_MODEL:-j-hartmann/emotion-english-distilroberta-base}
-      HF_SCREENING_MODEL: ${HF_SCREENING_MODEL:-facebook/bart-large-mnli}
-      HF_SAFETY_MODEL: ${HF_SAFETY_MODEL:-unitary/toxic-bert}
-      
-      NODE_ENV: production
-    networks:
-      - radai-net
-    volumes:
-      - ./Characters/r3f-virtual-girlfriend-backend-main/audios:/app/audios
-
-
-  # R3F Character Frontend (React + Vite)
-  character-frontend:
-    build:
-      context: ./Characters/r3f-virtual-girlfriend-frontend-main
-      dockerfile: Dockerfile
-    container_name: radai-character-frontend
-    restart: unless-stopped
-    ports:
-      - "5173:5173"
-    environment:
-      VITE_API_URL: http://localhost:3001
     networks:
       - radai-net
 

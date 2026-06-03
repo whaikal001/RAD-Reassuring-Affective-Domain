@@ -1,13 +1,10 @@
-import { Component, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
 import { ChatService } from '../../services/chat.service';
 import { EMOTIONS, EmotionalJourneyPoint, PaginatedSessions, SessionDetails } from '../../models';
 import { TranslatePipe } from '../../pipes/t.pipe';
-import { Chart, registerables } from 'chart.js';
-
-Chart.register(...registerables);
 
 @Component({
   selector: 'app-history',
@@ -17,9 +14,6 @@ Chart.register(...registerables);
   styleUrl: './history.component.scss'
 })
 export class HistoryComponent implements OnInit {
-  @ViewChild('emotionChart') emotionChart?: ElementRef<HTMLCanvasElement>;
-  @ViewChild('intensityChart') intensityChart?: ElementRef<HTMLCanvasElement>;
-  
   loading = signal(true);
   error = signal<string | null>(null);
   sessionsData = signal<PaginatedSessions | null>(null);
@@ -40,9 +34,7 @@ export class HistoryComponent implements OnInit {
   maxIntensity = signal<number>(0);
   minIntensity = signal<number>(10);
   intensityZoneStats = signal<any>(null);
-  chartInstance: Chart | null = null;
-  intensityChartInstance: Chart | null = null;
-  
+
   // Make Object available to template
   Object = Object;
 
@@ -74,13 +66,12 @@ export class HistoryComponent implements OnInit {
         
         // Load themes for each session
         this.loadSessionThemes(sessions.sessions);
-        
-        // Build charts after journey is loaded
-        setTimeout(() => {
-          this.buildEmotionChart();
-          this.buildIntensityTrendChart();
-        }, 100);
-        
+
+        // The trend graph now lives only on the Dashboard (analytics section).
+        // Here we just compute the journey statistics used by the stat cards,
+        // intensity zones, emotion distribution and coping tips.
+        this.calculateStats(journey);
+
         this.loading.set(false);
       },
       error: (error) => {
@@ -142,122 +133,6 @@ export class HistoryComponent implements OnInit {
   }
 
   /**
-   * Build Chart.js chart with emotion data
-   */
-  buildEmotionChart(): void {
-    if (!this.emotionChart?.nativeElement) {
-      return;
-    }
-
-    const journey = this.journey();
-    if (journey.length === 0) {
-      return;
-    }
-
-    // Destroy existing chart
-    if (this.chartInstance) {
-      this.chartInstance.destroy();
-    }
-
-    // Prepare data
-    const labels = journey.map(p => new Date(p.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }));
-    const intensities = journey.map(p => p.intensity);
-    const emotions = journey.map(p => p.emotion);
-    
-    // Color code emotions
-    const colors = emotions.map(emotion => this.getEmotionColor(emotion));
-
-    // Calculate stats
-    this.calculateStats(journey);
-
-    this.chartInstance = new Chart(this.emotionChart.nativeElement, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          {
-            label: 'Emotional Intensity',
-            data: intensities,
-            borderColor: '#35d6c1',
-            backgroundColor: 'rgba(53, 214, 193, 0.1)',
-            fill: true,
-            tension: 0.4, // Smooth curves
-            pointRadius: 6,
-            pointBackgroundColor: colors,
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            pointHoverRadius: 8,
-            borderWidth: 2.5,
-            segment: {
-              borderColor: (ctx: any) => {
-                const color = colors[ctx.p0DataIndex];
-                return color;
-              }
-            }
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        interaction: {
-          mode: 'index',
-          intersect: false
-        },
-        plugins: {
-          legend: {
-            display: true,
-            labels: {
-              color: 'rgba(165, 178, 224, 0.7)',
-              font: { size: 12 }
-            }
-          },
-          tooltip: {
-            enabled: true,
-            backgroundColor: 'rgba(15, 23, 42, 0.95)',
-            titleColor: '#35d6c1',
-            bodyColor: 'rgba(255, 255, 255, 0.8)',
-            borderColor: 'rgba(53, 214, 193, 0.3)',
-            borderWidth: 1,
-            padding: 12,
-            displayColors: true,
-            callbacks: {
-              title: (context: any) => context[0].label,
-              label: (context: any) => {
-                const emotion = emotions[context.dataIndex];
-                const intensity = context.parsed.y;
-                return `${this.getEmotionEmoji(emotion)} ${emotion} (Intensity: ${intensity}/10)`;
-              },
-              afterLabel: (context: any) => {
-                const isLastPoint = context.dataIndex === intensities.length - 1;
-                const isPrevWorst = context.dataIndex > 0 && intensities[context.dataIndex] < intensities[context.dataIndex - 1];
-                
-                if (isPrevWorst) {
-                  return '↗️ Improving!';
-                }
-                return '';
-              }
-            }
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 10,
-            ticks: { color: 'rgba(165, 178, 224, 0.5)', stepSize: 2 },
-            grid: { color: 'rgba(165, 178, 224, 0.1)', drawTicks: false },
-            title: { display: true, text: 'Intensity', color: 'rgba(165, 178, 224, 0.7)' }
-          },
-          x: {
-            ticks: { color: 'rgba(165, 178, 224, 0.5)' },
-            grid: { color: 'rgba(165, 178, 224, 0.08)' }
-          }
-        }
-      }
-    });
-  }
-
-  /**
    * Calculate emotional statistics
    */
   private calculateStats(journey: EmotionalJourneyPoint[]): void {
@@ -308,134 +183,6 @@ export class HistoryComponent implements OnInit {
   }
 
   /**
-   * Calculate moving average for trend
-   */
-  private calculateMovingAverage(data: number[], window: number = 3): number[] {
-    const result = [];
-    for (let i = 0; i < data.length; i++) {
-      const start = Math.max(0, i - Math.floor(window / 2));
-      const end = Math.min(data.length, i + Math.ceil(window / 2));
-      const avg = data.slice(start, end).reduce((a, b) => a + b, 0) / (end - start);
-      result.push(Math.round(avg * 100) / 100);
-    }
-    return result;
-  }
-
-  /**
-   * Build intensity trend chart
-   */
-  private buildIntensityTrendChart(): void {
-    if (!this.intensityChart || this.journey().length === 0) return;
-
-    const journey = this.journey();
-    const intensities = journey.map(p => p.intensity);
-    const dates = journey.map(p => new Date(p.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-    const movingAvg = this.calculateMovingAverage(intensities, 3);
-
-    // Zone background colors
-    const zoneColors = intensities.map(intensity => {
-      if (intensity >= 7) return 'rgba(239, 93, 108, 0.15)'; // High stress - red
-      if (intensity >= 4) return 'rgba(251, 113, 133, 0.08)'; // Moderate - orange
-      return 'rgba(119, 169, 255, 0.08)'; // Low - blue
-    });
-
-    this.intensityChartInstance = new Chart(this.intensityChart.nativeElement, {
-      type: 'line',
-      data: {
-        labels: dates,
-        datasets: [
-          {
-            label: 'Actual Intensity',
-            data: intensities,
-            borderColor: '#35d6c1',
-            backgroundColor: 'rgba(53, 214, 193, 0.08)',
-            fill: true,
-            tension: 0.3,
-            pointRadius: 5,
-            pointBackgroundColor: (ctx: any) => {
-              const intensity = intensities[ctx.dataIndex];
-              if (intensity >= 7) return '#ef5d6c';
-              if (intensity >= 4) return '#fb7185';
-              return '#77a9ff';
-            },
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            pointHoverRadius: 7,
-            borderWidth: 2,
-            segment: {
-              borderDash: (ctx: any) => ctx.p0DataIndex % 2 === 0 ? [0] : [0]
-            }
-          },
-          {
-            label: 'Trend (Moving Avg)',
-            data: movingAvg,
-            borderColor: '#fbbf24',
-            backgroundColor: 'transparent',
-            fill: false,
-            tension: 0.4,
-            pointRadius: 0,
-            borderWidth: 2.5,
-            borderDash: [5, 5]
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          filler: { propagate: true },
-          legend: {
-            display: true,
-            labels: { color: 'rgba(165, 178, 224, 0.7)', font: { size: 11 } }
-          },
-          tooltip: {
-            enabled: true,
-            backgroundColor: 'rgba(15, 23, 42, 0.95)',
-            titleColor: '#35d6c1',
-            bodyColor: 'rgba(255, 255, 255, 0.8)',
-            borderColor: 'rgba(53, 214, 193, 0.3)',
-            borderWidth: 1,
-            padding: 10,
-            callbacks: {
-              title: (context: any) => context[0].label,
-              label: (context: any) => {
-                const intensity = context.parsed.y;
-                const label = context.dataset.label || '';
-                if (label === 'Trend (Moving Avg)') return `${label}: ${intensity.toFixed(1)}`;
-                
-                let zone = 'Low Stress';
-                if (intensity >= 7) zone = '🔴 High Stress';
-                else if (intensity >= 4) zone = '🟡 Moderate';
-                else zone = '🟢 Low Stress';
-                
-                return `${label}: ${intensity}/10 • ${zone}`;
-              }
-            }
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 10,
-            ticks: { color: 'rgba(165, 178, 224, 0.5)', stepSize: 2 },
-            grid: {
-              color: 'rgba(165, 178, 224, 0.1)',
-              drawTicks: false,
-              lineWidth: (ctx: any) => ctx.tick.value === 7 || ctx.tick.value === 4 ? 1.5 : 1
-            },
-            title: { display: true, text: 'Intensity Level', color: 'rgba(165, 178, 224, 0.7)' }
-          },
-          x: {
-            ticks: { color: 'rgba(165, 178, 224, 0.5)' },
-            grid: { color: 'rgba(165, 178, 224, 0.05)' }
-          }
-        }
-      }
-    });
-  }
-
-  /**
    * Temporary method to access intensity percentages in template
    */
 
@@ -458,7 +205,17 @@ export class HistoryComponent implements OnInit {
   getEmotionEntries(): Array<[string, number]> {
     const stats = this.emotionStats();
     if (!stats) return [];
-    return Object.entries(stats);
+    return (Object.entries(stats) as Array<[string, number]>)
+      .map(([emotion, count]) => [emotion, Number(count) || 0] as [string, number])
+      .sort((a, b) => b[1] - a[1]);
+  }
+
+  /** Bar width (%) for an emotion-distribution count, relative to the most frequent emotion. */
+  getEmotionWidth(count: number): number {
+    const entries = this.getEmotionEntries();
+    const max = entries.length ? Math.max(...entries.map(e => e[1])) : 0;
+    if (!max) return 0;
+    return Math.max(8, Math.round((count / max) * 100));
   }
 
   /**

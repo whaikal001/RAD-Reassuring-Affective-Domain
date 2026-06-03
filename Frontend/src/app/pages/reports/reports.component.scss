@@ -5,9 +5,9 @@
     }
 
     :host .card, .page-shell .card {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.92);
       border: 1px solid var(--card-border);
-      backdrop-filter: blur(16px);
+      backdrop-filter: blur(8px);
     }
 
     .page-shell {
@@ -19,7 +19,7 @@
       text-transform: uppercase;
       letter-spacing: 0.08em;
       font-size: 0.75rem;
-      color: var(--secondary-color);
+      color: var(--text-secondary);
       font-weight: 700;
     }
 
@@ -32,8 +32,8 @@
     }
 
     .panel {
-      background: linear-gradient(165deg, rgba(22, 28, 46, 0.8), rgba(14, 18, 31, 0.9));
-      border: 1px solid rgba(165, 178, 224, 0.18);
+      background: linear-gradient(165deg, rgba(255, 255, 255, 0.88), rgba(239, 255, 250, 0.96));
+      border: 1px solid rgba(95, 231, 191, 0.14);
       box-shadow: var(--shadow-soft);
     }
 
@@ -49,7 +49,7 @@
       align-items: center;
       gap: 1rem;
       border: 1px solid var(--border-color);
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.9);
       color: var(--text-primary);
       border-radius: 14px;
       padding: 1rem 1.1rem;
@@ -115,7 +115,7 @@
       border: 1px dashed var(--border-color);
       border-radius: 10px;
       padding: 0.55rem 0.7rem;
-      background: rgba(10, 14, 24, 0.45);
+      background: rgba(255, 255, 255, 0.9);
     }
 
     .raw-summary summary {
@@ -141,25 +141,36 @@
 
     .trend-shell {
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 0.6rem 0.65rem;
-      background: rgba(255, 255, 255, 0.02);
+      border-radius: 14px;
+      padding: 0.75rem 0.7rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(240, 250, 247, 0.85));
       margin-bottom: 0.6rem;
     }
 
     .trend-chart {
       width: 100%;
-      height: 8.2rem;
+      height: 9.5rem;
       display: block;
+      overflow: visible;
     }
 
-    .trend-line {
-      fill: none;
-      stroke: var(--secondary-color);
-      stroke-width: 1.8;
+    .trend-curve {
+      stroke-width: 2.5;
       stroke-linecap: round;
       stroke-linejoin: round;
+      filter: drop-shadow(0 4px 6px rgba(27, 122, 110, 0.22));
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: trendDraw 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards;
     }
+
+    .trend-area {
+      opacity: 0;
+      animation: trendFade 1s ease 0.7s forwards;
+    }
+
+    @keyframes trendDraw { to { stroke-dashoffset: 0; } }
+    @keyframes trendFade { to { opacity: 1; } }
 
     .emotion-bars {
       display: grid;
@@ -181,9 +192,9 @@
     .emotion-track {
       position: relative;
       width: 100%;
-      height: 0.56rem;
+      height: 0.7rem;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(27, 122, 110, 0.1);
       overflow: hidden;
     }
 
@@ -191,7 +202,10 @@
       display: block;
       height: 100%;
       border-radius: inherit;
-      box-shadow: 0 0 16px rgba(111, 124, 255, 0.22);
+      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0));
+      background-blend-mode: overlay;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     @media (max-width: 768px) {
@@ -211,13 +225,13 @@
     .activity-card {
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.02);
+      background: rgba(255, 255, 255, 0.9);
       padding: 1rem;
       transition: all 0.2s ease;
 
       &:hover {
         border-color: var(--primary-color);
-        background: rgba(111, 124, 255, 0.05);
+        background: rgba(95, 231, 191, 0.06);
       }
     }
 
