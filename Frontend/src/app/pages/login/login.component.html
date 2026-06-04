@@ -6,7 +6,7 @@
           <div class="auth-form-wrapper w-100 px-4 px-md-5">
             <div class="auth-header text-center mb-5">
               <div class="brand-section mb-3">
-                <i class="bi bi-chat-heart fs-1 text-gradient"></i>
+                <img src="/assets/RadAIBrandMark.png" alt="RadAI" class="auth-brand-mark" width="72" height="72" />
               </div>
               <h1 class="auth-title">{{ 'auth.welcomeBack' | t }}</h1>
               <p class="auth-subtitle">{{ 'auth.signInJourney' | t }}</p>
@@ -68,10 +68,8 @@
             </form>
 
             <div class="social-login">
-              <p class="text-center text-secondary mb-3">{{ 'auth.orContinueWith' | t }}</p>
-              <button class="btn btn-outline-light w-100 mb-3">
-                <i class="bi bi-google me-2"></i>Google
-              </button>
+              <div class="auth-divider mb-3"><span>{{ 'auth.orContinueWith' | t }}</span></div>
+              <app-google-signin-button (failed)="error.set($event)"></app-google-signin-button>
             </div>
 
             <p class="text-center text-secondary mt-4">
@@ -88,11 +86,17 @@
             <div class="geometric-shape shape-2"></div>
             <div class="visual-text-overlay">
               <div class="rada-logo-container mb-4">
-                <img src="assets/RADAiLogo.png" alt="RADAi Logo" class="rada-logo">
+                <img src="assets\characters\RadAIWelcoming.png" alt="RADAi Logo" class="rada-logo">
               </div>
               <h2 class="visual-title">Welcome Back</h2>
               <p class="visual-description">Experience compassionate AI support for your mental wellness</p>
               <p class="visual-subtitle">Join thousands of users on their journey to better mental health</p>
+
+              <div class="visual-features">
+                <div class="visual-feature"><i class="bi bi-shield-lock-fill"></i><span>Private &amp; confidential</span></div>
+                <div class="visual-feature"><i class="bi bi-heart-pulse-fill"></i><span>Emotion-aware support</span></div>
+                <div class="visual-feature"><i class="bi bi-stars"></i><span>Here for you, anytime</span></div>
+              </div>
             </div>
           </div>
         </div>

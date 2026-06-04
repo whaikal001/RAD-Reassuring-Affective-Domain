@@ -1,4 +1,4 @@
-import { Component, signal, ViewChild, ElementRef, AfterViewChecked, OnInit, effect } from '@angular/core';
+import { Component, signal, computed, ViewChild, ElementRef, AfterViewChecked, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -10,6 +10,7 @@ import { ScreeningService } from '../../services/screening.service';
 import { TemplatesService, TemplateItem } from '../../services/templates.service';
 import { CharacterService } from '../../services/character.service';
 import { R3fCharacterBridgeService } from '../../services/r3f-character-bridge.service';
+import { PbotService } from '../../services/pbot.service';
 import { TranslatePipe } from '../../pipes/t.pipe';
 import { AnimatedCharacterComponent } from '../../components/animated-character/animated-character.component';
 
@@ -51,9 +52,15 @@ export class ChatComponent implements AfterViewChecked, OnInit {
   characterEmotion = signal<string | null>(null);      // NEW: Current character emotion
   characterIntensity = signal<number>(5);              // NEW: Current character intensity (default 5)
   // Signals to manage crossfade between character images
-  currentCharacter = signal<string>(this.characterImage());
+  // The character sprite mirrors the user's current emotion. Computed so it ALWAYS tracks
+  // characterImage() reactively — no effect/lifecycle timing to get wrong (the previous
+  // effect-based sync silently failed, leaving the face stuck on the neutral sprite).
+  currentCharacter = computed(() => this.characterImage());
   // Control visibility to trigger fade-in when character changes
   imageVisible = signal<boolean>(true);
+  // Plays a one-shot "reaction" animation on the character each time Hana responds.
+  characterReacting = signal<boolean>(false);
+  private reactionTimer: any = null;
 
   // DASS Template properties
   dassTemplates: TemplateItem[] = [];
@@ -78,55 +85,117 @@ export class ChatComponent implements AfterViewChecked, OnInit {
     private r3fBridge: R3fCharacterBridgeService,
     private uiFeedback: UiFeedbackService,
     private screeningService: ScreeningService,
-    private templatesService: TemplatesService
+    private templatesService: TemplatesService,
+    private pbotService: PbotService
   ) {}
+
+  // --- Physical PBOT (robot) connection state ---
+  pbotConnected = signal<boolean>(false);
+  pbotPort = signal<string>('');
+  pbotBusy = signal<boolean>(false);
+
+  /** Refresh the robot connection status from the backend. */
+  refreshPbotStatus(): void {
+    this.pbotService.status().subscribe({
+      next: (s) => { this.pbotConnected.set(!!s.connected); this.pbotPort.set(s.port || ''); },
+      error: () => { this.pbotConnected.set(false); }
+    });
+  }
+
+  /** Connect (to the configured COM port) or disconnect the physical robot. */
+  togglePbot(): void {
+    if (this.pbotBusy()) { return; }
+    this.pbotBusy.set(true);
+    const done = () => { this.pbotBusy.set(false); this.refreshPbotStatus(); };
+
+    if (this.pbotConnected()) {
+      this.pbotService.disconnect().subscribe({
+        next: () => { this.uiFeedback.info('Robot', 'Disconnected'); done(); },
+        error: () => { this.uiFeedback.error('Robot', 'Could not disconnect'); done(); }
+      });
+    } else {
+      this.pbotService.connectDefault().subscribe({
+        next: (s) => { this.uiFeedback.success('Robot', 'Connected on ' + (s.port || 'serial port')); done(); },
+        error: () => { this.uiFeedback.error('Robot', 'Connect failed — check the USB cable / COM port'); done(); }
+      });
+    }
+  }
 
   /**
    * Map current emotion + intensity to a static character image asset.
    * Uses `Frontend/src/assets/characters/*.png` files.
    */
   characterImage(): string {
-    // Prefer explicit currentEmotion (from backend), then the latest message's emotion (local bot messages),
-    // then the lastResponse stored object. This ensures local/addLocalBotMessage emotions are respected.
-    const msgs = this.chatService.messages();
-    const lastMsgEmotion = msgs && msgs.length ? msgs[msgs.length - 1].emotion : null;
-    const resp = (this.chatService.currentEmotion() || lastMsgEmotion || this.chatService.lastResponse()?.emotion || 'neutral') as string;
-    const emotion = (resp || 'neutral').toString().toLowerCase();
-    const intensity = this.currentIntensity() ?? 0;
+    // MIRROR the user's emotion ("sad user -> sad face"). The emotion is the backend-detected
+    // emotion from the user's latest message; before the first message we fall back to the
+    // screening emotion. Intensity (0-10, from the user's message) only splits sadness low/high.
+    const liveEmotion = this.chatService.currentEmotion() || this.chatService.lastResponse()?.emotion;
+    const emotion = (liveEmotion || this.characterEmotion() || 'neutral').toString().toLowerCase();
+    const intensity = liveEmotion ? this.chatService.currentIntensity() : (this.characterIntensity() ?? 5);
+    const high = intensity >= 6;
 
-    // High intensity sadness
-    if (emotion.includes('sad') || emotion.includes('depressed')) {
-      return intensity >= 2 ? '/assets/characters/RadSadHigh.png' : '/assets/characters/RadSadLow.png';
+    const has = (...keys: string[]) => keys.some(k => emotion.includes(k));
+
+    // Crisis / hopeless -> strongest sad expression
+    if (has('hopeless', 'helpless', 'despair', 'suicid')) {
+      return '/assets/characters/RadSadHigh.png';
     }
-
-    if (emotion.includes('happy') || emotion.includes('joy') || emotion.includes('smile') || emotion.includes('glad') ) {
-      return '/assets/characters/RadSmiling.png';
+    // Sad / low mood / lonely -> mirror with a sad face (intensity picks low vs high)
+    if (has('sad', 'depress', 'down', 'unhappy', 'blue', 'heartbroken', 'grief', 'cry', 'lonel', 'isolat', 'alone')) {
+      return high ? '/assets/characters/RadSadHigh.png' : '/assets/characters/RadSadLow.png';
     }
-
-    if (emotion.includes('thinking') || emotion.includes('ponder')) {
+    // Tired / drained
+    if (has('exhaust', 'tired', 'drain', 'fatigue', 'weary', 'burnout', 'burned')) {
+      return '/assets/characters/RadSadLow.png';
+    }
+    // Stress / anxiety / anger -> concerned, thinking-it-through face
+    if (has('stress', 'overwhelm', 'pressure', 'tense',
+            'anx', 'worry', 'worried', 'nervous', 'panic', 'fear', 'afraid', 'scared',
+            'anger', 'angry', 'frustrat', 'mad', 'furious', 'irritat')) {
       return '/assets/characters/RadThinking.png';
     }
-
-    if (emotion.includes('welcome') || emotion.includes('welcoming') || emotion.includes('hello')) {
-      return '/assets/characters/RadWelcoming.png';
-    }
-
-    if (emotion.includes('encourage') || emotion.includes('encouraging') || emotion.includes('empathy')) {
-      return '/assets/characters/RadEncouraging.png';
-    }
-
-    if (emotion.includes('good') || emotion.includes('proud') || emotion.includes('congrats')) {
+    // Strong positive -> celebrate
+    if (has('proud', 'accomplish', 'congrat', 'celebrat', 'good job', 'goodjob')) {
       return '/assets/characters/RadGoodJob.png';
     }
-
-    // default neutral
+    // Positive -> smile
+    if (has('happy', 'joy', 'glad', 'great', 'excit', 'reliev', 'grateful', 'content', 'calm', 'smil', 'good')) {
+      return '/assets/characters/RadSmiling.png';
+    }
+    // Greeting
+    if (has('welcom', 'hello', 'greet')) {
+      return '/assets/characters/RadWelcoming.png';
+    }
+    // Empathy / support / understanding
+    if (has('encourag', 'empath', 'support', 'understand', 'sympath')) {
+      return '/assets/characters/RadEncouraging.png';
+    }
+    if (has('think', 'ponder', 'curious', 'unsure')) {
+      return '/assets/characters/RadThinking.png';
+    }
     return '/assets/characters/RadNeutral.png';
+  }
+
+  /**
+   * Play a one-shot reaction (perk-up, head-tilt, squash) on the character.
+   * Called whenever Hana responds so she visibly reacts to every message.
+   * Removes then re-adds the CSS animation class so it restarts even on rapid replies.
+   */
+  playCharacterReaction(): void {
+    clearTimeout(this.reactionTimer);
+    this.characterReacting.set(false);
+    // Two animation frames so the DOM drops the class before we re-add it (restarts the keyframes).
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      this.characterReacting.set(true);
+      this.reactionTimer = setTimeout(() => this.characterReacting.set(false), 850);
+    }));
   }
 
   
 
   ngOnInit(): void {
     this.language.set(this.chatService.language());
+    this.refreshPbotStatus();
     this.chatService.getContext().subscribe({
       next: () => {
         this.updateInitialGreeting();
@@ -187,20 +256,6 @@ export class ChatComponent implements AfterViewChecked, OnInit {
 
     // NEW: Load saved emotion/intensity from screening
     this.loadSavedEmotionAndIntensity();
-
-    // Keep the static character image in sync with emotion/intensity changes
-    effect(() => {
-      const img = this.characterImage();
-      if (img && img !== this.currentCharacter()) {
-        // trigger fade-out, swap src, then fade-in to avoid stacking
-        this.imageVisible.set(false);
-        setTimeout(() => {
-          this.currentCharacter.set(img);
-          // small delay to allow browser to register src change before fading in
-          setTimeout(() => this.imageVisible.set(true), 40);
-        }, 120);
-      }
-    });
   }
 
   startConversationalScreening(): void {
@@ -926,6 +981,7 @@ export class ChatComponent implements AfterViewChecked, OnInit {
     this.chatService.sendMessage(message, messageIntensity, this.useAI(), appendUserMessage)
       .subscribe({
         next: (response) => {
+          this.playCharacterReaction();
           this.autoSpeakLatestBotMessage();
           this.characterService.getFullCharacterResponse(response, this.language()).subscribe({
             error: err => console.warn('Character enrichment failed:', err)

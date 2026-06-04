@@ -6,11 +6,12 @@ import { AuthService } from '../../services/auth.service';
 import { ChatService } from '../../services/chat.service';
 import { TranslatePipe } from '../../pipes/t.pipe';
 import { LanguageService } from '../../services/language.service';
+import { GoogleSignInButtonComponent } from '../../components/google-signin-button/google-signin-button.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe, GoogleSignInButtonComponent],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
 })
@@ -45,7 +46,7 @@ export class RegisterComponent {
       password: this.password 
     }).subscribe({
       next: () => {
-        this.success.set('Account created successfully! Redirecting...');
+        this.success.set('Account created! We sent a verification link to your email — please confirm it. Redirecting...');
         this.chatService.resetSession().subscribe({
           next: () => {
             setTimeout(() => {

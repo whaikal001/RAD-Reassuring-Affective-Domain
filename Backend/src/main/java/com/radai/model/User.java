@@ -65,6 +65,17 @@ public class User {
     @Column(name = "is_verified")
     private Boolean isVerified = false;
 
+    // How the account was created / authenticates: "LOCAL" (email+password) or "GOOGLE".
+    @Column(name = "auth_provider")
+    private String authProvider = "LOCAL";
+
+    // Email-verification token + expiry (null once verified or for Google accounts).
+    @Column(name = "verification_token")
+    private String verificationToken;
+
+    @Column(name = "verification_token_expires_at")
+    private LocalDateTime verificationTokenExpiresAt;
+
     @Column(name = "roles")
     private String roles = "USER"; // comma-separated roles, e.g. "ADMIN,USER"
     
@@ -138,6 +149,15 @@ public class User {
 
     public Boolean getIsVerified() { return isVerified; }
     public void setIsVerified(Boolean isVerified) { this.isVerified = isVerified; }
+
+    public String getAuthProvider() { return authProvider; }
+    public void setAuthProvider(String authProvider) { this.authProvider = authProvider; }
+
+    public String getVerificationToken() { return verificationToken; }
+    public void setVerificationToken(String verificationToken) { this.verificationToken = verificationToken; }
+
+    public LocalDateTime getVerificationTokenExpiresAt() { return verificationTokenExpiresAt; }
+    public void setVerificationTokenExpiresAt(LocalDateTime verificationTokenExpiresAt) { this.verificationTokenExpiresAt = verificationTokenExpiresAt; }
 
     public String getRoles() { return roles; }
     public void setRoles(String roles) { this.roles = roles; }

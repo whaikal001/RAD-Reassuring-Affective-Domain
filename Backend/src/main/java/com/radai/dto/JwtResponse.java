@@ -6,7 +6,8 @@ public class JwtResponse {
     private String username;
     private String roles;
     private String userId;
-    
+    private Boolean verified;
+
     public JwtResponse(String token, String username, String roles, String userId) {
         this.token = token;
         this.username = username;
@@ -33,5 +34,8 @@ public class JwtResponse {
 
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
+
+    public Boolean getVerified() { return verified; }
+    public void setVerified(Boolean verified) { this.verified = verified; }
 }
 

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { trigger, transition, style, animate, query } from '@angular/animations';
 import { CommonModule } from '@angular/common';
@@ -61,6 +61,24 @@ import { TranslatePipe } from './pipes/t.pipe';
       <div class="offline-banner" role="status" aria-live="polite">
         <i class="bi bi-wifi-off me-2"></i>
         {{ 'app.offline' | t }}
+      </div>
+    }
+
+    @if (shouldShowVerifyBanner()) {
+      <div class="verify-banner" role="status">
+        <span class="verify-banner-copy">
+          <i class="bi bi-envelope-exclamation me-2"></i>
+          Please verify your email to secure your account.
+        </span>
+        <span class="verify-banner-actions">
+          <button type="button" class="btn btn-sm verify-resend" (click)="resendVerification()" [disabled]="resendingVerification()">
+            @if (resendingVerification()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Resend email
+          </button>
+          <button type="button" class="btn-close-verify" (click)="verifyBannerDismissed.set(true)" aria-label="Dismiss">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </span>
       </div>
     }
 
@@ -233,6 +251,50 @@ import { TranslatePipe } from './pipes/t.pipe';
       font-weight: 600;
     }
 
+    .verify-banner {
+      margin: 0.75rem 1rem 0;
+      padding: 0.7rem 1rem;
+      border-radius: 14px;
+      border: 1px solid rgba(42, 157, 143, 0.4);
+      background: rgba(42, 157, 143, 0.12);
+      color: var(--text-primary);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .verify-banner-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .verify-resend {
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-weight: 600;
+      padding: 0.3rem 0.9rem;
+    }
+
+    .verify-resend:hover:not(:disabled) { filter: brightness(1.05); }
+    .verify-resend:disabled { opacity: 0.7; }
+
+    .btn-close-verify {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 0.25rem 0.4rem;
+      border-radius: 8px;
+    }
+
+    .btn-close-verify:hover { background: rgba(0, 0, 0, 0.05); color: var(--text-primary); }
+
     .toast-stack {
       position: fixed;
       right: 1rem;
@@ -302,9 +364,41 @@ export class AppComponent {
   // as early as possible so every page renders in the right mode.
   private themeService = inject(ThemeService);
 
+  verifyBannerDismissed = signal(false);
+  resendingVerification = signal(false);
+
   shouldShowSidebar(): boolean {
     const path = this.router.url.split(/[?#]/)[0] || '';
     return path === '/chat';
+  }
+
+  /** Show the verify-email nudge for registered-but-unverified users, except on the
+      auth/verify pages themselves and for admins. Dismissible for the session. */
+  shouldShowVerifyBanner(): boolean {
+    if (this.verifyBannerDismissed()) return false;
+    if (!this.authService.needsVerification()) return false;
+    if (this.authService.hasRole('ADMIN')) return false;
+    const path = this.router.url.split(/[?#]/)[0] || '';
+    return path !== '/login' && path !== '/register' && path !== '/verify-email';
+  }
+
+  resendVerification(): void {
+    const email = this.authService.email();
+    if (!email) {
+      this.uiFeedback.warning('Verify email', 'We could not find your email address. Open the verify page to resend.');
+      return;
+    }
+    this.resendingVerification.set(true);
+    this.authService.resendVerification(email).subscribe({
+      next: (res) => {
+        this.resendingVerification.set(false);
+        this.uiFeedback.success('Verification email', res?.message || 'A new verification link is on its way.');
+      },
+      error: () => {
+        this.resendingVerification.set(false);
+        this.uiFeedback.success('Verification email', 'A new verification link is on its way.');
+      }
+    });
   }
 
   prepareRoute(outlet: RouterOutlet) {

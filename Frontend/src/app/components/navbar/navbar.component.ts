@@ -20,7 +20,7 @@ import { TranslatePipe } from '../../pipes/t.pipe';
           </button>
 
           <a class="navbar-brand d-flex align-items-center gap-2" routerLink="/">
-            <img class="brand-logo" src="/assets/Gemini_Generated_Image_ym28zxym28zxym28-removebg-preview.png" alt="RadAI" width="56" height="56" />
+            <img class="brand-logo" src="/assets/RadAIBrandMark.png" alt="RadAI" width="40" height="40" />
             <span class="fw-bold">RadAI</span>
           </a>
           
@@ -37,25 +37,28 @@ import { TranslatePipe } from '../../pipes/t.pipe';
                   <i class="bi" [class.bi-sun-fill]="themeService.isDark()" [class.bi-moon-stars-fill]="!themeService.isDark()"></i>
                 </button>
               </li>
-              @if (authService.isAuthenticated()) {
-                @if (authService.isRegistered() && !authService.hasRole('ADMIN')) {
+              <!-- Account controls are hidden on the login/register pages: a leftover
+                   session can still report authenticated there, which made a stale
+                   "recent account" avatar + Logout appear on the auth screens. -->
+              @if (!isAuthPage()) {
+                @if (authService.isAuthenticated()) {
+                  @if (authService.isRegistered() && !authService.hasRole('ADMIN')) {
+                    <li class="nav-item">
+                      <a class="profile-chip" routerLink="/profile" title="Profile">
+                        @if (authService.avatarUrl()) {
+                          <img [src]="authService.avatarUrl()" alt="Profile" />
+                        } @else {
+                          <span class="profile-initials">{{ navInitials() }}</span>
+                        }
+                      </a>
+                    </li>
+                  }
                   <li class="nav-item">
-                    <a class="profile-chip" routerLink="/profile" title="Profile">
-                      @if (authService.avatarUrl()) {
-                        <img [src]="authService.avatarUrl()" alt="Profile" />
-                      } @else {
-                        <span class="profile-initials">{{ navInitials() }}</span>
-                      }
-                    </a>
+                    <button class="btn btn-outline-light btn-sm" (click)="logout()">
+                      <i class="bi bi-box-arrow-right me-1"></i>{{ 'nav.logout' | t }}
+                    </button>
                   </li>
-                }
-                <li class="nav-item">
-                  <button class="btn btn-outline-light btn-sm" (click)="logout()">
-                    <i class="bi bi-box-arrow-right me-1"></i>{{ 'nav.logout' | t }}
-                  </button>
-                </li>
-              } @else {
-                @if (!isAuthPage()) {
+                } @else {
                   <li class="nav-item">
                     <a class="nav-link" routerLink="/login">{{ 'nav.login' | t }}</a>
                   </li>
@@ -141,12 +144,12 @@ import { TranslatePipe } from '../../pipes/t.pipe';
     }
 
     .brand-logo {
-      width: 56px;
-      height: 56px;
-      border-radius: 10px;
+      width: 40px;
+      height: 40px;
+      border-radius: 11px;
       background: transparent;
       object-fit: cover;
-      box-shadow: 0 8px 24px rgba(31, 44, 115, 0.18);
+      box-shadow: 0 6px 18px rgba(31, 44, 115, 0.18);
     }
     
     .navbar-collapse {

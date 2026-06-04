@@ -73,6 +73,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/conversations/risk/**").permitAll()
                 .requestMatchers("/api/tts/**").permitAll()                // Flow system endpoints (public for testing)
                 .requestMatchers("/api/chat/flow/**").permitAll()
+                // PBOT hardware bridge (local robot control / testing)
+                .requestMatchers("/api/pbot/**").permitAll()
                 // H2 console (only for local dev)
                 .requestMatchers("/h2-console/**").permitAll()                // Everything else requires authentication
                 .anyRequest().authenticated()

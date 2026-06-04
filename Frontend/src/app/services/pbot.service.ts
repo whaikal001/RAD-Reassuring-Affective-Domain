@@ -35,6 +35,11 @@ export class PbotService {
     return this.http.post<PbotStatus>(`${this.API_URL}/connect`, { port, baudRate });
   }
 
+  /** Connect using the backend's configured default port (COM4). */
+  connectDefault(): Observable<PbotStatus> {
+    return this.http.post<PbotStatus>(`${this.API_URL}/connect`, {});
+  }
+
   disconnect(): Observable<{ status: string }> {
     return this.http.post<{ status: string }>(`${this.API_URL}/disconnect`, {});
   }

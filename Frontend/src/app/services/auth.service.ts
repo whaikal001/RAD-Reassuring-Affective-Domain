@@ -24,6 +24,8 @@ export class AuthService {
   private _authMode = signal<AuthMode | null>(null);
   private _displayName = signal<string | null>(null);
   private _avatarUrl = signal<string | null>(null);
+  private _email = signal<string | null>(null);
+  private _verified = signal<boolean>(true);
 
   isAuthenticated = computed(() => this._isAuthenticated());
   userId = computed(() => this._userId());
@@ -31,6 +33,11 @@ export class AuthService {
   isRegistered = computed(() => this._authMode() === 'registered');
   displayName = this._displayName.asReadonly();
   avatarUrl = this._avatarUrl.asReadonly();
+  email = this._email.asReadonly();
+  verified = this._verified.asReadonly();
+  // Show the "verify your email" nudge only for registered (non-anonymous) users
+  // whose email is not yet confirmed.
+  needsVerification = computed(() => this.isRegistered() && !this._verified());
 
   constructor(
     private http: HttpClient,
@@ -92,6 +99,37 @@ export class AuthService {
       );
   }
 
+  /** Exchange a Google ID token (credential) for our own session. */
+  loginWithGoogle(idToken: string): Observable<JwtResponse> {
+    return this.http.post<JwtResponse>(`${this.API_URL}/google`, { idToken })
+      .pipe(
+        tap(response => this.handleAuthSuccess(response, 'registered')),
+        switchMap(response => this.syncUserState().pipe(map(() => response))),
+        catchError(error => {
+          console.error('Google sign-in failed:', error);
+          throw error;
+        })
+      );
+  }
+
+  /** Confirm an email address using the token from the verification link. */
+  verifyEmail(token: string): Observable<{ verified: boolean; message: string }> {
+    return this.http.post<{ verified: boolean; message: string }>(`${this.API_URL}/verify`, { token })
+      .pipe(
+        tap(res => {
+          // If the just-verified account is the one we're logged in as, clear the nudge.
+          if (res?.verified) {
+            this._verified.set(true);
+          }
+        })
+      );
+  }
+
+  /** Ask the backend to send a fresh verification email. */
+  resendVerification(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.API_URL}/resend-verification`, { email });
+  }
+
   logout(): void {
     this.clearStoredAuth();
     this._isAuthenticated.set(false);
@@ -99,6 +137,8 @@ export class AuthService {
     this._authMode.set(null);
     this._displayName.set(null);
     this._avatarUrl.set(null);
+    this._email.set(null);
+    this._verified.set(true);
     this.router.navigate(['/login']);
   }
 
@@ -165,9 +205,14 @@ export class AuthService {
     this._userId.set(uid);
     this._authMode.set(authMode);
 
+    // Drive the verification nudge immediately from the auth response; syncUserState
+    // refreshes it from the profile shortly after. Anonymous users never need it.
+    this._verified.set(authMode === 'anonymous' ? true : (response.verified ?? true));
+
     if (authMode === 'anonymous') {
       localStorage.removeItem(this.DISPLAY_NAME_KEY);
       this._displayName.set(null);
+      this._email.set(null);
     }
   }
 
@@ -219,6 +264,10 @@ export class AuthService {
         const authMode: AuthMode = user.isAnonymous ? 'anonymous' : 'registered';
         localStorage.setItem(this.AUTH_MODE_KEY, authMode);
         this._authMode.set(authMode);
+
+        // Track email + verification status for the in-app verify nudge.
+        this._email.set(user.email?.trim() || null);
+        this._verified.set(authMode === 'anonymous' ? true : !!user.isVerified);
 
         const resolvedDisplayName = user.firstName?.trim()
           || user.fullName?.trim()

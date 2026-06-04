@@ -1,261 +1,245 @@
+<div class="dash">
 
-    <section class="dashboard-container">
-      <div class="dashboard-hero">
-        <div class="hero-intro">
-          <p class="kicker mb-2">Wellness Intelligence</p>
-          <h2 class="text-gradient mb-1">{{ 'dashboard.title' | t }}</h2>
-          <p class="text-secondary mb-0">{{ 'dashboard.subtitle' | t }}</p>
-        </div>
-        <div class="hero-side">
-          @if (!loading() && !error()) {
-            <div class="score-ring" [attr.title]="'Average emotional intensity'">
-              <svg viewBox="0 0 120 120" aria-hidden="true">
-                <circle class="ring-track" cx="60" cy="60" r="52"></circle>
-                <circle
-                  class="ring-progress"
-                  cx="60" cy="60" r="52"
-                  pathLength="100"
-                  [style.stroke]="intensityZoneColor()"
-                  [attr.stroke-dasharray]="intensityPercent() + ' 100'"
-                ></circle>
-              </svg>
-              <div class="ring-center">
-                <span class="ring-value">{{ formatIntensity(dashboardData()?.averageIntensity) }}</span>
-                <span class="ring-max">/10</span>
-                <span class="ring-zone" [style.color]="intensityZoneColor()">{{ intensityZoneLabel() }}</span>
-              </div>
-            </div>
-          }
-          <div class="hero-actions">
-            <a class="btn btn-primary" routerLink="/chat">
-              <i class="bi bi-chevron-left me-2"></i>{{ 'dashboard.backToChat' | t }}
-            </a>
-            <button class="btn btn-outline-primary" (click)="refreshData()">
-              <i class="bi bi-arrow-clockwise me-2"></i>{{ 'dashboard.refresh' | t }}
-            </button>
+  @if (loading()) {
+    <div class="dash-loading">
+      <span class="spinner-border"></span>
+      <p>Loading your journey…</p>
+    </div>
+  } @else if (error()) {
+    <div class="dash-error">
+      <i class="bi bi-exclamation-triangle"></i>
+      <p>{{ error() }}</p>
+      <button class="btn btn-primary" (click)="refreshData()">Try again</button>
+    </div>
+  } @else {
+
+    <!-- ============ Profile banner ============ -->
+    <section class="banner panel">
+      <div class="banner-id">
+        <div class="banner-avatar">{{ initials() }}</div>
+        <div class="banner-meta">
+          <h1>{{ displayName() }}</h1>
+          <p class="banner-sub">Member since {{ memberSince() }} · ID #RA-{{ shortId() }}</p>
+          <div class="chips">
+            @if (verified()) {
+              <span class="chip chip-ok"><i class="bi bi-patch-check-fill"></i> Verified</span>
+            } @else {
+              <span class="chip chip-muted"><i class="bi bi-patch-exclamation"></i> Unverified</span>
+            }
+            <span class="chip chip-level"><i class="bi bi-stars"></i> Level {{ level().num }} · {{ level().title }}</span>
+            @if (streak() > 0) {
+              <span class="chip chip-streak"><i class="bi bi-fire"></i> {{ streak() }}-day streak</span>
+            }
           </div>
         </div>
       </div>
 
-      @if (loading()) {
-        <div class="card panel p-5 text-center">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-          <p class="text-secondary mt-3">Loading your data...</p>
+      <div class="banner-score">
+        <svg viewBox="0 0 120 120" class="ring">
+          <circle class="ring-track" cx="60" cy="60" r="52" />
+          <circle class="ring-fill" cx="60" cy="60" r="52"
+                  [attr.stroke-dasharray]="overallScoreDash()" stroke-dashoffset="0" />
+        </svg>
+        <div class="ring-center">
+          <strong>{{ overallScore() }}</strong>
+          <span>overall score</span>
         </div>
-      } @else if (error()) {
-        <div class="alert alert-danger">
-          <i class="bi bi-exclamation-circle me-2"></i>{{ error() }}
-        </div>
-      } @else {
-        <div class="row g-4 mb-4">
-          <div class="col-md-3">
-            <div class="stat-card panel">
-              <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <p class="stat-label mb-1">Total Sessions</p>
-                  <h3 class="stat-value mb-0">{{ dashboardData()?.totalSessions ?? 0 }}</h3>
-                </div>
-                <div class="stat-icon bg-primary bg-opacity-25">
-                  <i class="bi bi-chat-dots text-primary"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-md-3">
-            <div class="stat-card panel">
-              <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <p class="stat-label mb-1">Emotion Records</p>
-                  <h3 class="stat-value mb-0">{{ dashboardData()?.totalEmotionRecords ?? 0 }}</h3>
-                </div>
-                <div class="stat-icon bg-info bg-opacity-25">
-                  <i class="bi bi-heart-pulse text-info"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-md-3">
-            <div class="stat-card panel">
-              <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <p class="stat-label mb-1">Dominant Emotion</p>
-                  <h3 class="stat-value mb-0 text-capitalize">{{ dashboardData()?.dominantEmotion || 'N/A' }}</h3>
-                </div>
-                <div class="stat-icon bg-warning bg-opacity-25">
-                  <i class="bi bi-emoji-smile text-warning"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-md-3">
-            <div class="stat-card panel">
-              <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <p class="stat-label mb-1">Average Intensity</p>
-                  <h3 class="stat-value mb-0">{{ formatIntensity(dashboardData()?.averageIntensity) }}</h3>
-                </div>
-                <div class="stat-icon bg-success bg-opacity-25">
-                  <i class="bi bi-speedometer2 text-success"></i>
-                </div>
-              </div>
-            </div>
+      </div>
+    </section>
+
+    <!-- ============ KPI cards ============ -->
+    <section class="kpis">
+      @for (kpi of kpis(); track kpi.label) {
+        <div class="kpi panel" [attr.data-tone]="kpi.tone">
+          <div class="kpi-icon"><i class="bi" [ngClass]="kpi.icon"></i></div>
+          <div class="kpi-body">
+            <span class="kpi-label">{{ kpi.label }}</span>
+            <strong class="kpi-value">{{ kpi.value }}</strong>
+            <span class="kpi-sub">{{ kpi.sub }}</span>
           </div>
         </div>
-
-        <div class="row g-4">
-          <div class="col-lg-8">
-            <div class="card panel p-4 h-100">
-              <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="mb-0">
-                  <i class="bi bi-activity me-2"></i>Current Status
-                </h5>
-                <span class="badge" [class]="trendBadgeClass()">{{ dashboardData()?.emotionTrend || 'stable' }}</span>
-              </div>
-
-              <div class="status-grid">
-                <div class="status-item">
-                  <span class="text-secondary small">Active Session</span>
-                  <strong>{{ dashboardData()?.hasActiveSession ? 'In progress' : 'No active session' }}</strong>
-                </div>
-                <div class="status-item">
-                  <span class="text-secondary small">Average Intensity</span>
-                  <strong>{{ formatIntensity(dashboardData()?.averageIntensity) }}</strong>
-                </div>
-                <div class="status-item">
-                  <span class="text-secondary small">Dominant Emotion</span>
-                  <strong class="text-capitalize">{{ dashboardData()?.dominantEmotion || 'Unavailable' }}</strong>
-                </div>
-                <div class="status-item">
-                  <span class="text-secondary small">Recommended Next Step</span>
-                  <strong>{{ recommendation() }}</strong>
-                </div>
-              </div>
-
-              <div class="action-grid mt-4">
-                <a class="btn btn-primary" routerLink="/chat">
-                  <i class="bi bi-chat-dots me-2"></i>Continue Chat
-                </a>
-                <a class="btn btn-outline-primary" routerLink="/reports">
-                  <i class="bi bi-file-earmark-text me-2"></i>Reports
-                </a>
-                <a class="btn btn-outline-primary" routerLink="/profile">
-                  <i class="bi bi-sliders me-2"></i>Profile
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-4">
-            <div class="card panel p-4 h-100">
-              <h5 class="mb-4">
-                <i class="bi bi-signpost-split me-2"></i>Trend Meaning
-              </h5>
-
-              <div class="intensity-legend">
-                <div class="legend-item">
-                  <span class="legend-dot bg-success"></span>
-                  <span>Improving: sentiment is moving upward</span>
-                </div>
-                <div class="legend-item">
-                  <span class="legend-dot bg-warning"></span>
-                  <span>Stable: recent pattern matches earlier entries</span>
-                </div>
-                <div class="legend-item">
-                  <span class="legend-dot bg-danger"></span>
-                  <span>Declining: recent sentiment needs attention</span>
-                </div>
-              </div>
-
-              <div class="mt-4">
-                <p class="text-secondary small mb-0">
-                  This trend is calculated from your recent emotional history to help you see if the conversations are helping.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12">
-            <div class="card panel p-4">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">
-                  <i class="bi bi-graph-up-arrow me-2"></i>Session Activity Trend
-                </h5>
-                <small class="text-secondary">Last 7 sessions by message count</small>
-              </div>
-
-              @if (recentSessionSeries().length > 1) {
-                <div class="trend-chart-shell mb-4" aria-label="Session activity trend chart" role="img">
-                  <svg viewBox="0 0 100 36" preserveAspectRatio="none" class="trend-chart">
-                    <defs>
-                      <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#2a9d8f" stop-opacity="0.34"></stop>
-                        <stop offset="100%" stop-color="#2a9d8f" stop-opacity="0"></stop>
-                      </linearGradient>
-                      <linearGradient id="trendStroke" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stop-color="#1b7a6e"></stop>
-                        <stop offset="60%" stop-color="#2a9d8f"></stop>
-                        <stop offset="100%" stop-color="#35d6c1"></stop>
-                      </linearGradient>
-                    </defs>
-                    <path class="trend-area" [attr.d]="buildTrendArea()" fill="url(#trendFill)"></path>
-                    <path
-                      class="trend-curve"
-                      [attr.d]="buildTrendPath()"
-                      fill="none"
-                      stroke="url(#trendStroke)"
-                      pathLength="1"
-                      vector-effect="non-scaling-stroke"
-                    ></path>
-                  </svg>
-                  <div class="trend-axis mt-2">
-                    @for (point of recentSessionSeries(); track point.label) {
-                      <span>{{ point.label }}</span>
-                    }
-                  </div>
-                </div>
-              }
-
-              <h5 class="mb-4">
-                <i class="bi bi-pie-chart me-2"></i>Emotion Distribution
-              </h5>
-              
-              @if (emotionDistributionEntries().length === 0) {
-                <div class="text-center py-4">
-                  <i class="bi bi-inbox display-4 text-secondary mb-3"></i>
-                  <p class="text-secondary">No emotion data yet. Start chatting to track your emotions!</p>
-                </div>
-              } @else {
-                <div class="emotion-chart">
-                  @for (entry of emotionDistributionEntries(); track entry.emotion) {
-                    <div class="emotion-bar-item">
-                      <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="d-flex align-items-center">
-                          <i class="bi {{ getEmotionIcon(entry.emotion) }} me-2" 
-                             [style.color]="getEmotionColor(entry.emotion)"></i>
-                          <span class="text-capitalize">{{ entry.emotion }}</span>
-                        </div>
-                        <span class="badge bg-secondary">{{ entry.count }} times</span>
-                      </div>
-                      <div class="progress" style="height: 8px;">
-                        <div 
-                          class="progress-bar" 
-                          [style.width.%]="getPercentage(entry.count)"
-                          [style.background-color]="getEmotionColor(entry.emotion)"
-                        ></div>
-                      </div>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-          </div>
-        </div>
-
       }
     </section>
-  
+
+    <!-- ============ Tabs ============ -->
+    <nav class="tabs">
+      <button [class.active]="activeTab() === 'overview'" (click)="setTab('overview')">Overview</button>
+      <button [class.active]="activeTab() === 'progress'" (click)="setTab('progress')">Progress</button>
+      <button [class.active]="activeTab() === 'sessions'" (click)="setTab('sessions')">Sessions</button>
+      <button [class.active]="activeTab() === 'badges'" (click)="setTab('badges')">Badges</button>
+    </nav>
+
+    <!-- ============ Charts row (Overview + Progress) ============ -->
+    @if (activeTab() === 'overview' || activeTab() === 'progress') {
+      <section class="grid-2">
+        <!-- Score history -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Empathy score history</h3>
+            <p>Last 10 sessions · personal trend</p>
+          </div>
+          <div class="chart">
+            <div class="chart-y">
+              <span>100</span><span>85</span><span>70</span><span>55</span>
+            </div>
+            <div class="chart-main">
+              <div class="chart-plot" (mousemove)="onChartMove($event)" (mouseleave)="onChartLeave()">
+                <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="chart-svg">
+                  <defs>
+                    <linearGradient id="myFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="var(--primary-color)" stop-opacity="0.32" />
+                      <stop offset="100%" stop-color="var(--primary-color)" stop-opacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <line x1="0" y1="9"  x2="100" y2="9"  class="grid" />
+                  <line x1="0" y1="18" x2="100" y2="18" class="grid" />
+                  <line x1="0" y1="27" x2="100" y2="27" class="grid" />
+                  <path [attr.d]="avgPath()" class="line-avg" />
+                  <path [attr.d]="myArea()" fill="url(#myFill)" />
+                  <path [attr.d]="myPath()" class="line-my" />
+                  @for (p of myDots(); track $index) {
+                    <circle [attr.cx]="p.x" [attr.cy]="p.y" r="1.1" class="dot" />
+                  }
+                  @if (hoveredPoint(); as hp) {
+                    <line [attr.x1]="hp.x" [attr.x2]="hp.x" y1="2" y2="40" class="guide" />
+                    <circle [attr.cx]="hp.x" [attr.cy]="hp.avgY" r="1.7" class="dot-avg" />
+                    <circle [attr.cx]="hp.x" [attr.cy]="hp.myY" r="1.9" class="dot-my" />
+                  }
+                </svg>
+                @if (hoveredPoint(); as hp) {
+                  <div class="chart-tip" [style.left.%]="hp.tipLeft" [style.top.%]="hp.tipTop">
+                    <span class="tip-label">{{ hp.label }}</span>
+                    <span class="tip-row tip-my"><i></i>My score: {{ hp.my }}</span>
+                    <span class="tip-row tip-avg"><i></i>Avg user: {{ hp.avg }}</span>
+                  </div>
+                }
+              </div>
+              <div class="chart-x">
+                @for (p of chartPoints(); track p.label) {
+                  <span>{{ p.label }}</span>
+                }
+              </div>
+            </div>
+          </div>
+          <div class="chart-legend">
+            <span class="lg lg-my"><i></i> My score</span>
+            <span class="lg lg-avg"><i></i> Avg user</span>
+          </div>
+        </div>
+
+        <!-- EQ skill breakdown -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>EQ skill breakdown</h3>
+            <p>Your strength areas this month</p>
+          </div>
+          <div class="skills">
+            @for (skill of eqSkills(); track skill.name) {
+              <div class="skill">
+                <span class="skill-name">{{ skill.name }}</span>
+                <div class="skill-bar">
+                  <span class="skill-fill" [style.width.%]="skill.value" [style.background]="skill.color"></span>
+                </div>
+                <span class="skill-val">{{ skill.value }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- ============ Bottom row (Overview) ============ -->
+    @if (activeTab() === 'overview') {
+      <section class="grid-3">
+        <ng-container *ngTemplateOutlet="recentPanel"></ng-container>
+        <ng-container *ngTemplateOutlet="badgesPanel; context: { compact: true }"></ng-container>
+        <ng-container *ngTemplateOutlet="goalsPanel"></ng-container>
+      </section>
+    }
+
+    <!-- ============ Sessions tab ============ -->
+    @if (activeTab() === 'sessions') {
+      <section class="grid-1">
+        <ng-container *ngTemplateOutlet="recentPanel"></ng-container>
+      </section>
+    }
+
+    <!-- ============ Badges tab ============ -->
+    @if (activeTab() === 'badges') {
+      <section class="grid-1">
+        <ng-container *ngTemplateOutlet="badgesPanel; context: { compact: false }"></ng-container>
+      </section>
+    }
+
+  }
+</div>
+
+<!-- ============ Reusable panels ============ -->
+<ng-template #recentPanel>
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Recent sessions</h3>
+      <p>Your latest interactions</p>
+    </div>
+    @if (recentItems().length) {
+      <ul class="recent">
+        @for (item of recentItems(); track $index) {
+          <li>
+            <span class="recent-icon" [style.color]="item.color" [style.background]="item.color + '22'">
+              <i class="bi" [ngClass]="item.icon"></i>
+            </span>
+            <span class="recent-body">
+              <strong>{{ item.title }}</strong>
+              <small>{{ item.when }} · {{ item.minutes }} min</small>
+            </span>
+            <span class="recent-score" [style.color]="item.color">{{ item.score }}</span>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="empty">No sessions yet — <a routerLink="/chat">start your first one</a>.</p>
+    }
+  </div>
+</ng-template>
+
+<ng-template #badgesPanel let-compact="compact">
+  <div class="panel">
+    <div class="panel-head">
+      <h3>My badges</h3>
+      <p>{{ badgesEarned() }} of {{ badges().length }} unlocked</p>
+    </div>
+    <div class="badges" [class.badges-full]="!compact">
+      @for (badge of (compact ? badges().slice(0, 6) : badges()); track badge.name) {
+        <div class="badge" [class.locked]="!badge.unlocked" [title]="badge.hint">
+          <span class="badge-ic"><i class="bi" [ngClass]="badge.unlocked ? badge.icon : 'bi-lock-fill'"></i></span>
+          <span class="badge-name">{{ badge.name }}</span>
+        </div>
+      }
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #goalsPanel>
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Weekly goals</h3>
+      <p>{{ weeklyDone() }} of {{ weeklyGoals().length }} completed this week</p>
+    </div>
+    <ul class="goals">
+      @for (goal of weeklyGoals(); track goal.label) {
+        <li [class.done]="goal.done">
+          <i class="bi" [ngClass]="goal.done ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span class="goal-label">{{ goal.label }}</span>
+          <span class="goal-pts">+{{ goal.points }} pts</span>
+        </li>
+      }
+    </ul>
+    <div class="xp">
+      <div class="xp-row"><span>Weekly XP</span><span>{{ weeklyXp() }} / 100</span></div>
+      <div class="xp-bar"><span [style.width.%]="weeklyXp()"></span></div>
+    </div>
+    <a class="btn-tips" routerLink="/chat">
+      <i class="bi bi-stars"></i> Get improvement tips
+    </a>
+  </div>
+</ng-template>

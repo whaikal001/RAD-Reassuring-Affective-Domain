@@ -5,11 +5,12 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ChatService } from '../../services/chat.service';
 import { TranslatePipe } from '../../pipes/t.pipe';
+import { GoogleSignInButtonComponent } from '../../components/google-signin-button/google-signin-button.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, RouterModule, TranslatePipe, GoogleSignInButtonComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })

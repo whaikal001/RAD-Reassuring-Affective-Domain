@@ -14,6 +14,9 @@ export interface JwtResponse {
   token: string;
   username: string;
   type?: string;
+  userId?: string;
+  roles?: string;
+  verified?: boolean;
 }
 
 export type AuthMode = 'anonymous' | 'registered';

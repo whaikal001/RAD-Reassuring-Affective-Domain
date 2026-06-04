@@ -21,6 +21,11 @@ export const routes: Routes = [
     data: { animation: 'RegisterPage' }
   },
   {
+    path: 'verify-email',
+    loadComponent: () => import('./pages/verify-email/verify-email.component').then(m => m.VerifyEmailComponent),
+    data: { animation: 'VerifyEmailPage' }
+  },
+  {
     path: 'chat',
     loadComponent: () => import('./pages/chat/chat.component').then(m => m.ChatComponent),
     canActivate: [authGuard, noAdminGuard],

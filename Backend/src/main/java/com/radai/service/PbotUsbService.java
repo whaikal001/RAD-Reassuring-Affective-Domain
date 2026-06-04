@@ -4,6 +4,8 @@ import com.fazecast.jSerialComm.SerialPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -18,6 +20,8 @@ public class PbotUsbService {
     private static final Logger logger = LoggerFactory.getLogger(PbotUsbService.class);
 
     private final AtomicReference<SerialPort> activePort = new AtomicReference<>();
+    private volatile Thread readerThread;
+    private volatile String lastFromBot = "";
 
     @Value("${pbot.usb.port:}")
     private String defaultPort;
@@ -27,6 +31,29 @@ public class PbotUsbService {
 
     @Value("${pbot.usb.write-timeout-ms:1000}")
     private int writeTimeoutMs;
+
+    @Value("${pbot.usb.auto-connect:true}")
+    private boolean autoConnect;
+
+    /**
+     * Best-effort connect to the configured port once the app is up, so the chatbot drives the
+     * physical PBOT without any manual step. Non-fatal: if the robot isn't plugged in (or the port
+     * is busy), we just log a warning and the user can connect later via /api/pbot/connect.
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    public void autoConnectOnStartup() {
+        if (!autoConnect || defaultPort == null || defaultPort.isBlank()) {
+            return;
+        }
+        // Catch Throwable, not just Exception: the native serial library can raise an Error
+        // (e.g. UnsatisfiedLinkError) which must never be allowed to crash application startup.
+        try {
+            connect(defaultPort, null);
+            logger.info("PBOT auto-connected to {} on startup", defaultPort);
+        } catch (Throwable t) {
+            logger.warn("PBOT auto-connect to {} skipped (connect manually later): {}", defaultPort, t.toString());
+        }
+    }
 
     public List<Map<String, String>> listPorts() {
         return Arrays.stream(SerialPort.getCommPorts())
@@ -53,23 +80,93 @@ public class PbotUsbService {
 
         SerialPort serialPort = SerialPort.getCommPort(targetPort);
         serialPort.setBaudRate(baudRate);
-        serialPort.setComPortTimeouts(SerialPort.TIMEOUT_WRITE_BLOCKING, 0, writeTimeoutMs);
+        // Enable reads too, so we can log what the board sends back (PBOT_READY, OK:EMOTION:...).
+        serialPort.setComPortTimeouts(
+            SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 200, writeTimeoutMs);
 
         if (!serialPort.openPort()) {
             throw new IllegalStateException("Failed to open PBOT USB port: " + targetPort);
         }
 
+        // ESP32 + CH340: the serial driver asserts DTR/RTS on open, and on a dev board those are
+        // wired to EN (reset) and GPIO0 (boot). Asserted DTR holds the ESP32 in reset, so it never
+        // runs the sketch. De-assert both so the board boots into the app and starts responding.
+        // A brief reset pulse then guarantees a clean boot into the firmware (not the bootloader).
+        serialPort.clearRTS();   // GPIO0 high -> normal (run) mode
+        serialPort.clearDTR();   // EN released -> board runs
+        try {
+            Thread.sleep(50);
+            serialPort.setDTR();     // pull EN low (hold reset) briefly...
+            Thread.sleep(80);
+            serialPort.clearDTR();   // ...release -> clean reboot into the sketch
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
+
         activePort.set(serialPort);
-        logger.info("Connected to PBOT on {} at {} baud", targetPort, baudRate);
+        startReader(serialPort);
+        logger.info("Connected to PBOT on {} at {} baud (listening for board replies)", targetPort, baudRate);
 
         return status();
     }
 
     public synchronized void disconnect() {
+        stopReader();
         SerialPort port = activePort.getAndSet(null);
         if (port != null && port.isOpen()) {
             port.closePort();
             logger.info("Disconnected PBOT USB port {}", port.getSystemPortName());
+        }
+    }
+
+    /**
+     * Background reader: logs every line the board sends back so we can verify the firmware is
+     * alive and receiving. On boot the sketch prints "PBOT_READY"; after each command it replies
+     * "OK:EMOTION:...". Seeing these in the backend log = the right board is wired and listening.
+     */
+    private void startReader(SerialPort port) {
+        stopReader();
+        Thread t = new Thread(() -> {
+            StringBuilder line = new StringBuilder();
+            byte[] buf = new byte[256];
+            while (port.isOpen() && !Thread.currentThread().isInterrupted()) {
+                int n;
+                try {
+                    n = port.readBytes(buf, buf.length);
+                } catch (Exception e) {
+                    break;
+                }
+                if (n < 0) {
+                    break;
+                }
+                for (int i = 0; i < n; i++) {
+                    char c = (char) (buf[i] & 0xFF);
+                    if (c == '\n') {
+                        String s = line.toString().trim();
+                        if (!s.isEmpty()) {
+                            lastFromBot = s;
+                            logger.info("PBOT << {}", s);
+                        }
+                        line.setLength(0);
+                    } else if (c != '\r') {
+                        line.append(c);
+                        if (line.length() > 512) {
+                            line.setLength(0); // guard against runaway buffer
+                        }
+                    }
+                }
+            }
+        }, "pbot-serial-reader");
+        t.setDaemon(true);
+        t.start();
+        readerThread = t;
+    }
+
+    private void stopReader() {
+        Thread t = readerThread;
+        readerThread = null;
+        if (t != null) {
+            t.interrupt();
         }
     }
 
@@ -112,7 +209,8 @@ public class PbotUsbService {
         return Map.of(
             "connected", connected,
             "port", connected ? port.getSystemPortName() : "",
-            "baudRate", connected ? port.getBaudRate() : defaultBaudRate
+            "baudRate", connected ? port.getBaudRate() : defaultBaudRate,
+            "lastFromBot", lastFromBot == null ? "" : lastFromBot
         );
     }
 

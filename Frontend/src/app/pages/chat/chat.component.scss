@@ -367,6 +367,42 @@
 }
 
 
+/* Wrapper that animates: gentle idle "breathing" always, plus a one-shot reaction
+   (perk-up + head-tilt + squash) each time Hana responds. Keeps the image's own
+   opacity crossfade independent so the two never fight. */
+.character-stage {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 88%;
+  will-change: transform;
+  animation: hana-idle 5s ease-in-out infinite;
+}
+
+.character-stage.reacting {
+  animation: hana-react 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes hana-idle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-1.8%) rotate(0.5deg); }
+}
+
+@keyframes hana-react {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); }
+  18%  { transform: translateY(-7%) rotate(-3.5deg) scale(1.05); }
+  38%  { transform: translateY(0) rotate(3deg) scale(1.02); }
+  56%  { transform: translateY(-3%) rotate(-2deg) scale(1.03) scaleY(0.96); }
+  76%  { transform: translateY(0) rotate(1deg) scale(1.02); }
+  100% { transform: translateY(0) rotate(0deg) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .character-stage,
+  .character-stage.reacting {
+    animation: none;
+  }
+}
+
 .rad-character-img {
   position: absolute;
   inset: 0.2rem;
