@@ -5,6 +5,7 @@ import com.radai.repository.EmotionalHistoryRepository;
 import com.radai.repository.ConversationRepository;
 import com.radai.repository.ReportRepository;
 import com.radai.model.Report;
+import com.radai.service.trajectory.MoodTrajectoryEngine;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -71,6 +72,22 @@ public class ReportService {
             })
             .collect(Collectors.toList());
 
+        // Mood trajectory over the (oldest→newest) intensity series: trend, forecast, confidence.
+        MoodTrajectoryEngine trajectoryEngine = new MoodTrajectoryEngine();
+        List<MoodTrajectoryEngine.MoodPoint> moodPoints = history.stream()
+            .map(h -> new MoodTrajectoryEngine.MoodPoint(h.getIntensity()))
+            .collect(Collectors.toList());
+        MoodTrajectoryEngine.Trajectory trajectory = trajectoryEngine.analyze(moodPoints);
+
+        Map<String, Object> moodTrajectory = new LinkedHashMap<>();
+        moodTrajectory.put("trend", trajectory.trend().name());
+        moodTrajectory.put("slope", trajectory.slope());
+        moodTrajectory.put("forecastNextIntensity", trajectory.forecast());
+        moodTrajectory.put("volatility", trajectory.volatility());
+        moodTrajectory.put("rSquared", trajectory.rSquared());
+        moodTrajectory.put("confidence", trajectory.confidence());
+        moodTrajectory.put("sampleSize", trajectory.sampleSize());
+
         Map<String,Object> summary = Map.of(
                 "entries", history.size(),
             "totalSessions", totalSessions,
@@ -79,6 +96,7 @@ public class ReportService {
                 "dominantEmotion", dominantEmotion,
             "emotionDistribution", emotionDistribution,
             "intensityTrend", intensityTrend,
+            "moodTrajectory", moodTrajectory,
                 "timeRange", start + " to " + end
         );
 

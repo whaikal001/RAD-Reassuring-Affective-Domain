@@ -13,7 +13,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.Map;
@@ -40,6 +39,10 @@ public class FlowWithAIService {
     private final boolean useAI;
     private final com.radai.service.empathy.ApproachSwitchPolicy approachPolicy =
         new com.radai.service.empathy.ApproachSwitchPolicy();
+    private final com.radai.service.risk.RiskAssessmentEngine riskEngine =
+        new com.radai.service.risk.RiskAssessmentEngine();
+    private final com.radai.service.strategy.CopingStrategyEngine copingEngine =
+        new com.radai.service.strategy.CopingStrategyEngine();
     
     // Track conversation state per user
     private final Map<UUID, ConversationState> conversationStates = new ConcurrentHashMap<>();
@@ -57,7 +60,7 @@ public class FlowWithAIService {
         int highStateStreak = 0;
     }
 
-    private record RiskAssessment(String level, boolean crisis, double score, List<String> reasons) {}
+    private record RiskAssessment(String level, boolean crisis, double score, double confidence, List<String> reasons) {}
 
     private static final Map<String, List<String>> KNOWLEDGE_SNIPPETS = Map.of(
         "anxiety", List.of(
@@ -109,14 +112,7 @@ public class FlowWithAIService {
         "that helped", "this helped", "worked for me", "i feel better", "i am calmer"
     };
 
-    private static final String[] CRISIS_TRIGGERS = new String[] {
-        "kill myself", "end my life", "suicide", "want to die", "no reason to live", "hurt myself",
-        "nak mati", "mahu mati", "nak bunuh diri", "bunuh diri", "tak mahu hidup", "tak ingin hidup"
-    };
-
-    private static final String[] HIGH_RISK_TRIGGERS = new String[] {
-        "hopeless", "cannot go on", "can't go on", "worthless", "panic attack", "emergency"
-    };
+    // Crisis / high-risk trigger lexicons now live in RiskAssessmentEngine (see riskEngine).
 
     private static final int MAX_MEMORY_MESSAGES = 12;
 
@@ -302,15 +298,18 @@ public class FlowWithAIService {
 
             response.withMetadata("safetyLevel", risk.level())
                     .withMetadata("riskScore", risk.score())
+                    .withMetadata("riskConfidence", risk.confidence())
                     .withMetadata("riskReasons", risk.reasons())
                     .withMetadata("memorySummary", memorySummary)
                     .withMetadata("retrievalSnippets", snippets)
                     .withMetadata("personalizationState", personalizationState.name())
                     .withMetadata("activeGoals", getGoals(userId))
                     .withMetadata("responseMode", responseMode)
+                    .withMetadata("helpBanner", com.radai.service.support.CrisisResources.helpBanner(language))
+                    .withMetadata("disclaimer", com.radai.service.support.CrisisResources.disclaimer(language))
                     .withMetadata("responseLatencyMs", Duration.between(started, Instant.now()).toMillis());
-            
-            logger.info("Integrated response generated for user {} - emotion: {}, cycle: {}", 
+
+            logger.info("Integrated response generated for user {} - emotion: {}, cycle: {}",
                        userId, detectedEmotion, state.messageCount);
             return response;
 
@@ -458,48 +457,19 @@ public class FlowWithAIService {
     }
 
     private RiskAssessment assessRisk(String userMessage, int intensity, MonitoringContext context) {
-        String lower = userMessage == null ? "" : userMessage.toLowerCase();
-        double score = 0.0;
-        List<String> reasons = new ArrayList<>();
-
-        for (String trigger : CRISIS_TRIGGERS) {
-            if (lower.contains(trigger)) {
-                score += 0.7;
-                reasons.add("crisis_trigger:" + trigger);
-            }
+        // Delegated to the standalone, unit-tested RiskAssessmentEngine (weighted scoring,
+        // configurable cut-offs, margin-based confidence). Behaviour matches the original heuristic;
+        // the confidence is new metadata surfaced to the client.
+        boolean contextCrisis = context.isSuicidalIdeationDetected() || context.isCrisisDetected();
+        com.radai.service.risk.RiskAssessmentEngine.RiskResult r =
+            riskEngine.assess(userMessage, intensity, contextCrisis);
+        // The recall-focused CrisisDetectionEngine (via the screening service) may flag ideation from
+        // indirect language the risk lexicon alone would score too low. Ideation always forces the
+        // crisis protocol so it is never missed.
+        if (context.isSuicidalIdeationDetected()) {
+            return new RiskAssessment("critical", true, Math.max(r.score(), 0.9), r.confidence(), r.reasons());
         }
-
-        for (String trigger : HIGH_RISK_TRIGGERS) {
-            if (lower.contains(trigger)) {
-                score += 0.2;
-                reasons.add("high_risk_trigger:" + trigger);
-            }
-        }
-
-        if (intensity >= 8) {
-            score += 0.2;
-            reasons.add("high_intensity");
-        }
-        if (context.isSuicidalIdeationDetected() || context.isCrisisDetected()) {
-            score += 0.4;
-            reasons.add("context_crisis");
-        }
-
-        if (lower.matches(".*(want to die|end my life|kill myself|suicide|nak mati|mahu mati|nak bunuh diri|bunuh diri|tak mahu hidup|tak ingin hidup).*")) {
-            score = Math.max(score, 0.9);
-            reasons.add("matched_crisis_language");
-        }
-
-        if (score >= 0.8) {
-            return new RiskAssessment("critical", true, Math.min(1.0, score), reasons);
-        }
-        if (score >= 0.45) {
-            return new RiskAssessment("high", false, Math.min(1.0, score), reasons);
-        }
-        if (score >= 0.2) {
-            return new RiskAssessment("moderate", false, Math.min(1.0, score), reasons);
-        }
-        return new RiskAssessment("low", false, Math.min(1.0, score), reasons);
+        return new RiskAssessment(r.level(), r.crisis(), r.score(), r.confidence(), r.reasons());
     }
 
     private FlowResponse buildCrisisResponse(String conversationId, String language, String detectedEmotion,
@@ -513,8 +483,13 @@ public class FlowWithAIService {
             ? "Boleh anda beritahu saya sama ada anda berada di tempat yang selamat sekarang?"
             : "Can you tell me if you are in a safe place right now?";
 
+        // Localized, verified Malaysian crisis resources appended to the main message so the user
+        // always sees actionable, reachable help — not a placeholder number.
+        List<String> resources = com.radai.service.support.CrisisResources.forLanguage(language);
+        String mainWithResources = main + "\n\n" + String.join("\n", resources);
+
         return new FlowResponse(conversationId)
-            .withMainContent(main)
+            .withMainContent(mainWithResources)
             .withFollowUp(followUp)
             .withEmotion(detectedEmotion)
             .withIntensity(Math.max(9, state.lastIntensity))
@@ -522,7 +497,11 @@ public class FlowWithAIService {
             .withApproach(ApproachType.SYMPATHY)
             .withMetadata("safetyLevel", risk.level())
             .withMetadata("riskScore", risk.score())
+            .withMetadata("riskConfidence", risk.confidence())
             .withMetadata("riskReasons", risk.reasons())
+            .withMetadata("crisisResources", resources)
+            .withMetadata("helpline", com.radai.service.support.CrisisResources.primaryHelpline())
+            .withMetadata("disclaimer", com.radai.service.support.CrisisResources.disclaimer(language))
             .withMetadata("responseMode", "crisis-protocol");
     }
 
@@ -587,6 +566,16 @@ public class FlowWithAIService {
         strategies.append(intro).append("\n");
         for (String snippet : snippets) {
             strategies.append("- ").append(snippet).append("\n");
+        }
+
+        // Scored, state-aware recommendations from the CopingStrategyEngine (emotion + stressor +
+        // intensity), best match first. Only surface reasonably-relevant picks.
+        for (com.radai.service.strategy.CopingStrategyEngine.Recommendation rec : copingEngine.recommend(
+                context.getCurrentEmotion(), context.getDominantStressor(),
+                context.getCurrentIntensityScore(), 3)) {
+            if (rec.relevance() >= 0.6) {
+                strategies.append("- ").append(rec.strategy().text()).append("\n");
+            }
         }
 
         List<String> goals = getGoals(userId);

@@ -15,6 +15,16 @@ interface ReportTrendPoint {
   emotion?: string;
 }
 
+interface MoodTrajectory {
+  trend?: string;
+  slope?: number;
+  forecastNextIntensity?: number;
+  volatility?: number;
+  rSquared?: number;
+  confidence?: number;
+  sampleSize?: number;
+}
+
 interface ParsedReportSummary {
   entries?: number;
   totalSessions?: number;
@@ -23,6 +33,7 @@ interface ParsedReportSummary {
   dominantEmotion?: string;
   emotionDistribution?: Record<string, number>;
   intensityTrend?: ReportTrendPoint[];
+  moodTrajectory?: MoodTrajectory;
   timeRange?: string;
 }
 
@@ -231,6 +242,22 @@ export class ReportsComponent implements OnInit {
     }
 
     return items;
+  }
+
+  /** Cross-session mood trajectory from the MoodTrajectoryEngine (null if not present). */
+  getMoodTrajectory(): MoodTrajectory | null {
+    return this.getParsedSummary()?.moodTrajectory ?? null;
+  }
+
+  /** Human-friendly label + emoji for a trajectory trend. */
+  getTrajectoryLabel(trend?: string): string {
+    switch ((trend || '').toUpperCase()) {
+      case 'IMPROVING': return '📉 Improving';
+      case 'WORSENING': return '📈 Worsening';
+      case 'STABLE': return '➡️ Stable';
+      case 'VOLATILE': return '🌊 Volatile';
+      default: return '— Not enough data';
+    }
   }
 
   getReadableSummary(): string {

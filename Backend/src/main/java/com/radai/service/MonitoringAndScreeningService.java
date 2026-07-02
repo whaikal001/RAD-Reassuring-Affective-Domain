@@ -4,6 +4,8 @@ import com.radai.model.MonitoringContext;
 import com.radai.enums.IntensityLevel;
 import com.radai.enums.PathwayType;
 import com.radai.service.emotion.EmotionClassifier;
+import com.radai.service.emotion.EmotionScoringEngine;
+import com.radai.service.crisis.CrisisDetectionEngine;
 import com.radai.service.config.AppConfig;
 
 /**
@@ -13,11 +15,15 @@ import com.radai.service.config.AppConfig;
 public class MonitoringAndScreeningService {
 
     private final EmotionClassifier emotionClassifier;
+    private final EmotionScoringEngine emotionScoringEngine;
+    private final CrisisDetectionEngine crisisDetectionEngine;
     private final AppConfig appConfig;
 
     public MonitoringAndScreeningService() {
         this.appConfig = AppConfig.load();
         this.emotionClassifier = new EmotionClassifier(appConfig);
+        this.emotionScoringEngine = new EmotionScoringEngine();
+        this.crisisDetectionEngine = new CrisisDetectionEngine();
     }
 
     /**
@@ -99,54 +105,32 @@ public class MonitoringAndScreeningService {
     }
 
     /**
-     * Detect crisis or emergency indicators
+     * Detect crisis or emergency indicators.
+     *
+     * <p>Delegates to the recall-focused {@link CrisisDetectionEngine}, which recognises not only
+     * explicit suicide language but also indirect / passive ideation ("no reason to live", "better
+     * off without me") in English and Malay — the dangerous false-negatives the old regex missed.
      */
     private void detectCrisisIndicators(MonitoringContext context, String input) {
-        String lower = input.toLowerCase();
-
-        // Crisis indicators
-        if (lower.matches(".*(crisis|emergency|danger|help|emergency).*")) {
+        CrisisDetectionEngine.CrisisResult result = crisisDetectionEngine.detect(input);
+        if (result.crisis()) {
             context.setCrisisDetected(true);
         }
-
-        // Suicidal ideation indicators
-        if (lower.matches(".*(suicide|suicidal|kill myself|end it|no point|hopeless|helpless|give up|want to die|end my life|hurt myself|nak mati|mahu mati|nak bunuh diri|bunuh diri|tak mahu hidup|tak ingin hidup|tak ada sebab untuk hidup).*")) {
+        if (result.suicidalIdeation()) {
             context.setSuicidalIdeationDetected(true);
-            context.setCrisisDetected(true);
-        }
-
-        // Safety-related questions → HIGH risk indicators
-        // Users asking about safety often indicates they may be in crisis
-        if (lower.matches(".*(safe place|am i safe|am i in a safe|safe right now|feeling unsafe|not safe|dangerous place|hurt myself|harm myself).*")) {
-            context.setCrisisDetected(true);
-            context.setSuicidalIdeationDetected(true); // Treat as potential crisis
         }
     }
 
     /**
-     * Detect primary emotion from user input (heuristic fallback)
+     * Detect primary emotion from user input (heuristic fallback).
+     *
+     * <p>Delegates to the weighted-lexicon {@link EmotionScoringEngine}, which scores every emotion
+     * and returns the strongest rather than the first keyword to match. Safety words are weighted
+     * high enough to win, preserving the original crisis-first behaviour; the caller additionally
+     * forces {@code hopeless} whenever the crisis/suicidal flags are set.
      */
     private String detectEmotion(String text) {
-        String lower = text.toLowerCase();
-
-        // Critical safety concerns → hopeless/crisis emotion
-        if (lower.matches(".*(safe place|am i safe|am i in a safe|safe right now|feeling unsafe|not safe|dangerous|hurt myself|harm myself).*")) {
-            return "hopeless";
-        }
-
-        if (lower.matches(".*(suicide|suicidal|kill myself|end it|want to die|end my life|nak mati|mahu mati|nak bunuh diri|bunuh diri|tak mahu hidup|tak ingin hidup).*")) {
-            return "hopeless";
-        }
-
-        if (containsAny(lower, "stress", "stressed", "overwhelm", "overwhelmed", "pressure", "too much", "burnout", "burned out")) return "stress";
-        if (containsAny(lower, "anxious", "anxiety", "panic", "panicking", "worried", "worry", "afraid", "scared")) return "anxiety";
-        if (containsAny(lower, "sad", "sadness", "down", "unhappy", "depressed", "depression", "blue", "heartbroken")) return "sadness";
-        if (containsAny(lower, "angry", "mad", "frustrated", "frustrating", "furious", "hate")) return "anger";
-        if (containsAny(lower, "tired", "exhausted", "drained", "fatigue", "burned out")) return "exhaustion";
-        if (containsAny(lower, "lonely", "loneliness", "isolated", "alone")) return "loneliness";
-        if (containsAny(lower, "happy", "great", "wonderful", "excited", "amazing", "relieved", "grateful")) return "joy";
-
-        return "neutral";
+        return emotionScoringEngine.classifyLabel(text);
     }
 
     private boolean containsAny(String text, String... keywords) {

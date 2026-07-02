@@ -54,6 +54,9 @@ public class MonitoringContext {
     private String previousEmotion;
     private PathwayType previousPathway;
 
+    // The first real (assessed) intensity of the session; -1 until the first assessment.
+    private int firstIntensityScore = -1;
+
     public MonitoringContext(UUID userId, String conversationId) {
         this.userId = userId;
         this.conversationId = conversationId;
@@ -78,10 +81,16 @@ public class MonitoringContext {
 
     public int getCurrentIntensityScore() { return currentIntensityScore; }
     public void setCurrentIntensityScore(int score) {
+        if (this.firstIntensityScore < 0) {
+            this.firstIntensityScore = score; // first real assessment of the session
+        }
         this.previousIntensityScore = this.currentIntensityScore;
         this.currentIntensityScore = score;
         this.currentIntensityLevel = IntensityLevel.fromScore(score);
     }
+
+    /** The first assessed intensity of the session, or -1 if none yet. */
+    public int getFirstIntensityScore() { return firstIntensityScore; }
 
     public IntensityLevel getCurrentIntensityLevel() { return currentIntensityLevel; }
     public void setCurrentIntensityLevel(IntensityLevel level) { this.currentIntensityLevel = level; }

@@ -755,6 +755,46 @@ public class HuggingFaceClient {
         }
     }
 
+    /**
+     * Zero-shot classification against the screening model (facebook/bart-large-mnli). Returns a map
+     * of candidate label &rarr; independent probability (multi_label=true), or an empty map on failure
+     * so callers can fall back to their rule-based floor.
+     */
+    public Map<String,Double> classifyZeroShot(String text, java.util.List<String> candidateLabels) {
+        String url = "https://router.huggingface.co/hf-inference/models/" + screeningModel;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(getHfToken());
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("User-Agent", "RadAI/1.0");
+
+        Map<String,Object> parameters = new HashMap<>();
+        parameters.put("candidate_labels", candidateLabels);
+        parameters.put("multi_label", true);
+        Map<String,Object> payload = new HashMap<>();
+        payload.put("inputs", text);
+        payload.put("parameters", parameters);
+
+        Map<String,Double> result = new LinkedHashMap<>();
+        try {
+            ResponseEntity<String> res = rest.postForEntity(url, new HttpEntity<>(payload, headers), String.class);
+            if (res.getStatusCode() != HttpStatus.OK || res.getBody() == null) {
+                logger.warn("Zero-shot classification non-200: {}", res.getStatusCode());
+                return result;
+            }
+            JsonNode root = mapper.readTree(res.getBody());
+            JsonNode labels = root.get("labels");
+            JsonNode scores = root.get("scores");
+            if (labels != null && scores != null && labels.isArray() && scores.isArray()) {
+                for (int i = 0; i < labels.size() && i < scores.size(); i++) {
+                    result.put(labels.get(i).asText(), scores.get(i).asDouble());
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Zero-shot classification failed: {}", e.getMessage());
+        }
+        return result;
+    }
+
     public Map<String,Object> classifySafety(String text) throws Exception {
         String url = "https://router.huggingface.co/hf-inference/models/" + safetyModel;
         HttpHeaders headers = new HttpHeaders();

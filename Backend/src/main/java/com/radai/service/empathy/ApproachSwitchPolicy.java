@@ -1,26 +1,6 @@
 package com.radai.service.empathy;
 
 import com.radai.enums.ApproachType;
-
-/**
- * Decides whether Hana responds in EMPATHY or SYMPATHY mode for the current turn, driven by a
- * stress/intensity calculation with hysteresis.
- *
- * <p><b>Direction</b> (per the RAD model): HIGH stress/intensity → SYMPATHY (step in, guide, act);
- * LOW stress/intensity → EMPATHY (gentle presence). Every session starts in EMPATHY.
- *
- * <p><b>Signal</b> is a blend of two sources ("both combined"):
- * <ul>
- *   <li>the DASS screening <i>band</i> — a stable session baseline, and</li>
- *   <li>the per-message <i>intensity</i> score (0-10) — the live override.</li>
- * </ul>
- *
- * <p><b>Stickiness</b> is hysteresis: a high cutoff and a low cutoff with a dead-zone between them,
- * so the mode does not flip-flop on small fluctuations. The four outcomes are therefore:
- * switch E→S, switch S→E, stay E, stay S.
- *
- * <p>This class is intentionally free of Spring/JPA dependencies so it is trivially unit-testable.
- */
 public class ApproachSwitchPolicy {
 
     /** At or above this combined signal → SYMPATHY. */
@@ -38,7 +18,12 @@ public class ApproachSwitchPolicy {
     private final double messageWeight;
 
     public ApproachSwitchPolicy() {
-        this(DEFAULT_HIGH_CUT, DEFAULT_LOW_CUT, DEFAULT_BAND_WEIGHT, DEFAULT_MESSAGE_WEIGHT);
+        // Sourced from EngineTuning so the cut-offs/weights can be tuned via application.properties;
+        // EngineTuning defaults to the constants above, so behaviour is unchanged unless configured.
+        this(com.radai.service.config.EngineTuning.approachHighCut,
+             com.radai.service.config.EngineTuning.approachLowCut,
+             com.radai.service.config.EngineTuning.approachBandWeight,
+             com.radai.service.config.EngineTuning.approachMessageWeight);
     }
 
     public ApproachSwitchPolicy(double highCut, double lowCut, double bandWeight, double messageWeight) {
@@ -51,10 +36,6 @@ public class ApproachSwitchPolicy {
         this.messageWeight = messageWeight;
     }
 
-    /**
-     * Map a DASS stress band to a 0-10 baseline. Returns {@code -1} for unknown/blank, which the
-     * blend treats as "no band → use per-message intensity alone".
-     */
     public static double bandBaseline(String dassBand) {
         if (dassBand == null) {
             return -1.0;
@@ -82,15 +63,6 @@ public class ApproachSwitchPolicy {
         return bandWeight * baseline + messageWeight * msg;
     }
 
-    /**
-     * Decide the approach for this turn.
-     *
-     * @param current          approach in effect coming into this turn (collapsed to EMPATHY/SYMPATHY)
-     * @param firstTurn        true on the first user turn of the session → always EMPATHY
-     * @param crisis           crisis / suicidal-ideation detected → force SYMPATHY (highest support)
-     * @param dassBand         DASS screening band, or {@code null} if unknown
-     * @param messageIntensity per-message intensity, 0-10
-     */
     public Decision decide(ApproachType current, boolean firstTurn, boolean crisis,
                            String dassBand, int messageIntensity) {
         ApproachType base = (current == ApproachType.SYMPATHY) ? ApproachType.SYMPATHY : ApproachType.EMPATHY;
@@ -130,13 +102,5 @@ public class ApproachSwitchPolicy {
         return Math.max(0, Math.min(10, v));
     }
 
-    /**
-     * Outcome of a switch decision.
-     *
-     * @param approach the resolved approach for this turn
-     * @param signal   the combined 0-10 stress/intensity signal that drove the decision
-     * @param reason   human-readable explanation (for logging / debugging)
-     * @param switched true if {@code approach} differs from the incoming approach
-     */
     public record Decision(ApproachType approach, double signal, String reason, boolean switched) {}
 }

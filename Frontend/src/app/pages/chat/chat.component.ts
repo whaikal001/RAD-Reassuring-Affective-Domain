@@ -834,6 +834,41 @@ export class ChatComponent implements AfterViewChecked, OnInit {
     return meta['helpline'] || null;
   }
 
+  /** Backend-provided list of localized crisis resources (shown on crisis responses). */
+  getCrisisResources(): string[] {
+    const meta = this.chatService.lastResponse()?.metadata || {};
+    const res = meta['crisisResources'];
+    return Array.isArray(res) ? res : [];
+  }
+
+  /** Always-available help line (backend helpBanner, with a localized static fallback). */
+  getHelpBanner(): string {
+    const meta = this.chatService.lastResponse()?.metadata || {};
+    if (meta['helpBanner']) {
+      return meta['helpBanner'];
+    }
+    return this.language() === 'ms'
+      ? 'Jika anda dalam bahaya segera, hubungi 999. Untuk sokongan, hubungi Talian Kasih 15999 (24 jam).'
+      : "If you're in immediate danger, call 999. For support, call Talian Kasih 15999 (24/7).";
+  }
+
+  /** "I'm not a therapist" framing (backend disclaimer, with a localized static fallback). */
+  getDisclaimer(): string {
+    const meta = this.chatService.lastResponse()?.metadata || {};
+    if (meta['disclaimer']) {
+      return meta['disclaimer'];
+    }
+    return this.language() === 'ms'
+      ? 'Saya rakan sokongan digital, bukan ahli terapi atau perkhidmatan kecemasan.'
+      : "I'm a digital support companion, not a therapist or an emergency service.";
+  }
+
+  /** Within-session progress from the SessionInsightEngine, or null before the first reply. */
+  getSessionInsight(): { status: string; improvementPct: number; summary: string; recommendation: string } | null {
+    const meta = this.chatService.lastResponse()?.metadata || {};
+    return meta['sessionInsight'] || null;
+  }
+
   newChat(): void {
     this.chatService.resetSession().subscribe({
       next: () => {

@@ -3,6 +3,7 @@ package com.radai.controller;
 import com.radai.dto.ScreeningRequest;
 import com.radai.dto.ScreeningResponse;
 import com.radai.service.SessionHistoryService;
+import com.radai.service.support.CrisisResources;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -31,7 +32,9 @@ public class PreLLMScreeningController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ScreeningResponse screen(@RequestBody ScreeningRequest req,
                                     @RequestHeader(value = "X-User-ID", required = false) String userIdHeader,
-                                    @RequestHeader(value = "X-Conversation-ID", required = false) String conversationId) {
+                                    @RequestHeader(value = "X-Conversation-ID", required = false) String conversationId,
+                                    @RequestHeader(value = "Accept-Language", required = false) String acceptLanguage) {
+        String language = (acceptLanguage != null && acceptLanguage.toLowerCase().startsWith("ms")) ? "ms" : "en";
         List<Integer> answers = req.getDass21_answers() == null ? new ArrayList<>() : req.getDass21_answers();
 
         int score = answers.stream().mapToInt(Integer::intValue).sum();
@@ -58,13 +61,19 @@ public class PreLLMScreeningController {
             case "Severe":
                 action = "intervention";
                 message = "High stress detected. LLM access is blocked; please review and escalate to human operator.";
-                resources.add("If you are in immediate danger call your local emergency number.");
-                resources.add("Crisis hotline: 1-800-273-8255 (example)");
+                resources.addAll(CrisisResources.forLanguage(language));
+                break;
+            case "Moderate":
+                // Previously fell through to "allow"; moderate stress now gets preventive guidance
+                // (and still proceeds to chat — only Severe/Extremely severe is blocked).
+                action = "prevention";
+                message = "Moderate stress detected. Provide preventive guidance and resources.";
+                resources.add(CrisisResources.helpBanner(language));
                 break;
             case "Mild":
                 action = "prevention";
                 message = "Mild stress detected. Provide preventive guidance and resources.";
-                resources.add("Self-help resources and contacts.");
+                resources.add(CrisisResources.helpBanner(language));
                 break;
             default:
                 action = "allow";

@@ -104,7 +104,31 @@
 
       @if (getHelpline()) {
         <div class="helpline-banner alert alert-danger mb-2">
-          <strong>{{ 'helpline.immediateDanger' | t }}</strong> {{ getHelpline() }}
+          <div><strong>{{ 'helpline.immediateDanger' | t }}</strong> {{ getHelpline() }}</div>
+          @if (getCrisisResources().length) {
+            <ul class="crisis-resources mt-2 mb-0">
+              @for (res of getCrisisResources(); track res) {
+                <li>{{ res }}</li>
+              }
+            </ul>
+          }
+        </div>
+      }
+
+      <!-- Always-available help + "not a therapist" framing (Phase 1 safety) -->
+      <div class="safety-strip alert alert-light border mb-2" role="note">
+        <span class="me-1" aria-hidden="true">💙</span>{{ getHelpBanner() }}
+        <span class="safety-disclaimer d-block small text-muted mt-1">{{ getDisclaimer() }}</span>
+      </div>
+
+      @if (getSessionInsight(); as insight) {
+        <div class="session-insight-chip mb-2 small"
+             [class.insight-improved]="insight.status === 'IMPROVED'"
+             [class.insight-worsened]="insight.status === 'WORSENED'"
+             [class.insight-crisis]="insight.status === 'CRISIS'">
+          <strong>{{ insight.status }}</strong>
+          @if (insight.improvementPct) { <span>({{ insight.improvementPct }}%)</span> }
+          — {{ insight.recommendation }}
         </div>
       }
 

@@ -8,9 +8,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-/**
- * EmotionClassifier: optional external API-backed classifier with heuristic fallback.
- */
 public class EmotionClassifier {
     private final AppConfig config;
 
@@ -18,9 +15,6 @@ public class EmotionClassifier {
         this.config = config;
     }
 
-    /**
-     * Return emotion label (e.g., "sadness", "anxiety") or null if unavailable.
-     */
     public String classifyEmotion(String text) {
         String apiUrl = config.getEmotionApiUrl();
         if (apiUrl == null || apiUrl.isEmpty()) {

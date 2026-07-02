@@ -32,9 +32,10 @@ public class ChatbotFlowEngine {
     private final ResponseTemplateService templateService;
     private final LoopManager loopManager;
     private final String language; // en, ms, etc.
-    private final com.radai.service.config.AppConfig appConfig;
     private final com.radai.service.empathy.ApproachSwitchPolicy approachPolicy =
         new com.radai.service.empathy.ApproachSwitchPolicy();
+    private final com.radai.service.insight.SessionInsightEngine sessionInsightEngine =
+        new com.radai.service.insight.SessionInsightEngine();
 
     // Session management
     private final Map<UUID, MonitoringContext> sessionContexts = new ConcurrentHashMap<>();
@@ -45,7 +46,6 @@ public class ChatbotFlowEngine {
         this.screeningService = new MonitoringAndScreeningService();
         this.templateService = new ResponseTemplateService();
         this.loopManager = new LoopManager(screeningService, templateService);
-        this.appConfig = com.radai.service.config.AppConfig.load();
     }
 
     /**
@@ -179,13 +179,28 @@ public class ChatbotFlowEngine {
             response.withCycleNumber(context.getCycleCount());
             response.withSessionDuration(context.getSessionDurationMinutes());
 
-            // Add helpline metadata if crisis detected
+            // Add localized crisis resources + safety framing.
+            response.withMetadata("helpBanner", com.radai.service.support.CrisisResources.helpBanner(language));
+            response.withMetadata("disclaimer", com.radai.service.support.CrisisResources.disclaimer(language));
             if (context.isCrisisDetected() || context.isSuicidalIdeationDetected()) {
-                response.withMetadata("helpline", appConfig.getDefaultHelpline());
+                response.withMetadata("helpline", com.radai.service.support.CrisisResources.primaryHelpline());
+                response.withMetadata("crisisResources", com.radai.service.support.CrisisResources.forLanguage(language));
                 response.withMetadata("safetyLevel", "critical");
             } else {
                 response.withMetadata("safetyLevel", "low");
             }
+
+            // Within-session progress insight (SessionInsightEngine).
+            com.radai.service.insight.SessionInsightEngine.SessionInsight insight = sessionInsightEngine.summarize(
+                context.getFirstIntensityScore(), context.getCurrentIntensityScore(), context.getCycleCount(),
+                context.getSwitchingReasons().size(),
+                context.isCrisisDetected() || context.isSuicidalIdeationDetected(),
+                context.getCurrentEmotion(), language);
+            response.withMetadata("sessionInsight", Map.of(
+                "status", insight.status().name(),
+                "improvementPct", insight.improvementPct(),
+                "summary", insight.summary(),
+                "recommendation", insight.recommendation()));
 
             // Store response for tracking
             context.addBotResponse(response.getFullResponse());

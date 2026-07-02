@@ -1513,3 +1513,40 @@ app-animated-character {
   border: 1px solid rgba(239, 93, 108, 0.3);
 }
 
+/* Phase 1/4: safety strip, crisis resources, and session-insight chip */
+.safety-strip {
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.safety-strip .safety-disclaimer {
+  opacity: 0.85;
+}
+
+.helpline-banner .crisis-resources {
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+}
+
+.session-insight-chip {
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.6rem;
+  background: rgba(120, 130, 255, 0.12);
+  border: 1px solid rgba(120, 130, 255, 0.25);
+}
+
+.session-insight-chip.insight-improved {
+  background: rgba(24, 199, 143, 0.12);
+  border-color: rgba(24, 199, 143, 0.3);
+}
+
+.session-insight-chip.insight-worsened {
+  background: rgba(255, 190, 85, 0.14);
+  border-color: rgba(255, 190, 85, 0.35);
+}
+
+.session-insight-chip.insight-crisis {
+  background: rgba(239, 93, 108, 0.15);
+  border-color: rgba(239, 93, 108, 0.35);
+}
+
